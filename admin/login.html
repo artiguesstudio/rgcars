@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>RG Cars TDF · Ingreso al panel</title>
+  <link rel="icon" type="image/png" href="../imagenes/pestana.png" />
+  <meta name="description" content="Acceso interno al panel de administración de RG Cars TDF." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body class="auth-body">
+  <main class="auth-shell">
+    <section class="auth-card">
+      <a class="brand auth-brand" href="../index.html" aria-label="Volver al sitio">
+        <img src="../imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
+      </a>
+
+      <span class="eyebrow">Backoffice</span>
+      <h1>Ingresar al panel</h1>
+      <p class="auth-copy">Acceso reservado para administradores de RG Cars TDF.</p>
+
+      <div class="form-grid compact-form">
+        <div class="field col-12">
+          <label for="email">Email</label>
+          <input id="email" class="input" type="email" placeholder="tu@email.com" />
+        </div>
+        <div class="field col-12">
+          <label for="pass">Contraseña</label>
+          <input id="pass" class="input" type="password" placeholder="Contraseña" />
+        </div>
+        <div class="col-12 action-row stacked-mobile">
+          <button id="btn" class="btn btn-primary" type="button">Iniciar sesión</button>
+          <button id="forgot" class="btn btn-ghost" type="button">Olvidé mi contraseña</button>
+        </div>
+        <div class="col-12">
+          <div id="msg" class="form-message" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../config.js"></script>
+  <script src="../shared.js"></script>
+  <script src="./admin.js" defer></script>
+</body>
+</html>

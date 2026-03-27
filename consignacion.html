@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RG Cars TDF · Vendé tu auto en consignación</title>
+  <link rel="icon" type="image/png" href="./imagenes/pestana.png" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta name="description" content="Cargá tu vehículo en consignación y recibí una propuesta para avanzar." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body class="public-theme wizard-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="RG Cars TDF">
+        <img src="./imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="./index.html#explorar-stock">Comprá un auto</a>
+        <a href="./consignacion.html" aria-current="page">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+        <a href="./financiacion.html">Financiación</a>
+        <a href="./seguros.html">Seguros</a>
+        <a href="./peritaje.html">Peritaje</a>
+      </nav>
+
+      <nav class="header-actions" aria-label="Acciones principales">
+        <a class="btn btn-ghost" href="./index.html">Volver al inicio</a>
+        <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wizard-shell">
+    <section class="container wizard-intro">
+      <span class="eyebrow">Vendé tu auto</span>
+      <h1>Una forma más simple de vender tu auto</h1>
+      <p>Completá un formulario corto, ordenamos la información clave de la unidad y uno de nuestros asesores te contacta para avanzar.</p>
+    </section>
+
+    <section class="container consignment-benefits-shell" aria-label="Beneficios de consignar con RG Cars">
+      <div class="consignment-benefits-grid">
+        <article class="consignment-benefit-card">
+          <span class="consignment-benefit-icon">01</span>
+          <h2>Respetamos tu valor objetivo</h2>
+          <p>Tomamos tu referencia de precio y evaluamos la operación con criterio comercial, sin promesas vacías.</p>
+        </article>
+        <article class="consignment-benefit-card">
+          <span class="consignment-benefit-icon">02</span>
+          <h2>Filtramos consultas y ordenamos la gestión</h2>
+          <p>Centralizamos el contacto, la presentación de la unidad y el seguimiento para que no pierdas tiempo.</p>
+        </article>
+        <article class="consignment-benefit-card">
+          <span class="consignment-benefit-icon">03</span>
+          <h2>Te acompañamos hasta el cierre</h2>
+          <p>Si hay match, avanzamos con documentación, coordinación y próximos pasos con atención directa.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="container wizard-grid wizard-grid--consignment">
+      <aside class="wizard-side-card wizard-side-card--consignment">
+        <span class="mini-kicker">Cómo funciona</span>
+        <h2>Vos cargás los datos. Nosotros seguimos la gestión.</h2>
+        <p class="wizard-side-copy">La idea es resolver lo esencial en pocos pasos: vehículo, estado comercial y datos de contacto.</p>
+        <ul class="consignment-side-list">
+          <li>Marca, modelo, año y kilometraje.</li>
+          <li>Estado general, precio ideal y mínimo aceptable.</li>
+          <li>Datos de contacto y fotos para evaluar mejor.</li>
+        </ul>
+        <div class="wizard-steps wizard-steps--compact" id="consignmentStepsNav">
+          <button type="button" class="wizard-step is-active" data-step-nav="0"><span>1</span><strong>Vehículo</strong></button>
+          <button type="button" class="wizard-step" data-step-nav="1"><span>2</span><strong>Estado y precio</strong></button>
+          <button type="button" class="wizard-step" data-step-nav="2"><span>3</span><strong>Contacto y fotos</strong></button>
+        </div>
+    
+      </aside>
+
+      <article class="wizard-card">
+        <div class="wizard-head">
+          <div>
+            <span class="eyebrow">Quiero vender</span>
+            <h2 id="wizardTitle">Paso 1 · Datos del vehículo</h2>
+          </div>
+          <div class="wizard-progress"><span id="wizardProgressBar"></span></div>
+        </div>
+
+        <form id="consignmentForm" novalidate>
+          <section class="wizard-panel is-active" data-step="0">
+            <div class="form-grid">
+              <div class="field col-4"><label for="category">Categoría</label>
+                <select id="category" name="category" class="select">
+                  <option value="auto">Auto</option>
+                  <option value="camioneta">Camioneta</option>
+                  <option value="suv">SUV</option>
+                  <option value="moto">Moto</option>
+                  <option value="utilitario">Utilitario</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div class="field col-4"><label for="brand">Marca</label><select id="brand" name="brand" class="select" required></select></div>
+              <div class="field col-4 conditional-field is-hidden"><label for="brand_other">Otra marca</label><input id="brand_other" name="brand_other" class="input" placeholder="Especificá la marca" /></div>
+              <div class="field col-4"><label for="model">Modelo</label><select id="model" name="model" class="select" required></select></div>
+              <div class="field col-4 conditional-field is-hidden"><label for="model_other">Otro modelo</label><input id="model_other" name="model_other" class="input" placeholder="Especificá el modelo" /></div>
+              <div class="field col-4"><label for="version">Versión</label><input id="version" name="version" class="input" placeholder="Ej: SRX, Highline, XLS" /></div>
+              <div class="field col-3"><label for="year">Año</label><select id="year" name="year" class="select" required></select></div>
+              <div class="field col-3"><label for="km">Kilómetros</label><input id="km" name="km" class="input" type="number" min="0" required /></div>
+              <div class="field col-3"><label for="plate">Patente</label><input id="plate" name="plate" class="input" placeholder="AB123CD" /></div>
+              <div class="field col-3"><label for="fuel">Combustible</label><select id="fuel" name="fuel" class="select" required></select></div>
+              <div class="field col-6"><label for="transmission">Transmisión</label><select id="transmission" name="transmission" class="select" required></select></div>
+              <div class="field col-6"><label for="owner_city">Ciudad</label><select id="owner_city" name="owner_city" class="select" required></select></div>
+            </div>
+          </section>
+
+          <section class="wizard-panel" data-step="1">
+            <div class="form-grid">
+              <div class="field col-12"><label for="condition_summary">Resumen general</label><textarea id="condition_summary" name="condition_summary" class="textarea" rows="4" placeholder="Contanos el estado general del vehículo" required></textarea></div>
+              <div class="field col-6"><label for="service_history">Historial de servicios</label><textarea id="service_history" name="service_history" class="textarea" rows="4" placeholder="Últimos services, cubiertas, distribución, etc."></textarea></div>
+              <div class="field col-6"><label for="cosmetic_notes">Detalles estéticos / mecánicos</label><textarea id="cosmetic_notes" name="cosmetic_notes" class="textarea" rows="4" placeholder="Detalles de pintura, interior, mecánica o equipamiento"></textarea></div>
+              <div class="field col-4"><label for="has_debt">Tiene deuda / observaciones</label><select id="has_debt" name="has_debt" class="select" required><option value="">Seleccioná</option><option value="no">No</option><option value="yes">Sí</option></select></div>
+              <div class="field col-8 conditional-field is-hidden" id="debtNotesField"><label for="debt_notes">Aclaraciones sobre deuda / observaciones</label><input id="debt_notes" name="debt_notes" class="input" placeholder="Ej: patente, multa, prenda, detalle administrativo" /></div>
+              <div class="field col-4"><label for="accepts_trade_in">¿Acepta permuta?</label><select id="accepts_trade_in" name="accepts_trade_in" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+              <div class="field col-4"><label for="ready_to_transfer">¿Listo para transferir?</label><select id="ready_to_transfer" name="ready_to_transfer" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+              <div class="field col-4"><label for="expected_price">Precio ideal a recibir</label><input id="expected_price" name="expected_price" class="input" type="number" min="0" required /></div>
+              <div class="field col-6"><label for="min_acceptable_price">Mínimo aceptable</label><input id="min_acceptable_price" name="min_acceptable_price" class="input" type="number" min="0" required /></div>
+              <div class="field col-6"><label for="pricing_notes">Aclaraciones de precio</label><input id="pricing_notes" name="pricing_notes" class="input" placeholder="Urgencia, permuta, forma de pago, etc." /></div>
+            </div>
+          </section>
+
+          <section class="wizard-panel" data-step="2">
+            <div class="form-grid">
+              <div class="field col-4"><label for="owner_name">Nombre y apellido</label><input id="owner_name" name="owner_name" class="input" required /></div>
+              <div class="field col-4"><label for="owner_phone">Teléfono</label><input id="owner_phone" name="owner_phone" class="input" required /></div>
+              <div class="field col-4"><label for="owner_email">Email</label><input id="owner_email" name="owner_email" class="input" type="email" required /></div>
+              <div class="field col-12"><label for="photos">Fotos del vehículo</label><input id="photos" name="photos" class="input" type="file" accept="image/*" multiple /></div>
+              <div class="col-12"><div id="photoPreview" class="photo-list"><div class="empty-inline">Podés subir frente, laterales, interior, tablero, motor y detalles.</div></div></div>
+            </div>
+          </section>
+
+          <div class="form-message col-12" role="status" aria-live="polite" id="consignmentMessage" hidden></div>
+          <div class="wizard-actions col-12">
+            <button type="button" id="consignmentPrev" class="btn btn-ghost">Anterior</button>
+            <button type="button" id="consignmentNext" class="btn btn-soft">Siguiente</button>
+            <button type="submit" id="consignmentSubmit" class="btn btn-primary" hidden>Enviar ficha</button>
+          </div>
+        </form>
+      </article>
+    </section>
+
+
+    <section class="container search-accordion-shell faq-shell faq-shell--consignment">
+      <div class="section-head faq-head">
+        <div>
+          <span class="mini-kicker">Preguntas frecuentes</span>
+        </div>
+       </div>
+
+      <div class="accordion-list" aria-label="Preguntas frecuentes sobre consignación">
+        <article class="accordion-item is-open">
+          <button type="button" class="accordion-trigger" aria-expanded="true">
+            <span>¿Cómo funciona la consignación con RG Cars?</span>
+            <span class="accordion-icon" aria-hidden="true">⌄</span>
+          </button>
+          <div class="accordion-content">
+            <p>Cargás los datos básicos de la unidad, revisamos la información y uno de nuestros asesores te contacta para validar el caso y ordenar los próximos pasos.</p>
+          </div>
+        </article>
+
+        <article class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false">
+            <span>¿Quién define el precio de publicación?</span>
+            <span class="accordion-icon" aria-hidden="true">⌄</span>
+          </button>
+          <div class="accordion-content">
+            <p>Tomamos tu precio ideal y tu mínimo aceptable como base. Desde ahí evaluamos la operación para proponer una salida comercial coherente con el mercado y con tu objetivo.</p>
+          </div>
+        </article>
+
+        <article class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false">
+            <span>¿Qué información conviene cargar para recibir una mejor propuesta?</span>
+            <span class="accordion-icon" aria-hidden="true">⌄</span>
+          </button>
+          <div class="accordion-content">
+            <p>Marca, modelo, versión, año, kilometraje, estado general, historial de servicios, observaciones y fotos claras. Cuanta más precisión haya, más rápido podemos evaluar.</p>
+          </div>
+        </article>
+
+        <article class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false">
+            <span>¿Revisan documentación o deudas antes de avanzar?</span>
+            <span class="accordion-icon" aria-hidden="true">⌄</span>
+          </button>
+          <div class="accordion-content">
+            <p>Sí. Si hay deuda, multas, prenda u otra observación, conviene informarlo desde el inicio. Eso permite ordenar la operación y evitar fricciones más adelante.</p>
+          </div>
+        </article>
+
+        <article class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false">
+            <span>¿Hace falta acercar el auto antes de completar el formulario?</span>
+            <span class="accordion-icon" aria-hidden="true">⌄</span>
+          </button>
+          <div class="accordion-content">
+            <p>No necesariamente. Primero recibimos la ficha, revisamos el caso y luego coordinamos cómo seguir según el vehículo, la documentación y el tipo de operación.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer kavak-footer" id="siteFooter">
+    <div class="container footer-main">
+      <div class="footer-brand-block">
+        <img src="./imagenes/isotipo-white.png" alt="RG Cars TDF" class="footer-brand-logo" />
+        <p>Compra, venta y servicios para tu vehículo con atención clara, directa y personalizada.</p>
+      </div>
+
+      <div class="footer-columns">
+        <div class="footer-column">
+          <h3>Comprar</h3>
+          <a href="#explorar-stock">Explorar stock</a>
+          <a href="#stock">Catálogo</a>
+        </div>
+        <div class="footer-column">
+          <h3>Servicios</h3>
+          <a href="./consignacion.html">Consignación</a>
+          <a href="./scouting.html">Búsqueda personalizada</a>
+          <a href="./financiacion.html">Financiación</a>
+          <a href="./seguros.html">Seguros</a>
+          <a href="./peritaje.html">Peritaje</a>
+        </div>
+        <div class="footer-column">
+          <h3>Contacto</h3>
+          <a href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+          <a href="https://taplink.cc/rgcarstdf?from=qr" target="_blank" rel="noreferrer">Redes</a>
+          <span class="footer-address">Sarmiento 2760 · Río Grande, TDF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>Copyright © 2026 RG Cars TDF. Todos los derechos reservados.</p>
+      <div class="footer-bottom-links">
+        <a href="./index.html">Inicio</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="./config.js"></script>
+  <script src="./catalog-data.js"></script>
+  <script src="./shared.js"></script>
+  <script src="./consignacion.js" defer></script>
+</body>
+</html>

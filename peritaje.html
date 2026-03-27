@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RG Cars TDF · Peritaje</title>
+  <link rel="icon" type="image/png" href="./imagenes/pestana.png" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta name="description" content="Coordiná un peritaje de vehículo con fecha y horario estimado, dejá tus datos y descargá la ficha de peritaje." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body class="public-theme wizard-page peritaje-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="RG Cars TDF">
+        <img src="./imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
+      </a>
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="./index.html#explorar-stock">Comprá un auto</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+        <a href="./financiacion.html">Financiación</a>
+        <a href="./seguros.html">Seguros</a>
+        <a href="./peritaje.html" aria-current="page">Peritaje</a>
+      </nav>
+      <nav class="header-actions" aria-label="Acciones principales">
+        <a class="btn btn-ghost" href="./index.html">Volver al inicio</a>
+        <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wizard-shell peritaje-shell">
+    <section class="container wizard-intro peritaje-intro">
+      <span class="eyebrow">Peritaje</span>
+      <h1>Coordiná un peritaje con fecha y horario</h1>
+      <p>Agendá una revisión con RG Cars TDF, dejá los datos de la unidad y descargá una ficha clara para llevar el caso ordenado.</p>
+    </section>
+
+    <section class="container wizard-grid peritaje-grid">
+      <aside class="wizard-side-card">
+        <h2>Qué podés resolver desde acá</h2>
+        <ul class="feature-list compact-list">
+          <li>Reservar fecha tentativa desde calendario</li>
+          <li>Elegir una franja horaria predefinida</li>
+          <li>Dejar todos los datos de la unidad y del titular</li>
+                  </ul>
+        <p class="wizard-side-copy">La confirmación final del turno queda sujeta a disponibilidad operativa del equipo de RG Cars.</p>
+      </aside>
+
+      <article class="wizard-card peritaje-card">
+        <div class="section-head compact">
+          <div>
+            <span class="eyebrow">Agenda guiada</span>
+            <h2>Solicitud de peritaje</h2>
+          </div>
+          <p class="section-meta">Completá el formulario y descargá la ficha para tener la operación ordenada desde el inicio.</p>
+        </div>
+
+        <form id="peritajeForm" class="form-grid" novalidate>
+          <input type="hidden" id="vehicle_id" name="vehicle_id" />
+
+          <div class="field col-4">
+            <label for="customer_name">Nombre y apellido</label>
+            <input id="customer_name" name="customer_name" class="input" required />
+          </div>
+          <div class="field col-4">
+            <label for="phone">Celular</label>
+            <input id="phone" name="phone" class="input" placeholder="Ej: 2964 58-0000" required />
+          </div>
+          <div class="field col-4">
+            <label for="email">E-mail</label>
+            <input id="email" name="email" class="input" type="email" placeholder="Opcional" />
+          </div>
+
+          <div class="field col-4">
+            <label for="city">Ciudad</label>
+            <select id="city" name="city" class="select" required></select>
+          </div>
+          <div class="field col-4">
+            <label for="appointment_date">Fecha tentativa</label>
+            <input id="appointment_date" name="appointment_date" class="input" type="date" required />
+          </div>
+          <div class="field col-4">
+            <label for="appointment_time">Horario</label>
+            <select id="appointment_time" name="appointment_time" class="select" required></select>
+          </div>
+
+          <div class="field col-4">
+            <label for="vehicle_brand">Marca</label>
+            <input id="vehicle_brand" name="vehicle_brand" class="input" required />
+          </div>
+          <div class="field col-4">
+            <label for="vehicle_model">Modelo</label>
+            <input id="vehicle_model" name="vehicle_model" class="input" required />
+          </div>
+          <div class="field col-4">
+            <label for="vehicle_year">Año</label>
+            <input id="vehicle_year" name="vehicle_year" class="input" type="number" min="1950" max="2030" required />
+          </div>
+
+          <div class="field col-4">
+            <label for="plate">Patente</label>
+            <input id="plate" name="plate" class="input" placeholder="AG123BC" />
+          </div>
+          <div class="field col-4">
+            <label for="km">Kilometraje</label>
+            <input id="km" name="km" class="input" type="number" min="0" placeholder="Ej: 61000" />
+          </div>
+          <div class="field col-4">
+            <label for="inspection_reason">Motivo del peritaje</label>
+            <select id="inspection_reason" name="inspection_reason" class="select" required>
+              <option value="">Seleccioná una opción</option>
+              <option value="pre-compra">Pre compra / inspección previa</option>
+              <option value="consignacion">Consignación</option>
+              <option value="particulares">Operación entre particulares</option>
+              <option value="control-general">Control general</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+
+          <div class="field col-12">
+            <label for="notes">Observaciones</label>
+            <textarea id="notes" name="notes" class="textarea" rows="5" placeholder="Contanos qué querés revisar, si ya hay una operación en curso o cualquier dato útil para coordinar mejor el peritaje."></textarea>
+          </div>
+
+          <label class="field col-12 field-check field-check--full">
+            <input id="authorization" name="authorization" type="checkbox" required />
+            <span>Autorizo a RG Cars TDF a guardar mis datos para coordinar este peritaje y contactarme.</span>
+          </label>
+
+          <div class="form-message col-12" role="status" aria-live="polite" id="peritajeMessage" hidden></div>
+          <div class="wizard-actions col-12">
+            <button type="button" id="peritajeReset" class="btn btn-ghost">Limpiar</button>
+            <button type="submit" id="peritajeSubmit" class="btn btn-primary">Enviar solicitud</button>
+          </div>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer kavak-footer" id="siteFooter">
+    <div class="container footer-main">
+      <div class="footer-brand-block">
+        <img src="./imagenes/isotipo-white.png" alt="RG Cars TDF" class="footer-brand-logo" />
+        <p>Compra, venta y servicios para tu vehículo con atención clara, directa y personalizada.</p>
+      </div>
+
+      <div class="footer-columns">
+        <div class="footer-column">
+          <h3>Comprar</h3>
+          <a href="#explorar-stock">Explorar stock</a>
+          <a href="#stock">Catálogo</a>
+        </div>
+        <div class="footer-column">
+          <h3>Servicios</h3>
+          <a href="./consignacion.html">Consignación</a>
+          <a href="./scouting.html">Búsqueda personalizada</a>
+          <a href="./financiacion.html">Financiación</a>
+          <a href="./seguros.html">Seguros</a>
+          <a href="./peritaje.html">Peritaje</a>
+        </div>
+        <div class="footer-column">
+          <h3>Contacto</h3>
+          <a href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+          <a href="https://taplink.cc/rgcarstdf?from=qr" target="_blank" rel="noreferrer">Redes</a>
+          <span class="footer-address">Sarmiento 2760 · Río Grande, TDF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>Copyright © 2026 RG Cars TDF. Todos los derechos reservados.</p>
+      <div class="footer-bottom-links">
+        <a href="./index.html">Inicio</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="./config.js"></script>
+  <script src="./catalog-data.js"></script>
+  <script src="./shared.js"></script>
+  <script src="./peritaje.js" defer></script>
+</body>
+</html>

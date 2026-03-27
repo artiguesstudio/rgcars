@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RG Cars TDF · Financiación</title>
+  <link rel="icon" type="image/png" href="./imagenes/pestana.png" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta name="description" content="Conocé una estimación de financiación para autos de agencia o compras entre particulares y dejá tu CUIL y contacto para avanzar." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body class="public-theme wizard-page financing-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="RG Cars TDF">
+        <img src="./imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="./index.html#explorar-stock">Comprá un auto</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+        <a href="./financiacion.html" aria-current="page">Financiación</a>
+        <a href="./seguros.html">Seguros</a>
+        <a href="./peritaje.html">Peritaje</a>
+      </nav>
+
+      <nav class="header-actions" aria-label="Acciones principales">
+        <a class="btn btn-ghost" href="./index.html">Volver al inicio</a>
+        <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wizard-shell financing-shell">
+    <section class="container wizard-intro financing-intro">
+      <span class="eyebrow">Financiación</span>
+      <h1>Financiación</h1>
+    </section>
+
+    <section class="container financing-mode-row financing-mode-row--strong">
+      <button type="button" class="mode-chip mode-chip--strong is-active" data-mode="agency">Financiación para autos de la agencia</button>
+      <button type="button" class="mode-chip mode-chip--strong" data-mode="private">Financiación para compras entre particulares</button>
+    </section>
+
+    <section class="container wizard-grid financing-grid">
+      <div class="financing-side-column">
+        <aside class="wizard-side-card financing-side-card">
+          <h2>Estimá tu financiación</h2>
+          <p class="wizard-side-copy">La cuota estimada es orientativa y puede variar según perfil, documentación y condiciones vigentes de la entidad.</p>
+        </aside>
+
+        <article class="info-panel is-strong financing-extra-card financing-side-card">
+          <div>
+            <span class="eyebrow">Más alternativas</span>
+            <h3>¿Querés conocer más opciones de financiamiento?</h3>
+            <p>Si necesitás evaluar otras líneas, otra entidad o un esquema más conveniente para tu operación, escribinos y te mostramos alternativas con atención directa.</p>
+          </div>
+          <div class="inline-cta-row financing-extra-actions">
+            <a class="btn btn-soft" href="https://wa.me/5492964588267?text=Hola%20RG%20Cars%20TDF%2C%20quiero%20conocer%20m%C3%A1s%20opciones%20de%20financiamiento%20para%20mi%20caso." target="_blank" rel="noreferrer">Quiero más opciones</a>
+          </div>
+        </article>
+      </div>
+
+      <article class="wizard-card financing-card">
+        <div class="section-head compact financing-head">
+          <div>
+            <span class="eyebrow">Financiación</span>
+            <h2 id="financingTitle">Financiación para autos de la agencia</h2>
+          </div>
+          <p class="section-meta">Elegí la línea, indicá el monto a financiar y dejá tus datos para continuar.</p>
+        </div>
+
+        <form id="financingForm" class="form-grid" novalidate>
+          <input type="hidden" id="operation_type" name="operation_type" value="agency" />
+          <input type="hidden" id="vehicle_id" name="vehicle_id" />
+          <input type="hidden" id="estimated_monthly_payment" name="estimated_monthly_payment" />
+          <input type="hidden" id="estimated_total_cost" name="estimated_total_cost" />
+          <input type="hidden" id="estimated_monthly_rate" name="estimated_monthly_rate" />
+          <input type="hidden" id="selected_profile_code" name="selected_profile_code" />
+
+          <div class="field col-6">
+            <label for="entity">Entidad</label>
+            <select id="entity" name="entity" class="select" required></select>
+          </div>
+          <div class="field col-6">
+            <label for="profile_code">Línea</label>
+            <select id="profile_code" name="profile_code" class="select" required></select>
+          </div>
+
+          <div class="field col-4">
+            <label for="vehicle_type">Tipo de vehículo</label>
+            <select id="vehicle_type" name="vehicle_type" class="select" required>
+              <option value="auto">Auto</option>
+              <option value="pickup">Pickup / camioneta</option>
+              <option value="suv">SUV</option>
+              <option value="utilitario">Utilitario</option>
+              <option value="moto">Moto</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="field col-4">
+            <label for="vehicle_year">Año del vehículo</label>
+            <select id="vehicle_year" name="vehicle_year" class="select" required></select>
+          </div>
+          <div class="field col-4">
+            <label for="installments">Plazo</label>
+            <select id="installments" name="installments" class="select" required></select>
+          </div>
+
+          <div class="field col-6">
+            <label for="vehicle_title">Unidad / referencia</label>
+            <input id="vehicle_title" name="vehicle_title" class="input" placeholder="Ej: Toyota Hilux SRX 2022" required />
+          </div>
+          <div class="field col-6">
+            <label for="requested_amount">Monto a financiar</label>
+            <input id="requested_amount" name="requested_amount" class="input" type="text" inputmode="numeric" autocomplete="off" placeholder="$15.000.000" required />
+          </div>
+
+          <div class="field col-4">
+            <label for="customer_name">Nombre y apellido</label>
+            <input id="customer_name" name="customer_name" class="input" required />
+          </div>
+          <div class="field col-4">
+            <label for="cuil">CUIL</label>
+            <input id="cuil" name="cuil" class="input" inputmode="numeric" placeholder="20-12345678-3" required />
+          </div>
+          <div class="field col-4">
+            <label for="contact_preference">Preferencia de contacto</label>
+            <select id="contact_preference" name="contact_preference" class="select">
+              <option value="whatsapp">WhatsApp</option>
+              <option value="phone">Llamada</option>
+              <option value="email">Email</option>
+            </select>
+          </div>
+
+          <div class="field col-4">
+            <label for="phone">Celular</label>
+            <input id="phone" name="phone" class="input" placeholder="Opcional si dejás email" />
+          </div>
+          <div class="field col-4">
+            <label for="email">E-mail</label>
+            <input id="email" name="email" class="input" type="email" placeholder="Opcional si dejás celular" />
+          </div>
+          <div class="field col-4">
+            <label for="city">Ciudad</label>
+            <select id="city" name="city" class="select"></select>
+          </div>
+
+          <div class="field col-12 private-only is-hidden">
+            <label for="operation_context">Detalle de la operación entre particulares</label>
+            <textarea id="operation_context" name="operation_context" class="textarea" rows="4" placeholder="Ej: ya encontré la unidad, necesito gestoría, peritaje o asistencia para cerrar la operación."></textarea>
+          </div>
+
+          <div class="field col-12">
+            <label for="notes">Observaciones</label>
+            <textarea id="notes" name="notes" class="textarea" rows="4" placeholder="Documentación disponible, urgencia, dudas sobre la operación o cualquier dato útil."></textarea>
+          </div>
+
+          <div class="col-12">
+            <article class="simulation-result-card simulation-result-card--enhanced" id="simulationResult">
+              <div class="simulation-result-header simulation-result-header--enhanced">
+                <div>
+                  <strong>Resultado orientativo</strong>
+                  <span>Actualizá entidad, línea, plazo, año o monto para recalcular.</span>
+                </div>
+                <button type="button" class="btn btn-ghost simulation-detail-trigger" id="openSimulationDetail">Ver detalle</button>
+              </div>
+
+              <div class="simulation-result-kpis">
+                <div class="simulation-kpi simulation-kpi--accent">
+                  <span>Cuota total estimada</span>
+                  <strong id="resultInstallment">-</strong>
+                  <small id="resultInstallmentHint">Calculada según el monto, línea y plazo seleccionados.</small>
+                </div>
+                <div class="simulation-kpi">
+                  <span>Costo estimado total</span>
+                  <strong id="resultTotal">-</strong>
+                  <small id="resultTerm">Esperando datos para completar el plazo.</small>
+                </div>
+              </div>
+
+              <div class="simulation-result-table-wrap">
+                <table class="simulation-result-table" aria-label="Resumen de simulación">
+                  <tbody>
+                    <tr>
+                      <th scope="row">Monto a financiar</th>
+                      <td id="resultAmount">-</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Entidad / línea</th>
+                      <td id="resultLine">-</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Plazo</th>
+                      <td id="resultInstallments">-</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Método de cálculo</th>
+                      <td id="resultMethod">-</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Tasa / coeficiente</th>
+                      <td id="resultRate">-</td>
+                    </tr>
+                    <tr id="resultFactorRow" hidden>
+                      <th scope="row">Valor por cada $10.000</th>
+                      <td id="resultPerTenThousand">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <p class="simulation-disclaimer" id="simulationDisclaimer">Esperando datos para simular.</p>
+            </article>
+          </div>
+
+          <div class="form-message col-12" role="status" aria-live="polite" id="financingMessage" hidden></div>
+          <div class="wizard-actions col-12">
+            <button type="button" id="resetSimulation" class="btn btn-ghost">Limpiar</button>
+            <button type="submit" id="financingSubmit" class="btn btn-primary">Enviar simulación</button>
+          </div>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <div class="simulation-modal" id="simulationDetailModal" hidden>
+    <div class="simulation-modal__backdrop" data-simulation-close="true"></div>
+    <div class="simulation-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="simulationDetailTitle">
+      <button type="button" class="simulation-modal__close" aria-label="Cerrar" data-simulation-close="true">×</button>
+      <div class="simulation-modal__eyebrow">Detalle de simulación</div>
+      <h3 id="simulationDetailTitle">Resumen de financiación</h3>
+      <p class="simulation-modal__copy" id="simulationModalLine">Esperando datos para simular.</p>
+
+      <div class="simulation-modal__hero">
+        <div>
+          <span>Cuota total estimada</span>
+          <strong id="modalInstallment">-</strong>
+        </div>
+        <div>
+          <span>Costo estimado total</span>
+          <strong id="modalTotal">-</strong>
+        </div>
+      </div>
+
+      <div class="simulation-modal__table-wrap">
+        <table class="simulation-result-table simulation-result-table--modal" aria-label="Detalle de simulación">
+          <tbody>
+            <tr>
+              <th scope="row">Monto a financiar</th>
+              <td id="modalAmount">-</td>
+            </tr>
+            <tr>
+              <th scope="row">Entidad</th>
+              <td id="modalEntity">-</td>
+            </tr>
+            <tr>
+              <th scope="row">Línea</th>
+              <td id="modalProfile">-</td>
+            </tr>
+            <tr>
+              <th scope="row">Tipo de vehículo</th>
+              <td id="modalVehicleType">-</td>
+            </tr>
+            <tr>
+              <th scope="row">Año tomado para la línea</th>
+              <td id="modalYear">-</td>
+            </tr>
+            <tr>
+              <th scope="row">Plazo</th>
+              <td id="modalInstallments">-</td>
+            </tr>
+            <tr>
+              <th scope="row">Método de cálculo</th>
+              <td id="modalMethod">-</td>
+            </tr>
+            <tr>
+              <th scope="row">Tasa / coeficiente</th>
+              <td id="modalRate">-</td>
+            </tr>
+            <tr id="modalFactorRow" hidden>
+              <th scope="row">Valor por cada $10.000</th>
+              <td id="modalPerTenThousand">-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="simulation-disclaimer simulation-modal__disclaimer" id="simulationModalDisclaimer">Esperando datos para simular.</p>
+      <div class="simulation-modal__actions">
+        <button type="button" class="btn btn-ghost" data-simulation-close="true">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer kavak-footer" id="siteFooter">
+    <div class="container footer-main">
+      <div class="footer-brand-block">
+        <img src="./imagenes/isotipo-white.png" alt="RG Cars TDF" class="footer-brand-logo" />
+        <p>Compra, venta y servicios para tu vehículo con atención clara, directa y personalizada.</p>
+      </div>
+
+      <div class="footer-columns">
+        <div class="footer-column">
+          <h3>Comprar</h3>
+          <a href="#explorar-stock">Explorar stock</a>
+          <a href="#stock">Catálogo</a>
+        </div>
+        <div class="footer-column">
+          <h3>Servicios</h3>
+          <a href="./consignacion.html">Consignación</a>
+          <a href="./scouting.html">Búsqueda personalizada</a>
+          <a href="./financiacion.html">Financiación</a>
+          <a href="./seguros.html">Seguros</a>
+          <a href="./peritaje.html">Peritaje</a>
+        </div>
+        <div class="footer-column">
+          <h3>Contacto</h3>
+          <a href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+          <a href="https://taplink.cc/rgcarstdf?from=qr" target="_blank" rel="noreferrer">Redes</a>
+          <span class="footer-address">Sarmiento 2760 · Río Grande, TDF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>Copyright © 2026 RG Cars TDF. Todos los derechos reservados.</p>
+      <div class="footer-bottom-links">
+        <a href="./index.html">Inicio</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="./config.js"></script>
+  <script src="./catalog-data.js"></script>
+  <script src="./finance-rate-defaults.js"></script>
+  <script src="./shared.js"></script>
+  <script src="./financiacion.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RG Cars TDF · Seguros del automotor</title>
+  <link rel="icon" type="image/png" href="./imagenes/pestana.png" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta name="description" content="Pedí una pre-cotización de seguro automotor y dejá tus datos para que RG Cars te contacte con una propuesta ajustada a tu operación." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body class="public-theme wizard-page insurance-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="RG Cars TDF">
+        <img src="./imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="./index.html#explorar-stock">Comprá un auto</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+        <a href="./financiacion.html">Financiación</a>
+        <a href="./seguros.html" aria-current="page">Seguros</a>
+        <a href="./peritaje.html">Peritaje</a>
+      </nav>
+
+      <nav class="header-actions" aria-label="Acciones principales">
+        <a class="btn btn-ghost" href="./index.html">Volver al inicio</a>
+        <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wizard-shell insurance-shell">
+    <section class="container wizard-intro">
+      <span class="eyebrow">Seguros del automotor</span>
+      <h1>Pedí una pre-cotización y armá tu propuesta con RG Cars</h1>
+       </section>
+
+    <section class="container wizard-grid">
+      <aside class="wizard-side-card">
+        <h2>Qué podés resolver desde acá</h2>
+        <div class="mini-facts-list">
+          <span>✔ Seguro para unidades de la agencia</span>
+          <span>✔ Seguro para compras entre particulares</span>
+          <span>✔ Derivación con documentación y cobertura objetivo</span>
+        </div>
+        <p class="wizard-side-copy">En esta fase no se muestra una póliza cerrada ni un precio contractual.</p>
+      </aside>
+
+      <article class="wizard-card insurance-card">
+        <div class="section-head compact">
+          <div>
+            <span class="eyebrow">Pre-cotización</span>
+            <h2>Completá tus datos</h2>
+          </div>
+          <p class="section-meta">Cuanto mejor venga la información, más rápido puede responder RG Cars con una alternativa concreta.</p>
+        </div>
+
+        <form id="insuranceForm" class="form-grid" novalidate>
+          <input type="hidden" id="vehicle_id" name="vehicle_id" />
+
+          <div class="field col-4"><label for="customer_name">Nombre y apellido</label><input id="customer_name" name="customer_name" class="input" required /></div>
+          <div class="field col-4"><label for="cuil">CUIL</label><input id="cuil" name="cuil" class="input" placeholder="20-12345678-3" required /></div>
+          <div class="field col-4"><label for="phone">Teléfono</label><input id="phone" name="phone" class="input" required /></div>
+          <div class="field col-6"><label for="email">E-mail</label><input id="email" name="email" class="input" type="email" required /></div>
+          <div class="field col-6"><label for="city">Localidad</label><input id="city" name="city" class="input" /></div>
+
+          <div class="field col-4"><label for="vehicle_title">Unidad / referencia</label><input id="vehicle_title" name="vehicle_title" class="input" placeholder="Ej: Toyota Hilux SRX 2022" required /></div>
+          <div class="field col-4"><label for="vehicle_brand">Marca</label><input id="vehicle_brand" name="vehicle_brand" class="input" /></div>
+          <div class="field col-4"><label for="vehicle_model">Modelo</label><input id="vehicle_model" name="vehicle_model" class="input" /></div>
+          <div class="field col-4"><label for="vehicle_year">Año</label><input id="vehicle_year" name="vehicle_year" class="input" type="number" min="1990" max="2030" /></div>
+          <div class="field col-4"><label for="plate">Patente</label><input id="plate" name="plate" class="input" placeholder="AB123CD" /></div>
+          <div class="field col-4"><label for="insured_amount">Valor estimado a asegurar</label><input id="insured_amount" name="insured_amount" class="input" type="number" min="0" /></div>
+
+          <div class="field col-4">
+            <label for="coverage_type">Cobertura buscada</label>
+            <select id="coverage_type" name="coverage_type" class="select" required>
+              <option value="">Seleccioná una opción</option>
+              <option value="responsabilidad-civil">Responsabilidad civil</option>
+              <option value="terceros-completo">Terceros completo</option>
+              <option value="todo-riesgo">Todo riesgo</option>
+              <option value="a-definir">A definir con asesor</option>
+            </select>
+          </div>
+          <div class="field col-4">
+            <label for="use_type">Uso</label>
+            <select id="use_type" name="use_type" class="select">
+              <option value="particular">Particular</option>
+              <option value="laboral">Laboral</option>
+              <option value="mixto">Mixto</option>
+            </select>
+          </div>
+          <div class="field col-4">
+            <label for="insurer_preference">Preferencia de compañía</label>
+            <select id="insurer_preference" name="insurer_preference" class="select">
+              <option value="">Sin preferencia</option>
+              <option value="santander">Santander</option>
+              <option value="rossi">Rossi / otras compañías</option>
+              <option value="a-definir">A definir con asesor</option>
+            </select>
+          </div>
+
+          <div class="field col-6"><label for="current_insurer">Aseguradora actual</label><input id="current_insurer" name="current_insurer" class="input" placeholder="Opcional" /></div>
+          <div class="field col-6 checkbox-row"><label><input id="needs_financing" name="needs_financing" type="checkbox" /> También quiero evaluar financiación para esta operación</label></div>
+          <div class="field col-12"><label for="notes">Observaciones</label><textarea id="notes" name="notes" class="textarea" rows="4" placeholder="Siniestros previos, uso, guarda, urgencia o cualquier dato útil para cotizar mejor."></textarea></div>
+          <div class="field col-12 checkbox-row"><label><input id="consent" name="consent" type="checkbox" required /> Autorizo a RG Cars TDF a guardar mis datos para gestionar esta pre-cotización y contactarme.</label></div>
+
+          <div id="insuranceMessage" class="form-message col-12" role="status" aria-live="polite" hidden></div>
+
+          <div class="wizard-actions col-12">
+            <button type="button" class="btn btn-ghost" id="insuranceReset">Limpiar</button>
+            <button type="submit" class="btn btn-primary" id="insuranceSubmit">Enviar pre-cotización</button>
+          </div>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer kavak-footer" id="siteFooter">
+    <div class="container footer-main">
+      <div class="footer-brand-block">
+        <img src="./imagenes/isotipo-white.png" alt="RG Cars TDF" class="footer-brand-logo" />
+        <p>Compra, venta y servicios para tu vehículo con atención clara, directa y personalizada.</p>
+      </div>
+
+      <div class="footer-columns">
+        <div class="footer-column">
+          <h3>Comprar</h3>
+          <a href="#explorar-stock">Explorar stock</a>
+          <a href="#stock">Catálogo</a>
+        </div>
+        <div class="footer-column">
+          <h3>Servicios</h3>
+          <a href="./consignacion.html">Consignación</a>
+          <a href="./scouting.html">Búsqueda personalizada</a>
+          <a href="./financiacion.html">Financiación</a>
+          <a href="./seguros.html">Seguros</a>
+          <a href="./peritaje.html">Peritaje</a>
+        </div>
+        <div class="footer-column">
+          <h3>Contacto</h3>
+          <a href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+          <a href="https://taplink.cc/rgcarstdf?from=qr" target="_blank" rel="noreferrer">Redes</a>
+          <span class="footer-address">Sarmiento 2760 · Río Grande, TDF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>Copyright © 2026 RG Cars TDF. Todos los derechos reservados.</p>
+      <div class="footer-bottom-links">
+        <a href="./index.html">Inicio</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="./config.js"></script>
+  <script src="./shared.js"></script>
+  <script src="./seguros.js" defer></script>
+</body>
+</html>

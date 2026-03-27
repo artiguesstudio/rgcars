@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>RG Cars TDF · Restablecer contraseña</title>
+  <link rel="icon" type="image/png" href="../imagenes/pestana.png" />
+  <meta name="description" content="Restablecimiento interno de contraseña del panel de RG Cars TDF." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body class="auth-body">
+  <main class="auth-shell">
+    <section class="auth-card small-card">
+      <a class="brand auth-brand" href="../index.html" aria-label="Volver al sitio">
+        <img src="../imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
+      </a>
+
+      <span class="eyebrow">Seguridad</span>
+      <h1>Restablecer contraseña</h1>
+      <p class="auth-copy">Ingresá una nueva contraseña para recuperar tu acceso al panel.</p>
+
+      <div class="form-grid compact-form">
+        <div class="field col-12">
+          <label for="newpass">Nueva contraseña</label>
+          <input id="newpass" class="input" type="password" placeholder="Mínimo 6 caracteres" />
+        </div>
+        <div class="col-12 action-row stacked-mobile">
+          <button id="setpass" class="btn btn-primary" type="button">Guardar nueva contraseña</button>
+        </div>
+        <div class="col-12">
+          <div id="msg" class="form-message" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../config.js"></script>
+  <script>
+    const sb = window.supabase.createClient(window.RG.SUPABASE_URL, window.RG.SUPABASE_ANON_KEY);
+    const $ = (id) => document.getElementById(id);
+
+    function showMsg(text, ok = true) {
+      const el = $('msg');
+      if (!el) return;
+      el.hidden = false;
+      el.textContent = text;
+      el.className = `form-message ${ok ? 'is-success' : 'is-error'}`;
+    }
+
+    $('setpass')?.addEventListener('click', async () => {
+      const password = $('newpass')?.value || '';
+      if (password.length < 6) {
+        showMsg('La contraseña debe tener al menos 6 caracteres.', false);
+        return;
+      }
+
+      const { error } = await sb.auth.updateUser({ password });
+      if (error) {
+        showMsg(error.message, false);
+        return;
+      }
+
+      showMsg('Contraseña actualizada. Ya podés iniciar sesión.', true);
+      setTimeout(() => { window.location.href = './login.html'; }, 1000);
+    });
+  </script>
+</body>
+</html>

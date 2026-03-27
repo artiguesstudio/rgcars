@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>RG Cars TDF · Backoffice</title>
+  <link rel="icon" type="image/png" href="../imagenes/pestana.png" />
+  <meta name="description" content="Panel interno de administración de RG Cars TDF." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body class="admin-body admin-saas-page">
+  <div class="admin-saas-shell">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar__brand">
+        <a class="brand" href="../index.html" aria-label="Volver al inicio">
+          <img src="../imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
+        </a>
+        <div>
+          <span class="eyebrow">Backoffice</span>
+          <strong>RG Cars TDF</strong>
+        </div>
+      </div>
+
+      <nav class="admin-sidebar__nav" aria-label="Navegación del panel">
+        <button type="button" class="admin-nav-link is-active" data-view="overview">
+          <span>Resumen</span>
+        </button>
+
+        <details class="admin-nav-group" open>
+          <summary>Operación diaria</summary>
+          <div class="admin-nav-group__items">
+            <button type="button" class="admin-nav-link" data-view="vehicles">Vehículos</button>
+            <button type="button" class="admin-nav-link" data-view="leads"><span class="admin-nav-link__inner"><span>Leads</span><span class="admin-nav-badge" id="adminLeadBadge" hidden>0</span></span></button>
+            <button type="button" class="admin-nav-link" data-view="insurance">Seguros</button>
+          </div>
+        </details>
+
+        <details class="admin-nav-group" open>
+          <summary>Comercial</summary>
+          <div class="admin-nav-group__items">
+            <button type="button" class="admin-nav-link" data-view="financing">Financiación</button>
+          </div>
+        </details>
+
+        <details class="admin-nav-group" open>
+          <summary>Sistema</summary>
+          <div class="admin-nav-group__items">
+            <button type="button" class="admin-nav-link" data-view="settings">Configuración</button>
+          </div>
+        </details>
+      </nav>
+    </aside>
+
+    <div class="admin-workspace">
+      <header class="admin-topbar">
+        <div>
+          <span class="admin-topbar__eyebrow">Panel administrativo</span>
+          <h1 id="adminViewTitle">Resumen</h1>
+          <p id="adminViewCopy">Visual general de stock, leads y configuración comercial.</p>
+        </div>
+
+        <div class="admin-topbar__actions">
+          <button type="button" class="btn btn-ghost" data-quick-view="vehicles">Nuevo vehículo</button>
+          <button type="button" class="btn btn-ghost" data-quick-view="leads">Ver leads</button>
+          <button type="button" class="btn btn-primary" id="logout">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <main class="admin-view-stack">
+        <section class="admin-view is-active" data-view-panel="overview">
+          <div class="admin-kpi-grid" id="overviewStats"></div>
+
+          <div class="admin-overview-grid">
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">Accesos rápidos</span>
+                  <h2>Operación del día</h2>
+                </div>
+                <p class="admin-muted">Abrí una tarea puntual sin perderte en el panel.</p>
+              </div>
+              <div class="admin-quick-grid">
+                <button type="button" class="admin-quick-action" data-quick-view="vehicles">
+                  <strong>Cargar vehículo</strong>
+                  <span>Publicar, editar o cambiar estados del stock.</span>
+                </button>
+                <button type="button" class="admin-quick-action" data-quick-view="leads">
+                  <strong>Gestionar leads</strong>
+                  <span>Consignación, búsquedas, financiación y sugerencias.</span>
+                </button>
+                <button type="button" class="admin-quick-action" data-quick-view="financing">
+                  <strong>Actualizar tasas</strong>
+                  <span>Editá líneas comerciales del simulador sin tocar código.</span>
+                </button>
+                <button type="button" class="admin-quick-action" data-quick-view="insurance">
+                  <strong>Ver seguros</strong>
+                  <span>Seguimiento de pre-cotizaciones y contacto comercial.</span>
+                </button>
+              </div>
+            </article>
+
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">En foco</span>
+                  <h2>Resumen operativo</h2>
+                </div>
+                <p class="admin-muted" id="overviewMeta">Cargando datos…</p>
+              </div>
+              <div id="overviewHighlights" class="admin-summary-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-view" data-view-panel="vehicles">
+          <div class="admin-split-grid admin-split-grid--vehicles">
+            <article class="admin-card admin-panel-card admin-panel-card--list">
+              <div class="admin-panel-head admin-panel-head--inline">
+                <div>
+                  <span class="eyebrow">Vehículos</span>
+                  <h2>Stock cargado</h2>
+                </div>
+                <button type="button" class="btn btn-ghost" id="newVehicleBtn">Nuevo vehículo</button>
+              </div>
+
+              <div class="admin-toolbar-grid">
+                <div class="field">
+                  <label for="adminSearch">Buscar</label>
+                  <input id="adminSearch" class="input" placeholder="Título, marca, modelo o patente" autocomplete="off" />
+                </div>
+                <div class="field">
+                  <label for="adminVehicleStatusFilter">Estado</label>
+                  <select id="adminVehicleStatusFilter" class="select">
+                    <option value="all">Todos</option>
+                    <option value="available">Disponible</option>
+                    <option value="incoming">Próximo a ingresar</option>
+                    <option value="sold">Vendido</option>
+                    <option value="hidden">Oculto</option>
+                  </select>
+                </div>
+              </div>
+
+              <p id="adminSearchMeta" class="section-meta search-meta">Cargando stock…</p>
+              <div id="rows" class="admin-results" aria-live="polite"></div>
+            </article>
+
+            <article class="admin-card admin-panel-card admin-panel-card--form">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">Editor</span>
+                  <h2 id="vehicleFormTitle">Publicar vehículo</h2>
+                </div>
+                <p class="admin-muted">Formulario ordenado por secciones para cargar stock sin mezclar otras tareas del sistema.</p>
+              </div>
+
+              <input type="hidden" id="id" />
+
+              <details class="admin-fold" open>
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Datos</span>
+                    <strong>Datos principales</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="form-grid">
+                    <div class="field col-12">
+                      <label for="title">Título</label>
+                      <input id="title" class="input" placeholder="Ej: Peugeot 208 Allure 2022" />
+                    </div>
+                    <div class="field col-3"><label for="brand">Marca</label><input id="brand" class="input" placeholder="Marca" /></div>
+                    <div class="field col-3"><label for="model">Modelo</label><input id="model" class="input" placeholder="Modelo" /></div>
+                    <div class="field col-3"><label for="year">Año</label><input id="year" class="input" type="number" placeholder="Año" /></div>
+                    <div class="field col-3"><label for="plate">Patente</label><input id="plate" class="input" placeholder="AB123CD" /></div>
+                    <div class="field col-4"><label for="km">Kilómetros</label><input id="km" class="input" type="number" placeholder="Kilómetros" /></div>
+                    <div class="field col-4"><label for="price">Precio</label><input id="price" class="input" type="number" placeholder="Precio" /></div>
+                    <div class="field col-4"><label for="currency">Moneda</label><select id="currency" class="select"><option value="ARS">ARS</option><option value="USD">USD</option></select></div>
+                    <div class="field col-4"><label for="category">Categoría</label><select id="category" class="select"><option value="auto">Auto</option><option value="camioneta">Camioneta</option><option value="suv">SUV</option><option value="camion">Camión</option><option value="moto">Moto</option><option value="utilitario">Utilitario</option><option value="otro">Otro</option></select></div>
+                    <div class="field col-4"><label for="status">Estado</label><select id="status" class="select"><option value="available">Disponible</option><option value="incoming">Próximo a ingresar</option><option value="reserved">Reservado</option><option value="sold">Vendido</option><option value="hidden">Oculto</option></select></div>
+                    <div class="field col-4"><label for="featured">Destacado</label><select id="featured" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="admin-fold">
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Contenido</span>
+                    <strong>Descripción comercial</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="field">
+                    <label for="description">Descripción</label>
+                    <textarea id="description" class="input textarea" rows="5" placeholder="Descripción comercial del vehículo"></textarea>
+                  </div>
+                </div>
+              </details>
+
+              <details class="admin-fold">
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Ficha</span>
+                    <strong>Ficha técnica y equipamiento</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="form-grid">
+                    <div class="field col-4"><label for="engine">Motor</label><input id="engine" class="input" placeholder="Ej: 1.8L 16V (130 CV)" /></div>
+                    <div class="field col-4"><label for="transmission">Transmisión</label><input id="transmission" class="input" placeholder="Ej: Automática de 6 velocidades" /></div>
+                    <div class="field col-4"><label for="drivetrain">Tracción</label><input id="drivetrain" class="input" placeholder="Ej: Delantera (FWD)" /></div>
+                    <div class="field col-3"><label for="color">Color</label><input id="color" class="input" placeholder="Ej: Blanco" /></div>
+                    <div class="field col-3"><label for="doors">Cantidad de puertas</label><input id="doors" class="input" type="number" min="1" max="8" placeholder="Ej: 5" /></div>
+                    <div class="field col-3"><label for="fuel_type">Combustible</label><input id="fuel_type" class="input" placeholder="Ej: Nafta" /></div>
+                    <div class="field col-3"><label for="vehicle_condition">Estado de la unidad</label><input id="vehicle_condition" class="input" placeholder="Ej: Excelente" /></div>
+                    <div class="field col-12"><label for="featured_equipment">Equipamiento destacado</label><textarea id="featured_equipment" class="input textarea" rows="6" placeholder="Un ítem por línea&#10;Pantalla táctil con Android Auto / Apple CarPlay&#10;Cámara de retroceso&#10;Control crucero"></textarea></div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="admin-fold">
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Operación</span>
+                    <strong>Flags comerciales y financiación</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="form-grid">
+                    <div class="field col-4"><label for="is_recent">Recién ingresado</label><select id="is_recent" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="outlet">Outlet</label><select id="outlet" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="insurance_available">Seguro disponible</label><select id="insurance_available" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="financing_enabled">Financiación agencia</label><select id="financing_enabled" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="private_financing_enabled">Compra entre particulares</label><select id="private_financing_enabled" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="finance_max_months">Máximo de cuotas</label><input id="finance_max_months" class="input" type="number" min="0" placeholder="Ej: 48" /></div>
+                    <div class="field col-6"><label for="min_down_payment">Entrega mínima sugerida</label><input id="min_down_payment" class="input" type="number" min="0" placeholder="Monto estimado" /></div>
+                    <div class="field col-6"><label for="finance_entities">Entidades / convenios</label><input id="finance_entities" class="input" placeholder="Santander, Prendo, BNA" /></div>
+                    <div class="field col-12"><label for="finance_note">Aclaración comercial</label><textarea id="finance_note" class="input textarea" rows="3" placeholder="Ej: sujeto a scoring, documentación y condiciones vigentes"></textarea></div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="admin-fold">
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Media</span>
+                    <strong>Fotos y archivos</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="field">
+                    <label for="photos">Fotos</label>
+                    <input id="photos" class="input" type="file" accept="image/*" multiple />
+                    <p class="field-help">Las imágenes se almacenan en el bucket <strong>vehicles</strong>.</p>
+                  </div>
+                  <div id="photoList" class="photo-list"></div>
+                </div>
+              </details>
+
+              <div class="action-row action-row--admin">
+                <button id="save" class="btn btn-primary" type="button">Guardar vehículo</button>
+                <button id="clear" class="btn btn-ghost" type="button">Limpiar formulario</button>
+              </div>
+              <div id="msg" class="form-message" role="status" aria-live="polite"></div>
+              <div id="postSaveActions" class="post-save-actions" hidden></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-view" data-view-panel="leads">
+          <article class="admin-card admin-panel-card">
+            <div class="admin-panel-head admin-panel-head--inline">
+              <div>
+                <span class="eyebrow">Leads</span>
+                <h2>Gestión comercial centralizada</h2>
+              </div>
+              <p class="admin-muted" id="leadsMeta">Cargando leads…</p>
+            </div>
+
+            <div class="admin-toolbar-grid admin-toolbar-grid--leads">
+              <div class="lead-tabs lead-tabs-wrap admin-tabs">
+                <button type="button" class="tab-button is-active" data-tab="consignment">Consignación</button>
+                <button type="button" class="tab-button" data-tab="scouting">Búsquedas</button>
+                <button type="button" class="tab-button" data-tab="financing">Financiación</button>
+                <button type="button" class="tab-button" data-tab="insurance">Seguros</button>
+                <button type="button" class="tab-button" data-tab="peritaje">Peritaje</button>
+                <button type="button" class="tab-button" data-tab="feedback">Sugerencias</button>
+              </div>
+              <div class="field">
+                <label for="leadSearch">Buscar lead</label>
+                <input id="leadSearch" class="input" placeholder="Nombre, email, teléfono, CUIL, marca o modelo" autocomplete="off" />
+              </div>
+            </div>
+
+            <div class="admin-kpi-grid admin-kpi-grid--compact" id="leadStats"></div>
+
+            <section id="consignmentPanel" class="lead-panel is-active"></section>
+            <section id="scoutingPanel" class="lead-panel"></section>
+            <section id="financingPanel" class="lead-panel"></section>
+            <section id="insurancePanel" class="lead-panel"></section>
+            <section id="peritajePanel" class="lead-panel"></section>
+            <section id="feedbackPanel" class="lead-panel"></section>
+          </article>
+        </section>
+
+        <section class="admin-view" data-view-panel="insurance">
+          <article class="admin-card admin-panel-card">
+            <div class="admin-panel-head admin-panel-head--inline">
+              <div>
+                <span class="eyebrow">Seguros</span>
+                <h2>Pre-cotizaciones y seguimiento</h2>
+              </div>
+              <p class="admin-muted" id="insuranceMeta">Cargando solicitudes…</p>
+            </div>
+            <div id="insuranceSummary" class="admin-summary-strip"></div>
+            <div id="insuranceStandaloneList" class="lead-panel is-active"></div>
+          </article>
+        </section>
+
+        <section class="admin-view" data-view-panel="financing">
+          <article class="admin-card admin-panel-card">
+            <div class="admin-panel-head admin-panel-head--inline">
+              <div>
+                <span class="eyebrow">Financiación</span>
+                <h2>Líneas comerciales del simulador</h2>
+              </div>
+              <p class="admin-muted" id="ratesMeta">Cargando perfiles de tasas…</p>
+            </div>
+            <div id="financeEntityCards" class="admin-fold-list finance-provider-stack"></div>
+          </article>
+        </section>
+
+        <section class="admin-view" data-view-panel="settings">
+          <div class="admin-overview-grid">
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">Cuenta</span>
+                  <h2>Seguridad del panel</h2>
+                </div>
+                <p class="admin-muted">Actualizá la contraseña del administrador desde un bloque independiente.</p>
+              </div>
+              <div class="form-grid">
+                <div class="field col-8">
+                  <label for="newpass">Nueva contraseña</label>
+                  <input id="newpass" class="input" type="password" placeholder="Nueva contraseña" />
+                </div>
+                <div class="field col-4 admin-align-end">
+                  <button id="changePass" class="btn btn-primary" type="button">Guardar contraseña</button>
+                </div>
+              </div>
+              <p class="field-help">La contraseña debe tener al menos 6 caracteres.</p>
+            </article>
+
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">Estructura</span>
+                  <h2>Cómo usar este backoffice</h2>
+                </div>
+                <p class="admin-muted">El panel quedó ordenado como un SaaS: una tarea visible por vez, sin mezclar stock, leads y configuración en el mismo scroll.</p>
+              </div>
+              <div class="admin-summary-list admin-summary-list--clean">
+                <div class="admin-summary-item"><strong>Vehículos</strong><span>Stock, edición y estados comerciales.</span></div>
+                <div class="admin-summary-item"><strong>Leads</strong><span>Consignación, búsquedas, financiación, seguros, peritajes y sugerencias.</span></div>
+                <div class="admin-summary-item"><strong>Financiación</strong><span>Edición de líneas, tasas, cuotas y notas comerciales.</span></div>
+                <div class="admin-summary-item"><strong>Seguros</strong><span>Seguimiento específico de pre-cotizaciones.</span></div>
+                <div class="admin-summary-item"><strong>Peritaje</strong><span>Agenda, fichas y seguimiento de inspecciones coordinadas.</span></div>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="../config.js"></script>
+  <script src="../finance-rate-defaults.js"></script>
+  <script src="../shared.js"></script>
+  <script src="../ficha.js"></script>
+  <script src="./admin.js" defer></script>
+</body>
+</html>

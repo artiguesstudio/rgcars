@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RG Cars TDF · Detalle del vehículo</title>
+  <link rel="icon" type="image/png" href="./imagenes/pestana.png" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta name="description" content="Detalle de publicación de RG Cars TDF con fotos, datos de la unidad y contacto directo por WhatsApp." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="RG Cars TDF · Detalle del vehículo" />
+  <meta property="og:description" content="Detalle de publicación de RG Cars TDF con fotos, datos de la unidad y contacto directo por WhatsApp." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body class="public-theme detail-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="RG Cars TDF">
+        <img src="./imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="./index.html#explorar-stock">Comprá un auto</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+        <a href="./financiacion.html">Financiación</a>
+          <a href="./seguros.html">Seguros</a>
+        <a href="./peritaje.html">Peritaje</a>
+      </nav>
+
+      <nav class="header-actions" aria-label="Acciones principales">
+        <a class="btn btn-ghost" href="./index.html">Catálogo</a>
+        <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="detail-page-shell">
+    <section class="detail-shell">
+      <div class="container">
+        <div class="detail-backline">
+          <a href="./index.html#explorar-stock" class="text-link">← Volver al catálogo</a>
+        </div>
+
+        <section id="detail" aria-live="polite"></section>
+
+        <section class="related-shell">
+          <div class="section-head compact">
+            <div>
+              <span class="eyebrow">Más vehículos</span>
+              <h2>También te puede interesar</h2>
+            </div>
+          </div>
+          <div id="relatedGrid" class="vehicle-grid related-grid"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer kavak-footer" id="siteFooter">
+    <div class="container footer-main">
+      <div class="footer-brand-block">
+        <img src="./imagenes/isotipo-white.png" alt="RG Cars TDF" class="footer-brand-logo" />
+        <p>Compra, venta y servicios para tu vehículo con atención clara, directa y personalizada.</p>
+      </div>
+
+      <div class="footer-columns">
+        <div class="footer-column">
+          <h3>Comprar</h3>
+          <a href="#explorar-stock">Explorar stock</a>
+          <a href="#stock">Catálogo</a>
+        </div>
+        <div class="footer-column">
+          <h3>Servicios</h3>
+          <a href="./consignacion.html">Consignación</a>
+          <a href="./scouting.html">Búsqueda personalizada</a>
+          <a href="./financiacion.html">Financiación</a>
+          <a href="./seguros.html">Seguros</a>
+          <a href="./peritaje.html">Peritaje</a>
+        </div>
+        <div class="footer-column">
+          <h3>Contacto</h3>
+          <a href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+          <a href="https://taplink.cc/rgcarstdf?from=qr" target="_blank" rel="noreferrer">Redes</a>
+          <span class="footer-address">Sarmiento 2760 · Río Grande, TDF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>Copyright © 2026 RG Cars TDF. Todos los derechos reservados.</p>
+      <div class="footer-bottom-links">
+        <a href="./index.html">Inicio</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="./config.js"></script>
+  <script src="./shared.js"></script>
+  <script src="./vehicle.js" defer></script>
+</body>
+</html>

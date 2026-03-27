@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RG Cars TDF · Búsqueda personalizada de vehículos</title>
+  <link rel="icon" type="image/png" href="./imagenes/pestana.png" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta name="description" content="Indicá qué vehículo buscás con un flujo más simple y dispará una búsqueda personalizada en RG Cars TDF." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body class="public-theme wizard-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="./index.html" aria-label="RG Cars TDF">
+        <img src="./imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <a href="./index.html#explorar-stock">Comprá un auto</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html" aria-current="page">Búsqueda personalizada</a>
+        <a href="./financiacion.html">Financiación</a>
+        <a href="./seguros.html">Seguros</a>
+        <a href="./peritaje.html">Peritaje</a>
+      </nav>
+
+      <nav class="header-actions" aria-label="Acciones principales">
+        <a class="btn btn-ghost" href="./index.html">Volver al inicio</a>
+        <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wizard-shell">
+    <section class="container wizard-intro">
+      <span class="eyebrow">Búsqueda personalizada de vehículos</span>
+      <h1>¿Estás buscando un modelo específico?</h1>
+      </section>
+
+    <section class="container wizard-grid">
+      <aside class="wizard-side-card">
+        <h2>Dos pasos simples</h2>
+        <div class="wizard-steps" id="scoutingStepsNav">
+          <button type="button" class="wizard-step is-active" data-step-nav="0"><span>1</span><strong>Vehículo</strong></button>
+          <button type="button" class="wizard-step" data-step-nav="1"><span>2</span><strong>Presupuesto y contacto</strong></button>
+        </div>
+      </aside>
+
+      <article class="wizard-card">
+        <div class="wizard-head">
+          <div>
+            <span class="eyebrow">Formulario guiado</span>
+            <h2 id="scoutingTitle">Paso 1 · Vehículo buscado</h2>
+          </div>
+          <div class="wizard-progress"><span id="scoutingProgressBar"></span></div>
+        </div>
+
+        <form id="scoutingForm" novalidate>
+          <section class="wizard-panel is-active" data-step="0">
+            <div class="form-grid">
+              <div class="field col-4"><label for="category">Categoría</label>
+                <select id="category" name="category" class="select">
+                  <option value="auto">Auto</option>
+                  <option value="camioneta">Camioneta</option>
+                  <option value="suv">SUV</option>
+                  <option value="moto">Moto</option>
+                  <option value="utilitario">Utilitario</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div class="field col-4"><label for="brand">Marca</label><select id="brand" name="brand" class="select" required></select></div>
+              <div class="field col-4 conditional-field is-hidden"><label for="brand_other">Otra marca</label><input id="brand_other" name="brand_other" class="input" /></div>
+              <div class="field col-4"><label for="model">Modelo</label><select id="model" name="model" class="select" required></select></div>
+              <div class="field col-4 conditional-field is-hidden"><label for="model_other">Otro modelo</label><input id="model_other" name="model_other" class="input" /></div>
+              <div class="field col-4"><label for="version">Versión</label><input id="version" name="version" class="input" placeholder="Opcional" /></div>
+              <div class="field col-4"><label for="year_min">Año desde</label><select id="year_min" name="year_min" class="select"></select></div>
+              <div class="field col-4"><label for="year_max">Año hasta</label><select id="year_max" name="year_max" class="select"></select></div>
+              <div class="field col-4"><label for="km_max">Kilometraje máximo</label><select id="km_max" name="km_max" class="select"></select></div>
+              <div class="field col-4"><label for="fuel">Combustible</label><select id="fuel" name="fuel" class="select"></select></div>
+              <div class="field col-4"><label for="transmission">Transmisión</label><select id="transmission" name="transmission" class="select"></select></div>
+              <div class="field col-4"><label for="color">Color</label><select id="color" name="color" class="select"></select></div>
+            </div>
+          </section>
+
+          <section class="wizard-panel" data-step="1">
+            <div class="form-grid">
+              <div class="field col-8"><label for="budget_estimate">¿Cuánto querés gastar?</label><input id="budget_estimate" name="budget_estimate" class="input" type="number" min="0" required placeholder="Monto estimado" /></div>
+              <div class="field col-4"><label for="currency">Moneda</label><select id="currency" name="currency" class="select"><option value="ARS">ARS</option><option value="USD">USD</option></select></div>
+              <div class="field col-4"><label for="financing_needed">¿Necesitás financiación?</label><select id="financing_needed" name="financing_needed" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+              <div class="field col-4"><label for="trade_in">¿Tenés usado para entregar?</label><select id="trade_in" name="trade_in" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+              <div class="field col-4"><label for="urgency">Urgencia</label><select id="urgency" name="urgency" class="select"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div>
+              <div class="field col-4"><label for="customer_name">Nombre y apellido</label><input id="customer_name" name="customer_name" class="input" required /></div>
+              <div class="field col-4"><label for="phone">Teléfono</label><input id="phone" name="phone" class="input" required /></div>
+              <div class="field col-4"><label for="email">Email</label><input id="email" name="email" class="input" type="email" required /></div>
+              <div class="field col-4"><label for="city">Ciudad</label><select id="city" name="city" class="select"></select></div>
+              <div class="field col-4"><label for="contact_preference">Preferencia de contacto</label><select id="contact_preference" name="contact_preference" class="select"><option value="whatsapp">WhatsApp</option><option value="phone">Llamada</option><option value="email">Email</option></select></div>
+              <div class="field col-4"><label for="must_have">Imprescindible</label><input id="must_have" name="must_have" class="input" placeholder="Ej: 4x4, 7 asientos, caja AT" /></div>
+              <div class="field col-12"><label for="notes">Observaciones</label><textarea id="notes" name="notes" class="textarea" rows="4" placeholder="Aclará uso, prioridad o cualquier detalle importante."></textarea></div>
+            </div>
+          </section>
+
+          <div class="form-message col-12" role="status" aria-live="polite" id="scoutingMessage" hidden></div>
+          <div class="wizard-actions col-12">
+            <button type="button" id="scoutingPrev" class="btn btn-ghost">Anterior</button>
+            <button type="button" id="scoutingNext" class="btn btn-soft">Siguiente</button>
+            <button type="submit" id="scoutingSubmit" class="btn btn-primary" hidden>Guardar búsqueda</button>
+          </div>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer kavak-footer" id="siteFooter">
+    <div class="container footer-main">
+      <div class="footer-brand-block">
+        <img src="./imagenes/isotipo-white.png" alt="RG Cars TDF" class="footer-brand-logo" />
+        <p>Compra, venta y servicios para tu vehículo con atención clara, directa y personalizada.</p>
+      </div>
+
+      <div class="footer-columns">
+        <div class="footer-column">
+          <h3>Comprar</h3>
+          <a href="#explorar-stock">Explorar stock</a>
+          <a href="#stock">Catálogo</a>
+        </div>
+        <div class="footer-column">
+          <h3>Servicios</h3>
+          <a href="./consignacion.html">Consignación</a>
+          <a href="./scouting.html">Búsqueda personalizada</a>
+          <a href="./financiacion.html">Financiación</a>
+          <a href="./seguros.html">Seguros</a>
+          <a href="./peritaje.html">Peritaje</a>
+        </div>
+        <div class="footer-column">
+          <h3>Contacto</h3>
+          <a href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
+          <a href="https://taplink.cc/rgcarstdf?from=qr" target="_blank" rel="noreferrer">Redes</a>
+          <span class="footer-address">Sarmiento 2760 · Río Grande, TDF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <p>Copyright © 2026 RG Cars TDF. Todos los derechos reservados.</p>
+      <div class="footer-bottom-links">
+        <a href="./index.html">Inicio</a>
+        <a href="./consignacion.html">Vendé tu auto</a>
+        <a href="./scouting.html">Búsqueda personalizada</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="./config.js"></script>
+  <script src="./catalog-data.js"></script>
+  <script src="./shared.js"></script>
+  <script src="./scouting.js" defer></script>
+</body>
+</html>
