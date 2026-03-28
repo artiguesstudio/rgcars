@@ -4667,8 +4667,9 @@ body.public-theme .filter-dialog-backdrop {
   position: fixed;
   inset: 0;
   z-index: 1100;
-  background: rgba(15, 23, 42, 0.18);
-  backdrop-filter: blur(2px);
+  background: rgba(15, 23, 42, 0.26);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 body.public-theme .filter-dialog-backdrop[hidden],
@@ -4862,10 +4863,23 @@ body.public-theme .detail-actions .btn {
 
 @media (max-width: 760px) {
   body.public-theme .filter-dialog {
-    top: auto;
-    bottom: 12px;
-    transform: translateX(-50%);
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(360px, calc(100vw - 24px));
+    max-height: calc(100dvh - 120px);
     border-radius: 24px;
+  }
+
+  body.public-theme .filter-dialog__body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.filter-dialog-open .whatsapp-fab,
+  body.filter-dialog-open .feedback-floating-button {
+    opacity: 0;
+    pointer-events: none;
   }
 
   body.public-theme .vehicle-grid {
