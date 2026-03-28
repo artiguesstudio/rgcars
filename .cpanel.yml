@@ -1,36 +1,57 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home2/rgcarsco/public_html/
-    - /bin/cp -R admin $DEPLOYPATH
-    - /bin/cp -R imagenes $DEPLOYPATH
-    - /bin/cp -R videos $DEPLOYPATH
-    - /bin/cp -R supabase $DEPLOYPATH
+    - export DEPLOYPATH=/home2/rgcarsco/public_html
 
-    - /bin/cp index.html $DEPLOYPATH
-    - /bin/cp vehicle.html $DEPLOYPATH
-    - /bin/cp financiacion.html $DEPLOYPATH
-    - /bin/cp consignacion.html $DEPLOYPATH
-    - /bin/cp scouting.html $DEPLOYPATH
-    - /bin/cp seguros.html $DEPLOYPATH
-    - /bin/cp peritaje.html $DEPLOYPATH
+    # Crear destinos necesarios
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/mkdir -p $DEPLOYPATH/admin
+    - /bin/mkdir -p $DEPLOYPATH/imagenes
+    - /bin/mkdir -p $DEPLOYPATH/videos
 
-    - /bin/cp config.js $DEPLOYPATH
-    - /bin/cp shared.js $DEPLOYPATH
-    - /bin/cp styles.css $DEPLOYPATH
-    - /bin/cp index.css $DEPLOYPATH
+    # Carpetas públicas
+    - /bin/cp -R admin/. $DEPLOYPATH/admin/
+    - /bin/cp -R imagenes/. $DEPLOYPATH/imagenes/
+    - /bin/cp -R videos/. $DEPLOYPATH/videos/
 
-    - /bin/cp app.js $DEPLOYPATH
-    - /bin/cp catalog-data.js $DEPLOYPATH
-    - /bin/cp home-ui.js $DEPLOYPATH
-    - /bin/cp finance-rate-defaults.js $DEPLOYPATH
-    - /bin/cp vehicle.js $DEPLOYPATH
-    - /bin/cp financiacion.js $DEPLOYPATH
-    - /bin/cp consignacion.js $DEPLOYPATH
-    - /bin/cp scouting.js $DEPLOYPATH
-    - /bin/cp seguros.js $DEPLOYPATH
-    - /bin/cp peritaje.js $DEPLOYPATH
-    - /bin/cp ficha.js $DEPLOYPATH
+    # HTML públicos
+    - /bin/cp index.html $DEPLOYPATH/
+    - /bin/cp vehicle.html $DEPLOYPATH/
+    - /bin/cp financiacion.html $DEPLOYPATH/
+    - /bin/cp consignacion.html $DEPLOYPATH/
+    - /bin/cp scouting.html $DEPLOYPATH/
+    - /bin/cp seguros.html $DEPLOYPATH/
+    - /bin/cp peritaje.html $DEPLOYPATH/
 
-    - /bin/cp robots.txt $DEPLOYPATH
+    # Acceso / gestión
+    - /bin/cp admin.html $DEPLOYPATH/
+    - /bin/cp admin.js $DEPLOYPATH/
+    - /bin/cp leads.html $DEPLOYPATH/
+    - /bin/cp leads.js $DEPLOYPATH/
+    - /bin/cp login.html $DEPLOYPATH/
+    - /bin/cp reset.html $DEPLOYPATH/
+
+    # CSS
+    - /bin/cp styles.css $DEPLOYPATH/
+    - /bin/cp index.css $DEPLOYPATH/
+
+    # JS base
+    - /bin/cp config.js $DEPLOYPATH/
+    - /bin/cp shared.js $DEPLOYPATH/
+    - /bin/cp app.js $DEPLOYPATH/
+    - /bin/cp catalog-data.js $DEPLOYPATH/
+    - /bin/cp home-ui.js $DEPLOYPATH/
+    - /bin/cp finance-rate-defaults.js $DEPLOYPATH/
+    - /bin/cp ficha.js $DEPLOYPATH/
+
+    # JS por sección
+    - /bin/cp vehicle.js $DEPLOYPATH/
+    - /bin/cp financiacion.js $DEPLOYPATH/
+    - /bin/cp consignacion.js $DEPLOYPATH/
+    - /bin/cp scouting.js $DEPLOYPATH/
+    - /bin/cp seguros.js $DEPLOYPATH/
+    - /bin/cp peritaje.js $DEPLOYPATH/
+
+    # SEO / utilitarios
+    - /bin/cp robots.txt $DEPLOYPATH/
     - /bin/cp sitemap.xml.example $DEPLOYPATH/sitemap.xml
