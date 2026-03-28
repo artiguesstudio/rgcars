@@ -4927,3 +4927,804 @@ body.public-theme .detail-actions .btn {
     width: 100%;
   }
 }
+
+/* ===== 2026-03-28 · cards más contrastadas en grises + drawer móvil a la izquierda ===== */
+body.public-theme .highlight-card {
+  position: relative;
+  overflow: hidden;
+}
+
+body.public-theme .highlight-card.is-silver {
+  background: linear-gradient(180deg, #f8f6f1 0%, #ebe7df 100%);
+  color: #111827;
+  border-color: rgba(17, 24, 39, 0.06);
+}
+
+body.public-theme .highlight-card.is-silver::after {
+  background: rgba(17, 24, 39, 0.1);
+  opacity: 0.14;
+}
+
+body.public-theme .highlight-card.is-steel {
+  background: linear-gradient(180deg, #eef1f4 0%, #d8dee6 100%);
+  color: #0f172a;
+  border-color: rgba(17, 24, 39, 0.07);
+}
+
+body.public-theme .highlight-card.is-steel::after {
+  background: rgba(77, 88, 104, 0.18);
+  opacity: 0.16;
+}
+
+body.public-theme .highlight-card.is-graphite {
+  background: linear-gradient(180deg, #737b87 0%, #565f6c 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+body.public-theme .highlight-card.is-graphite::after {
+  background: rgba(255, 255, 255, 0.14);
+  opacity: 0.2;
+}
+
+body.public-theme .highlight-card.is-dark {
+  background: linear-gradient(135deg, #06080d 0%, #151a22 55%, #202734 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+body.public-theme .highlight-card.is-dark::after {
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.02) 68%);
+  opacity: 0.2;
+}
+
+body.public-theme .highlight-card.is-silver .mini-kicker,
+body.public-theme .highlight-card.is-steel .mini-kicker {
+  color: #b91c1c;
+  opacity: 1;
+}
+
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p {
+  color: #475467;
+  opacity: 1;
+}
+
+body.public-theme .highlight-card.is-graphite .mini-kicker,
+body.public-theme .highlight-card.is-dark .mini-kicker {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+body.public-theme .highlight-card.is-graphite p,
+body.public-theme .highlight-card.is-dark p {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+body.public-theme .highlight-card.is-silver a,
+body.public-theme .highlight-card.is-steel a,
+body.public-theme .highlight-card.is-graphite a,
+body.public-theme .highlight-card.is-dark a {
+  background: linear-gradient(180deg, #ee2028 0%, #c9171e 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(201, 23, 30, 0.18);
+}
+
+@media (max-width: 980px) {
+  body.public-theme .mobile-menu-panel {
+    left: 12px;
+    right: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  body.public-theme .mobile-menu-panel {
+    left: 10px;
+    right: auto;
+  }
+}
+
+
+/* ===== 2026-03-28 · ajuste fino cards home + header limpio + drawer izquierdo ===== */
+body.public-theme .highlight-card {
+  position: relative;
+  overflow: hidden;
+}
+
+body.public-theme .highlight-card.is-silver {
+  background: linear-gradient(180deg, #f5f2ec 0%, #ece7df 100%);
+  color: #111827;
+  border-color: rgba(17, 24, 39, 0.06);
+}
+
+body.public-theme .highlight-card.is-silver::after {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.08) 0%, rgba(17, 24, 39, 0.02) 100%);
+  opacity: 0.16;
+}
+
+body.public-theme .highlight-card.is-steel {
+  background: linear-gradient(180deg, #eceef0 0%, #dfe4e8 100%);
+  color: #0f172a;
+  border-color: rgba(17, 24, 39, 0.07);
+}
+
+body.public-theme .highlight-card.is-steel::after {
+  background: linear-gradient(180deg, rgba(71, 85, 105, 0.12) 0%, rgba(71, 85, 105, 0.04) 100%);
+  opacity: 0.18;
+}
+
+body.public-theme .highlight-card.is-graphite {
+  background: linear-gradient(180deg, #d8dce1 0%, #c7cdd4 100%);
+  color: #101828;
+  border-color: rgba(17, 24, 39, 0.08);
+}
+
+body.public-theme .highlight-card.is-graphite::after {
+  background: linear-gradient(180deg, rgba(31, 41, 55, 0.14) 0%, rgba(31, 41, 55, 0.05) 100%);
+  opacity: 0.2;
+}
+
+body.public-theme .highlight-card.is-dark {
+  background: linear-gradient(135deg, #0d1117 0%, #171c23 58%, #232a34 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.public-theme .highlight-card.is-dark::after {
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 72%);
+  opacity: 0.2;
+}
+
+body.public-theme .highlight-card.is-silver .mini-kicker,
+body.public-theme .highlight-card.is-steel .mini-kicker,
+body.public-theme .highlight-card.is-graphite .mini-kicker {
+  color: #c41d24;
+  opacity: 1;
+}
+
+body.public-theme .highlight-card.is-silver h2,
+body.public-theme .highlight-card.is-steel h2,
+body.public-theme .highlight-card.is-graphite h2 {
+  color: #111827;
+}
+
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p,
+body.public-theme .highlight-card.is-graphite p {
+  color: #475467;
+  opacity: 1;
+}
+
+body.public-theme .highlight-card.is-dark .mini-kicker {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+body.public-theme .highlight-card.is-dark p {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+body.public-theme .mobile-menu-panel {
+  left: 12px;
+  right: auto;
+}
+
+@media (max-width: 640px) {
+  body.public-theme .mobile-menu-panel {
+    left: 10px;
+    right: auto;
+  }
+}
+
+
+/* ===== 2026-03-28 · refinamiento real cards home + contraste sutil ===== */
+body.public-theme .highlight-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 24px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+}
+
+body.public-theme .highlight-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.public-theme .highlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body.public-theme .highlight-card.is-silver {
+  background: linear-gradient(180deg, #f7f5f0 0%, #f0ece5 100%);
+  border-color: rgba(17, 24, 39, 0.08);
+}
+
+body.public-theme .highlight-card.is-silver::before {
+  background:
+    linear-gradient(135deg, transparent 0 72%, rgba(31, 41, 55, 0.045) 72% 100%),
+    repeating-linear-gradient(135deg, rgba(31, 41, 55, 0.05) 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(45deg, rgba(31, 41, 55, 0.038) 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(135deg, rgba(31, 41, 55, 0.05) 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(45deg, rgba(31, 41, 55, 0.038) 0 2px, transparent 2px 18px);
+  background-size: 100% 100%, 132px 132px, 132px 132px, 122px 122px, 122px 122px;
+  background-position: center, right -18px top -14px, right -18px top -14px, right -14px bottom -22px, right -14px bottom -22px;
+  background-repeat: no-repeat;
+  opacity: 0.48;
+}
+
+body.public-theme .highlight-card.is-steel {
+  background: linear-gradient(180deg, #efefec 0%, #e3e1dd 100%);
+  border-color: rgba(17, 24, 39, 0.08);
+}
+
+body.public-theme .highlight-card.is-steel::before {
+  background:
+    linear-gradient(162deg, transparent 0 68%, rgba(31, 41, 55, 0.07) 68% 100%),
+    radial-gradient(circle at 82% 82%, rgba(255, 255, 255, 0.34) 0 18%, transparent 19% 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  opacity: 0.62;
+}
+
+body.public-theme .highlight-card.is-graphite {
+  background: linear-gradient(145deg, #4b535c 0%, #3e454f 56%, #303741 100%);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+body.public-theme .highlight-card.is-graphite::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle, rgba(255, 255, 255, 0.12) 1.05px, transparent 1.45px),
+    linear-gradient(160deg, transparent 0 70%, rgba(255, 255, 255, 0.06) 70% 100%);
+  background-size: 100% 100%, 12px 12px, 100% 100%;
+  background-position: center, center, center;
+  background-repeat: no-repeat, repeat, no-repeat;
+  opacity: 0.3;
+}
+
+body.public-theme .highlight-card.is-dark {
+  background: linear-gradient(145deg, #090c11 0%, #11161d 56%, #1a2430 100%);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  box-shadow: 0 22px 42px rgba(6, 10, 16, 0.22);
+}
+
+body.public-theme .highlight-card.is-dark::before {
+  background:
+    radial-gradient(circle at 72% 50%, rgba(80, 116, 164, 0.12) 0%, rgba(80, 116, 164, 0) 42%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 26px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0.22;
+}
+
+body.public-theme .highlight-card.is-silver .mini-kicker,
+body.public-theme .highlight-card.is-steel .mini-kicker {
+  color: #c41d24;
+}
+
+body.public-theme .highlight-card.is-silver h2,
+body.public-theme .highlight-card.is-steel h2 {
+  color: #101828;
+}
+
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p {
+  color: #475467;
+}
+
+body.public-theme .highlight-card.is-graphite .mini-kicker,
+body.public-theme .highlight-card.is-dark .mini-kicker {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+body.public-theme .highlight-card.is-graphite h2,
+body.public-theme .highlight-card.is-dark h2 {
+  color: #ffffff;
+}
+
+body.public-theme .highlight-card.is-graphite p,
+body.public-theme .highlight-card.is-dark p {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+body.public-theme .highlight-card.is-silver a,
+body.public-theme .highlight-card.is-steel a,
+body.public-theme .highlight-card.is-graphite a,
+body.public-theme .highlight-card.is-dark a {
+  background: linear-gradient(180deg, #ee2028 0%, #c9171e 100%);
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(201, 23, 30, 0.2);
+}
+
+body.public-theme .mobile-menu-panel {
+  left: 12px;
+  right: auto;
+}
+
+@media (max-width: 980px) {
+  body.public-theme .mobile-menu-panel {
+    top: 76px;
+    left: 12px;
+    right: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  body.public-theme .mobile-menu-panel {
+    top: 10px;
+    left: 10px;
+    right: auto;
+  }
+}
+
+/* ===== 2026-03-28 · ajuste final cards home: 4 fondos realmente distintos ===== */
+body.public-theme .highlight-card.is-silver {
+  background: linear-gradient(180deg, #f6f3ed 0%, #efe9df 100%);
+  border-color: rgba(17, 24, 39, 0.08);
+  color: #111827;
+}
+
+body.public-theme .highlight-card.is-silver::before {
+  background:
+    linear-gradient(145deg, transparent 0 74%, rgba(17, 24, 39, 0.045) 74% 100%),
+    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.42) 0 16%, transparent 17% 100%),
+    repeating-linear-gradient(45deg, rgba(17, 24, 39, 0.032) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(135deg, rgba(17, 24, 39, 0.024) 0 1px, transparent 1px 16px);
+  background-size: 100% 100%, 100% 100%, 120px 120px, 120px 120px;
+  background-position: center, center, right -12px top -16px, right -12px top -16px;
+  background-repeat: no-repeat;
+  opacity: 0.5;
+}
+
+body.public-theme .highlight-card.is-steel {
+  background: linear-gradient(180deg, #eaedf1 0%, #dde2e8 100%);
+  border-color: rgba(17, 24, 39, 0.08);
+  color: #111827;
+}
+
+body.public-theme .highlight-card.is-steel::before {
+  background:
+    linear-gradient(165deg, transparent 0 66%, rgba(17, 24, 39, 0.055) 66% 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.04) 100%),
+    radial-gradient(circle at 78% 82%, rgba(255, 255, 255, 0.34) 0 17%, transparent 18% 100%);
+  opacity: 0.7;
+}
+
+body.public-theme .highlight-card.is-graphite {
+  background: linear-gradient(180deg, #cfd5dc 0%, #bcc4cd 100%);
+  border-color: rgba(17, 24, 39, 0.08);
+  color: #111827;
+}
+
+body.public-theme .highlight-card.is-graphite::before {
+  background:
+    linear-gradient(160deg, transparent 0 68%, rgba(17, 24, 39, 0.08) 68% 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 100%),
+    radial-gradient(circle at 72% 30%, rgba(255, 255, 255, 0.22) 0 14%, transparent 15% 100%);
+  opacity: 0.58;
+}
+
+body.public-theme .highlight-card.is-dark {
+  background: linear-gradient(180deg, #12161d 0%, #1a2029 100%);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  box-shadow: 0 22px 42px rgba(6, 10, 16, 0.24);
+}
+
+body.public-theme .highlight-card.is-dark::before {
+  background:
+    radial-gradient(circle at 78% 52%, rgba(96, 116, 142, 0.14) 0%, rgba(96, 116, 142, 0) 40%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.038) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 24px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0.28;
+}
+
+body.public-theme .highlight-card.is-silver .mini-kicker,
+body.public-theme .highlight-card.is-steel .mini-kicker,
+body.public-theme .highlight-card.is-graphite .mini-kicker {
+  color: #c41d24;
+}
+
+body.public-theme .highlight-card.is-silver h2,
+body.public-theme .highlight-card.is-steel h2,
+body.public-theme .highlight-card.is-graphite h2 {
+  color: #101828;
+}
+
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p,
+body.public-theme .highlight-card.is-graphite p {
+  color: #475467;
+}
+
+body.public-theme .highlight-card.is-dark .mini-kicker {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+body.public-theme .highlight-card.is-dark h2 {
+  color: #ffffff;
+}
+
+body.public-theme .highlight-card.is-dark p {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+
+/* ===== 2026-03-28 · override definitivo cards servicios ===== */
+body.public-theme .highlight-card,
+body.public-theme .highlight-card.is-silver,
+body.public-theme .highlight-card.is-steel,
+body.public-theme .highlight-card.is-graphite,
+body.public-theme .highlight-card.is-dark {
+  position: relative !important;
+  overflow: hidden !important;
+  background-image: none !important;
+}
+
+body.public-theme .highlight-card::before {
+  content: none !important;
+}
+
+body.public-theme .highlight-card::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 42% !important;
+  height: 40% !important;
+  border-radius: 54px 0 22px 0 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+body.public-theme .highlight-card.is-silver {
+  background: #f4f0ea !important;
+  color: #111827 !important;
+  border-color: #e1dbd3 !important;
+}
+
+body.public-theme .highlight-card.is-silver::after {
+  background: rgba(120, 128, 138, 0.20) !important;
+  opacity: 1 !important;
+}
+
+body.public-theme .highlight-card.is-steel {
+  background: #e3e6ea !important;
+  color: #111827 !important;
+  border-color: #d2d7dd !important;
+}
+
+body.public-theme .highlight-card.is-steel::after {
+  background: rgba(110, 119, 129, 0.30) !important;
+  opacity: 1 !important;
+}
+
+body.public-theme .highlight-card.is-graphite {
+  background: #c9ced5 !important;
+  color: #111827 !important;
+  border-color: #b7bec7 !important;
+}
+
+body.public-theme .highlight-card.is-graphite::after {
+  background: rgba(86, 95, 107, 0.50) !important;
+  opacity: 1 !important;
+}
+
+body.public-theme .highlight-card.is-dark {
+  background: #111318 !important;
+  color: #ffffff !important;
+  border-color: #1c2027 !important;
+}
+
+body.public-theme .highlight-card.is-dark::after {
+  background: rgba(124, 132, 143, 0.50) !important;
+  opacity: 1 !important;
+}
+
+body.public-theme .highlight-card.is-silver .mini-kicker,
+body.public-theme .highlight-card.is-steel .mini-kicker,
+body.public-theme .highlight-card.is-graphite .mini-kicker {
+  color: #c81f24 !important;
+  opacity: 1 !important;
+}
+
+body.public-theme .highlight-card.is-silver h2,
+body.public-theme .highlight-card.is-steel h2,
+body.public-theme .highlight-card.is-graphite h2,
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p,
+body.public-theme .highlight-card.is-graphite p {
+  color: #111827 !important;
+}
+
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p,
+body.public-theme .highlight-card.is-graphite p {
+  opacity: 0.74 !important;
+}
+
+body.public-theme .highlight-card.is-dark .mini-kicker {
+  color: rgba(255, 255, 255, 0.76) !important;
+}
+
+body.public-theme .highlight-card.is-dark h2,
+body.public-theme .highlight-card.is-dark p {
+  color: #ffffff !important;
+}
+
+body.public-theme .highlight-card.is-dark p {
+  opacity: 0.82 !important;
+}
+
+body.public-theme .highlight-card.is-silver a,
+body.public-theme .highlight-card.is-steel a,
+body.public-theme .highlight-card.is-graphite a,
+body.public-theme .highlight-card.is-dark a {
+  background: linear-gradient(180deg, #ee2028 0%, #c9171e 100%) !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 980px) {
+  body.public-theme .mobile-menu-panel {
+    left: 12px !important;
+    right: auto !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body.public-theme .mobile-menu-panel {
+    left: 10px !important;
+    right: auto !important;
+  }
+
+  body.public-theme .highlight-card::after {
+    width: 44% !important;
+    height: 36% !important;
+  }
+}
+
+/* ===== 2026-03-28 · ajuste sutil final cards home ===== */
+body.public-theme .highlight-card,
+body.public-theme .highlight-card.is-silver,
+body.public-theme .highlight-card.is-steel,
+body.public-theme .highlight-card.is-graphite,
+body.public-theme .highlight-card.is-dark {
+  background-image: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+body.public-theme .highlight-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.public-theme .highlight-card::before {
+  content: none !important;
+}
+
+body.public-theme .highlight-card::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 35% !important;
+  height: 31% !important;
+  border-radius: 34px 0 10px 0 !important;
+  transform: none !important;
+  clip-path: none !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  opacity: 1 !important;
+  z-index: 0 !important;
+}
+
+body.public-theme .highlight-card.is-silver {
+  background: #f6f3ee !important;
+  border-color: #e6e0d8 !important;
+  color: #111827 !important;
+}
+
+body.public-theme .highlight-card.is-silver::after {
+  background: rgba(17, 24, 39, 0.08) !important;
+}
+
+body.public-theme .highlight-card.is-steel {
+  background: #ece9e4 !important;
+  border-color: #ddd8d1 !important;
+  color: #111827 !important;
+}
+
+body.public-theme .highlight-card.is-steel::after {
+  background: rgba(17, 24, 39, 0.14) !important;
+}
+
+body.public-theme .highlight-card.is-graphite {
+  background: #d7dae0 !important;
+  border-color: #c7ccd4 !important;
+  color: #111827 !important;
+}
+
+body.public-theme .highlight-card.is-graphite::after {
+  background: rgba(17, 24, 39, 0.22) !important;
+}
+
+body.public-theme .highlight-card.is-dark {
+  background: #101216 !important;
+  border-color: #1c2027 !important;
+  color: #ffffff !important;
+}
+
+body.public-theme .highlight-card.is-dark::after {
+  background: rgba(185, 192, 201, 0.18) !important;
+}
+
+body.public-theme .highlight-card.is-silver .mini-kicker,
+body.public-theme .highlight-card.is-steel .mini-kicker,
+body.public-theme .highlight-card.is-graphite .mini-kicker {
+  color: #cf1f25 !important;
+  opacity: 1 !important;
+}
+
+body.public-theme .highlight-card.is-silver h2,
+body.public-theme .highlight-card.is-steel h2,
+body.public-theme .highlight-card.is-graphite h2,
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p,
+body.public-theme .highlight-card.is-graphite p {
+  color: #111827 !important;
+}
+
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p,
+body.public-theme .highlight-card.is-graphite p {
+  opacity: .78 !important;
+}
+
+body.public-theme .highlight-card.is-dark .mini-kicker {
+  color: rgba(255,255,255,.76) !important;
+}
+
+body.public-theme .highlight-card.is-dark h2,
+body.public-theme .highlight-card.is-dark p {
+  color: #ffffff !important;
+}
+
+body.public-theme .highlight-card.is-dark p {
+  opacity: .86 !important;
+}
+
+@media (max-width: 640px) {
+  body.public-theme .highlight-card::after {
+    width: 33% !important;
+    height: 28% !important;
+    border-radius: 28px 0 8px 0 !important;
+  }
+}
+
+
+/* ===== 2026-03-28 · override final real cards tones ===== */
+body.public-theme .highlight-card,
+body.public-theme .highlight-card.is-silver,
+body.public-theme .highlight-card.is-steel,
+body.public-theme .highlight-card.is-graphite,
+body.public-theme .highlight-card.is-dark {
+  background-image: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+}
+
+body.public-theme .highlight-card::before {
+  content: none !important;
+}
+
+body.public-theme .highlight-card::after {
+  content: "" !important;
+  position: absolute !important;
+  right: -12px !important;
+  bottom: -28px !important;
+  width: 42% !important;
+  height: 34% !important;
+  border-radius: 22px !important;
+  transform: rotate(16deg) !important;
+  transform-origin: center center !important;
+  clip-path: none !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  opacity: 1 !important;
+  z-index: 0 !important;
+}
+
+body.public-theme .highlight-card.is-silver {
+  background: #f4f1eb !important;
+  border-color: #e6e0d6 !important;
+  color: #101828 !important;
+}
+
+body.public-theme .highlight-card.is-silver::after {
+  background: rgba(94, 101, 112, 0.12) !important;
+}
+
+body.public-theme .highlight-card.is-steel {
+  background: #e6e3dd !important;
+  border-color: #d7d2ca !important;
+  color: #101828 !important;
+}
+
+body.public-theme .highlight-card.is-steel::after {
+  background: rgba(94, 101, 112, 0.18) !important;
+}
+
+body.public-theme .highlight-card.is-graphite {
+  background: #d0d4da !important;
+  border-color: #c2c8cf !important;
+  color: #101828 !important;
+}
+
+body.public-theme .highlight-card.is-graphite::after {
+  background: rgba(94, 101, 112, 0.28) !important;
+}
+
+body.public-theme .highlight-card.is-dark {
+  background: #12161c !important;
+  border-color: #1f252d !important;
+  color: #ffffff !important;
+}
+
+body.public-theme .highlight-card.is-dark::after {
+  background: rgba(164, 171, 181, 0.16) !important;
+}
+
+body.public-theme .highlight-card.is-silver .mini-kicker,
+body.public-theme .highlight-card.is-steel .mini-kicker,
+body.public-theme .highlight-card.is-graphite .mini-kicker {
+  color: #cf1f25 !important;
+  opacity: 1 !important;
+}
+
+body.public-theme .highlight-card.is-silver h2,
+body.public-theme .highlight-card.is-steel h2,
+body.public-theme .highlight-card.is-graphite h2,
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p,
+body.public-theme .highlight-card.is-graphite p {
+  color: #0f172a !important;
+}
+
+body.public-theme .highlight-card.is-silver p,
+body.public-theme .highlight-card.is-steel p,
+body.public-theme .highlight-card.is-graphite p {
+  opacity: .8 !important;
+}
+
+body.public-theme .highlight-card.is-dark .mini-kicker {
+  color: rgba(255,255,255,.76) !important;
+}
+
+body.public-theme .highlight-card.is-dark h2,
+body.public-theme .highlight-card.is-dark p {
+  color: #ffffff !important;
+}
+
+body.public-theme .highlight-card.is-dark p {
+  opacity: .88 !important;
+}
+
+@media (max-width: 640px) {
+  body.public-theme .highlight-card::after {
+    right: -10px !important;
+    bottom: -22px !important;
+    width: 41% !important;
+    height: 31% !important;
+    border-radius: 18px !important;
+    transform: rotate(16deg) !important;
+  }
+}

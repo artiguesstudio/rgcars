@@ -614,7 +614,6 @@
       desktopActions.className = 'header-actions header-actions--desktop';
       desktopActions.setAttribute('aria-label', 'Acciones principales');
       desktopActions.innerHTML = `
-        <a class="btn btn-ghost header-home-link" href="./index.html">Volver al inicio</a>
         <a class="btn btn-primary header-wa-link" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
       `;
 
@@ -820,6 +819,11 @@
 
         <div class="container footer-bottom">
           <p>Copyright © 2026 RG Cars TDF. Todos los derechos reservados.</p>
+          <div class="footer-bottom-links">
+            <a href="./index.html">Inicio</a>
+            <a href="./consignacion.html">Vendé tu auto</a>
+            <a href="./scouting.html">Búsqueda personalizada</a>
+          </div>
         </div>
       `;
     });
