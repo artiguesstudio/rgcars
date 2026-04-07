@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RG Cars TDF · FAQ</title>
+  <link rel="icon" type="image/png" href="./imagenes/pestana.png" />
+  <meta name="description" content="Preguntas frecuentes sobre stock, consignación, financiación, peritajes y servicios de RG Cars TDF." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./index.css" />
+</head>
+<body class="public-theme legal-page">
+  <header class="site-header"><div class="container header-inner"><a class="brand" href="./index.html"><img src="./imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo /></a></div></header>
+  <main class="detail-page-shell legal-shell">
+    <section class="container legal-card faq-page-card">
+      <span class="eyebrow">FAQ</span>
+      <h1>Preguntas frecuentes</h1>
+      <div class="accordion-list">
+        <article class="accordion-item is-open"><button type="button" class="accordion-trigger" aria-expanded="true"><span>¿Cómo funciona la consulta por una unidad?</span><span class="accordion-icon" aria-hidden="true">⌄</span></button><div class="accordion-content"><p>Podés escribirnos por WhatsApp o dejar tu consulta desde la web. El equipo comercial toma el caso y continúa el seguimiento por el canal más conveniente.</p></div></article>
+        <article class="accordion-item"><button type="button" class="accordion-trigger" aria-expanded="false"><span>¿Qué incluye un peritaje pre-compra?</span><span class="accordion-icon" aria-hidden="true">⌄</span></button><div class="accordion-content"><p>Incluye revisión general, checklist del vehículo y diagnóstico computarizado según disponibilidad y características de la unidad.</p></div></article>
+        <article class="accordion-item"><button type="button" class="accordion-trigger" aria-expanded="false"><span>¿Qué alternativas de financiación ofrecen?</span><span class="accordion-icon" aria-hidden="true">⌄</span></button><div class="accordion-content"><p>Trabajamos alternativas prendarias y/o propias según la unidad, la documentación y el perfil de la operación.</p></div></article>
+        <article class="accordion-item"><button type="button" class="accordion-trigger" aria-expanded="false"><span>¿Puedo dejar mi auto en consignación con pocos datos?</span><span class="accordion-icon" aria-hidden="true">⌄</span></button><div class="accordion-content"><p>Sí. Primero te pedimos los datos clave de la unidad y un celular de contacto. Después avanzamos con más detalle si hace falta.</p></div></article>
+        <article class="accordion-item"><button type="button" class="accordion-trigger" aria-expanded="false"><span>¿Dónde está la agencia?</span><span class="accordion-icon" aria-hidden="true">⌄</span></button><div class="accordion-content"><p>Estamos en Sarmiento 2760, Río Grande, Tierra del Fuego.</p></div></article>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer kavak-footer" id="siteFooter"></footer>
+  <script src="./config.js"></script>
+  <script src="./shared.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.accordion-trigger').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+          const item = trigger.closest('.accordion-item');
+          const list = trigger.closest('.accordion-list');
+          const isOpen = item.classList.contains('is-open');
+          list.querySelectorAll('.accordion-item').forEach((entry) => {
+            entry.classList.remove('is-open');
+            entry.querySelector('.accordion-trigger')?.setAttribute('aria-expanded', 'false');
+          });
+          item.classList.toggle('is-open', !isOpen);
+          trigger.setAttribute('aria-expanded', String(!isOpen));
+        });
+      });
+    });
+  </script>
+</body>
+</html>

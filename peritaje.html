@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>RG Cars TDF · Peritaje</title>
+  <title>RG Cars TDF · Peritajes pre-compra</title>
   <link rel="icon" type="image/png" href="./imagenes/pestana.png" />
   <meta name="robots" content="index,follow,max-image-preview:large" />
   <meta name="description" content="Coordiná un peritaje de vehículo con fecha y horario estimado, dejá tus datos y descargá la ficha de peritaje." />
@@ -28,7 +28,6 @@
         <a href="./peritaje.html" aria-current="page">Peritaje</a>
       </nav>
       <nav class="header-actions" aria-label="Acciones principales">
-        <a class="btn btn-ghost" href="./index.html">Volver al inicio</a>
         <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
       </nav>
     </div>
@@ -36,20 +35,21 @@
 
   <main class="wizard-shell peritaje-shell">
     <section class="container wizard-intro peritaje-intro">
-      <span class="eyebrow">Peritaje</span>
-      <h1>Coordiná un peritaje con fecha y horario</h1>
-      <p>Agendá una revisión con RG Cars TDF, dejá los datos de la unidad y descargá una ficha clara para llevar el caso ordenado.</p>
+      <span class="eyebrow">Peritajes pre-compra</span>
+      <h1>Revisá una unidad antes de decidir</h1>
+      <p>Coordiná un peritaje pre-compra con checklist técnico, diagnóstico computarizado y una devolución clara para comprar con más respaldo.</p>
     </section>
 
     <section class="container wizard-grid peritaje-grid">
-      <aside class="wizard-side-card">
-        <h2>Qué podés resolver desde acá</h2>
+      <aside class="wizard-side-card" id="gestoria">
+        <h2>Qué incluye el servicio</h2>
         <ul class="feature-list compact-list">
-          <li>Reservar fecha tentativa desde calendario</li>
-          <li>Elegir una franja horaria predefinida</li>
-          <li>Dejar todos los datos de la unidad y del titular</li>
-                  </ul>
-        <p class="wizard-side-copy">La confirmación final del turno queda sujeta a disponibilidad operativa del equipo de RG Cars.</p>
+          <li>Checklist general del vehículo y observaciones visibles</li>
+          <li>Diagnóstico computarizado según disponibilidad de la unidad</li>
+          <li>Datos ordenados para avanzar con más criterio en una compra</li>
+        </ul>
+        <p class="wizard-side-copy">La confirmación final del turno queda sujeta a disponibilidad operativa del equipo de RG Cars y al tipo de unidad a revisar.</p>
+        <p class="wizard-side-copy">Si la operación lo requiere, también podemos orientarte con gestoría para ordenar documentación y próximos pasos.</p>
       </aside>
 
       <article class="wizard-card peritaje-card">
@@ -115,7 +115,7 @@
             <label for="inspection_reason">Motivo del peritaje</label>
             <select id="inspection_reason" name="inspection_reason" class="select" required>
               <option value="">Seleccioná una opción</option>
-              <option value="pre-compra">Pre compra / inspección previa</option>
+              <option value="pre-compra">Peritaje pre-compra</option>
               <option value="consignacion">Consignación</option>
               <option value="particulares">Operación entre particulares</option>
               <option value="control-general">Control general</option>

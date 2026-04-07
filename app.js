@@ -2,53 +2,64 @@ const sb = window.supabase.createClient(RG.SUPABASE_URL, RG.SUPABASE_ANON_KEY);
 
 const $grid = document.getElementById('grid');
 const $q = document.getElementById('q');
-const $status = document.getElementById('status');
-const $sort = document.getElementById('sort');
-const $category = document.getElementById('category');
-const $resultsMeta = document.getElementById('resultsMeta');
-const $catalogSearch = document.getElementById('catalogSearch');
 const $clearFilters = document.getElementById('clearFilters');
 const $applyFilters = document.getElementById('applyFilters');
 const $filterButton = document.getElementById('filterButton');
 const $filterDialog = document.getElementById('filterDialog');
 const $filterBackdrop = document.getElementById('filterBackdrop');
 const $filterClose = document.getElementById('filterClose');
-const $filterAvailable = document.getElementById('filterAvailable');
+const $sort = document.getElementById('sort');
 const $filterFeatured = document.getElementById('filterFeatured');
 const $filterZeroKm = document.getElementById('filterZeroKm');
 const $filterUsed = document.getElementById('filterUsed');
+const $filterBrand = document.getElementById('filterBrand');
+const $filterFuel = document.getElementById('filterFuel');
+const $filterTransmission = document.getElementById('filterTransmission');
+const $filterDrivetrain = document.getElementById('filterDrivetrain');
+const $filterColor = document.getElementById('filterColor');
+const $filterYearMin = document.getElementById('filterYearMin');
+const $filterYearMax = document.getElementById('filterYearMax');
+const $filterPriceMin = document.getElementById('filterPriceMin');
+const $filterPriceMax = document.getElementById('filterPriceMax');
 
 let vehiclesCache = [];
+let stockExpanded = false;
+
+function escape(value) {
+  return window.RGShared.escapeHTML(value || '');
+}
+
+function formatText(value) {
+  return String(value || '').trim().toLowerCase();
+}
 
 function imagesHTML(vehicle) {
   const images = Array.isArray(vehicle.images) ? vehicle.images : [];
   const primary = images[0];
-  if (!primary) {
-    return `<div class="media-placeholder">Sin foto principal</div>`;
-  }
-  return `<img src="${primary}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}" class="is-active">`;
+  if (!primary) return '<div class="media-placeholder">Sin foto principal</div>';
+  return `<img src="${primary}" alt="${escape(vehicle.title || 'Vehículo')}" class="is-active">`;
 }
 
 function extraBadgesHTML(vehicle) {
   const tags = [];
-  if (vehicle.featured) tags.push('<span class="featured-pill">Destacado</span>');
-  if (vehicle.outlet) tags.push('<span class="featured-pill is-outlet">Outlet</span>');
+  if (vehicle.featured) tags.push('<span class="featured-pill">Oportunidad</span>');
+  if (vehicle.outlet) tags.push('<span class="featured-pill is-outlet">Oferta</span>');
   if (vehicle.is_recent && !vehicle.featured && !vehicle.outlet) tags.push('<span class="featured-pill is-neutral">Recién ingresado</span>');
   return tags.join('');
 }
 
 function cardHTML(vehicle) {
+  const year = String(vehicle.year || '').trim();
   return `
     <article class="vehicle-card vehicle-card--catalog">
-      <a class="vehicle-card-link" href="./vehicle.html?id=${vehicle.id}" aria-label="Ver detalle de ${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}">
+      <a class="vehicle-card-link" href="./vehicle.html?id=${encodeURIComponent(vehicle.id)}" aria-label="Ver detalle de ${escape(vehicle.title || 'Vehículo')}">
         <div class="vehicle-media">
           ${imagesHTML(vehicle)}
-          <span class="status-pill ${window.RGShared.statusClass(vehicle.status)}">${window.RGShared.statusLabel(vehicle.status)}</span>
           <div class="card-overlay-pills">${extraBadgesHTML(vehicle)}</div>
         </div>
-
         <div class="vehicle-body">
-          <h3>${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}</h3>
+          ${year ? `<p class="vehicle-year">${escape(year)}</p>` : ''}
+          <h3>${escape(vehicle.title || 'Vehículo')}</h3>
           <p class="vehicle-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
         </div>
       </a>
@@ -56,73 +67,28 @@ function cardHTML(vehicle) {
   `;
 }
 
-function initCarousels() {
-  document.querySelectorAll('[data-carousel]').forEach((carousel) => {
-    const images = Array.from(carousel.querySelectorAll('img'));
-    const dots = Array.from(carousel.querySelectorAll('[data-dot]'));
-    if (images.length <= 1) return;
-    if (carousel.dataset.carouselReady === 'true') return;
-    carousel.dataset.carouselReady = 'true';
-
-    let index = images.findIndex((img) => img.classList.contains('is-active'));
-    if (index < 0) index = 0;
-    let touchStartX = 0;
-    let touchStartY = 0;
-
-    const show = (nextIndex) => {
-      index = (nextIndex + images.length) % images.length;
-      images.forEach((img, i) => img.classList.toggle('is-active', i === index));
-      dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
-    };
-
-    carousel.querySelector('[data-nav="prev"]')?.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      show(index - 1);
-    });
-
-    carousel.querySelector('[data-nav="next"]')?.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      show(index + 1);
-    });
-
-    dots.forEach((dot) => {
-      dot.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        show(Number(dot.getAttribute('data-dot') || 0));
-      });
-    });
-
-    carousel.addEventListener('touchstart', (event) => {
-      const touch = event.changedTouches?.[0];
-      if (!touch) return;
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-    }, { passive: true });
-
-    carousel.addEventListener('touchend', (event) => {
-      const touch = event.changedTouches?.[0];
-      if (!touch) return;
-      const deltaX = touch.clientX - touchStartX;
-      const deltaY = touch.clientY - touchStartY;
-      if (Math.abs(deltaX) < 36 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
-      if (deltaX < 0) show(index + 1);
-      else show(index - 1);
-    }, { passive: true });
-  });
+function visibleCatalogLimit() {
+  if (window.innerWidth <= 760) return 8;
+  return 10;
 }
 
-
 function activeFilterCount() {
-  let count = 0;
-  if ($filterAvailable?.checked) count += 1;
-  if ($filterFeatured?.checked) count += 1;
-  if ($filterZeroKm?.checked) count += 1;
-  if ($filterUsed?.checked) count += 1;
-  if (($sort?.value || 'newest') !== 'newest') count += 1;
-  return count;
+  const controls = [
+    $filterFeatured?.checked,
+    $filterZeroKm?.checked,
+    $filterUsed?.checked,
+    !!$filterBrand?.value,
+    !!$filterFuel?.value,
+    !!$filterTransmission?.value,
+    !!$filterDrivetrain?.value,
+    !!$filterColor?.value?.trim(),
+    !!$filterYearMin?.value,
+    !!$filterYearMax?.value,
+    !!$filterPriceMin?.value,
+    !!$filterPriceMax?.value,
+    ($sort?.value || 'newest') !== 'newest',
+  ];
+  return controls.filter(Boolean).length;
 }
 
 function updateFilterButton() {
@@ -133,8 +99,15 @@ function updateFilterButton() {
 
 function updateApplyButton(count) {
   if (!$applyFilters) return;
-  const label = count === 1 ? 'Mostrar 1 vehículo' : `Mostrar ${count} vehículos`;
-  $applyFilters.textContent = label;
+  $applyFilters.textContent = count === 1 ? 'Mostrar 1 vehículo' : `Mostrar ${count} vehículos`;
+}
+
+function updateBrandOptions(rows) {
+  if (!$filterBrand) return;
+  const current = $filterBrand.value;
+  const brands = [...new Set((rows || []).map((vehicle) => String(vehicle.brand || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  $filterBrand.innerHTML = '<option value="">Todas</option>' + brands.map((brand) => `<option value="${escape(brand)}">${escape(brand)}</option>`).join('');
+  if (brands.includes(current)) $filterBrand.value = current;
 }
 
 function openFilterDialog() {
@@ -153,247 +126,192 @@ function closeFilterDialog() {
   $filterButton?.setAttribute('aria-expanded', 'false');
 }
 
-function toggleFilterDialog() {
-  if (!$filterDialog) return;
-  if ($filterDialog.hidden) openFilterDialog();
-  else closeFilterDialog();
-}
-
 function initFilterMenu() {
   closeFilterDialog();
   updateFilterButton();
-
-  $filterButton?.addEventListener('click', toggleFilterDialog);
+  $filterButton?.addEventListener('click', () => ($filterDialog?.hidden ? openFilterDialog() : closeFilterDialog()));
   $filterClose?.addEventListener('click', closeFilterDialog);
   $filterBackdrop?.addEventListener('click', closeFilterDialog);
   $applyFilters?.addEventListener('click', closeFilterDialog);
-
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !$filterDialog?.hidden) closeFilterDialog();
   });
 }
 
 function currentSearchQuery() {
-  return ($catalogSearch?.value || $q?.value || '').trim().toLowerCase();
-}
-
-function syncSearchInputs(source) {
-  const value = source?.value || '';
-  if (source !== $q && $q && $q.value !== value) $q.value = value;
-  if (source !== $catalogSearch && $catalogSearch && $catalogSearch.value !== value) $catalogSearch.value = value;
+  return ($q?.value || '').trim().toLowerCase();
 }
 
 function isZeroKm(vehicle) {
   const km = Number(vehicle.km);
-  if (!Number.isFinite(km)) return false;
-  return km <= 100;
-}
-
-function applySearch(rows) {
-  const query = currentSearchQuery();
-  if (!query) return rows;
-
-  return rows.filter((vehicle) => {
-    const haystack = [
-      vehicle.title,
-      vehicle.brand,
-      vehicle.model,
-      vehicle.year,
-      vehicle.category,
-      vehicle.description,
-    ].join(' ').toLowerCase();
-
-    return haystack.includes(query);
-  });
-}
-
-function applyQuickFilters(rows) {
-  return rows.filter((vehicle) => {
-    if ($filterAvailable?.checked && vehicle.status !== 'available') return false;
-    if ($filterFeatured?.checked && !vehicle.featured) return false;
-
-    const wantsZeroKm = !!$filterZeroKm?.checked;
-    const wantsUsed = !!$filterUsed?.checked;
-
-    if (wantsZeroKm && !wantsUsed && !isZeroKm(vehicle)) return false;
-    if (wantsUsed && !wantsZeroKm && isZeroKm(vehicle)) return false;
-
-    return true;
-  });
-}
-
-function filteredVehicles(rows) {
-  return applyQuickFilters(applySearch(rows));
-}
-
-function updateResultsMeta(count) {
-  if ($resultsMeta) {
-    $resultsMeta.textContent = `${count} ${count === 1 ? 'unidad en catálogo' : 'unidades en catálogo'}`;
-  }
-  updateFilterButton();
-  updateApplyButton(count);
+  return Number.isFinite(km) && km <= 100;
 }
 
 function vehiclePriority(vehicle) {
   let score = 0;
   if (vehicle.status === 'available') score += 25;
-  if (vehicle.featured) score += 20;
+  if (vehicle.featured || vehicle.outlet) score += 20;
   if (vehicle.is_recent) score += 14;
-  if (vehicle.financing_enabled) score += 4;
+  if (vehicle.financing_enabled || vehicle.private_financing_enabled) score += 6;
   return score;
 }
 
-function prioritizedRows(rows) {
-  return [...rows].sort((a, b) => {
+function sortRows(rows) {
+  const sort = $sort?.value || 'newest';
+  const sorted = [...rows];
+  if (sort === 'price_asc') return sorted.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+  if (sort === 'price_desc') return sorted.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+  if (sort === 'featured') {
+    return sorted.sort((a, b) => {
+      const aScore = Number(!!a.featured || !!a.outlet);
+      const bScore = Number(!!b.featured || !!b.outlet);
+      if (bScore !== aScore) return bScore - aScore;
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    });
+  }
+  return sorted.sort((a, b) => {
     const diff = vehiclePriority(b) - vehiclePriority(a);
     if (diff) return diff;
     return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
   });
 }
 
-function chunkRows(rows, size = 4) {
-  const chunks = [];
-  for (let i = 0; i < rows.length; i += size) chunks.push(rows.slice(i, i + size));
-  return chunks;
-}
-
-function stockPageSize() {
-  if (window.innerWidth <= 680) return 1;
-  if (window.innerWidth <= 980) return 2;
-  return 4;
-}
-
-function renderStockCarousel(rows) {
-  const pages = chunkRows(prioritizedRows(rows), stockPageSize());
-  let page = 0;
-  $grid.innerHTML = `
-    <div class="stock-carousel" data-stock-carousel>
-      <button class="stock-carousel-nav is-prev" type="button" data-stock-nav="prev" aria-label="Ver unidades anteriores">‹</button>
-      <div class="stock-carousel-track"></div>
-      <button class="stock-carousel-nav is-next" type="button" data-stock-nav="next" aria-label="Ver más unidades">›</button>
-    </div>
-  `;
-  const track = $grid.querySelector('.stock-carousel-track');
-  const prev = $grid.querySelector('[data-stock-nav="prev"]');
-  const next = $grid.querySelector('[data-stock-nav="next"]');
-
-  const paint = () => {
-    track.innerHTML = `<div class="stock-carousel-page">${(pages[page] || []).map(cardHTML).join('')}</div>`;
-    const hasMultiplePages = pages.length > 1;
-    if (prev) {
-      prev.disabled = page <= 0;
-      prev.hidden = !hasMultiplePages;
+function filteredVehicles(rows) {
+  const query = currentSearchQuery();
+  return rows.filter((vehicle) => {
+    if (query) {
+      const haystack = [vehicle.title, vehicle.brand, vehicle.model, vehicle.year, vehicle.category, vehicle.description, vehicle.color, vehicle.fuel_type, vehicle.transmission, vehicle.drivetrain]
+        .join(' ')
+        .toLowerCase();
+      if (!haystack.includes(query)) return false;
     }
-    if (next) {
-      next.disabled = page >= pages.length - 1;
-      next.hidden = !hasMultiplePages;
-    }
-    initCarousels();
-  };
 
-  prev?.addEventListener('click', () => {
-    if (page <= 0) return;
-    page -= 1;
-    paint();
-  });
-  next?.addEventListener('click', () => {
-    if (page >= pages.length - 1) return;
-    page += 1;
-    paint();
-  });
+    if ($filterFeatured?.checked && !(vehicle.featured || vehicle.outlet)) return false;
 
-  paint();
+    const wantsZeroKm = !!$filterZeroKm?.checked;
+    const wantsUsed = !!$filterUsed?.checked;
+    if (wantsZeroKm && !wantsUsed && !isZeroKm(vehicle)) return false;
+    if (wantsUsed && !wantsZeroKm && isZeroKm(vehicle)) return false;
+
+    if ($filterBrand?.value && formatText(vehicle.brand) !== formatText($filterBrand.value)) return false;
+    if ($filterFuel?.value && formatText(vehicle.fuel_type) !== formatText($filterFuel.value)) return false;
+    if ($filterTransmission?.value && formatText(vehicle.transmission) !== formatText($filterTransmission.value)) return false;
+    if ($filterDrivetrain?.value && formatText(vehicle.drivetrain) !== formatText($filterDrivetrain.value)) return false;
+    if ($filterColor?.value?.trim() && !formatText(vehicle.color).includes(formatText($filterColor.value))) return false;
+
+    const year = Number(vehicle.year || 0);
+    if ($filterYearMin?.value && year && year < Number($filterYearMin.value)) return false;
+    if ($filterYearMax?.value && year && year > Number($filterYearMax.value)) return false;
+
+    const price = Number(vehicle.price || 0);
+    if ($filterPriceMin?.value && price && price < Number($filterPriceMin.value)) return false;
+    if ($filterPriceMax?.value && price && price > Number($filterPriceMax.value)) return false;
+
+    return true;
+  });
 }
 
 function renderRows(rows, emptyTitle, emptyCopy) {
   if (!$grid) return;
   if (!rows.length) {
+    stockExpanded = false;
     $grid.innerHTML = `<div class="empty-state"><strong>${emptyTitle}</strong><span>${emptyCopy}</span></div>`;
     return;
   }
 
-  $grid.innerHTML = prioritizedRows(rows).map(cardHTML).join('');
+  const sorted = sortRows(rows);
+  const limit = visibleCatalogLimit();
+  const shouldShowToggle = sorted.length > limit;
+  const visibleRows = stockExpanded ? sorted : sorted.slice(0, limit);
+
+  $grid.innerHTML = `
+    ${visibleRows.map(cardHTML).join('')}
+    ${shouldShowToggle ? `
+      <div class="stock-more-wrap">
+        <button type="button" class="btn btn-ghost stock-more-button" id="stockMoreButton" aria-expanded="${stockExpanded ? 'true' : 'false'}">
+          ${stockExpanded ? 'Mostrar menos' : 'Ver todo el stock'}
+        </button>
+      </div>
+    ` : ''}
+  `;
+
+  document.getElementById('stockMoreButton')?.addEventListener('click', () => {
+    stockExpanded = !stockExpanded;
+    renderSearchResults();
+    if (!stockExpanded) {
+      document.getElementById('stock')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+}
+
+function renderSearchResults(emptyTitle = 'No encontramos vehículos con esos filtros.', emptyCopy = 'Probá ajustando la búsqueda o quitando algún filtro.') {
+  const filtered = filteredVehicles(vehiclesCache);
+  updateFilterButton();
+  updateApplyButton(filtered.length);
+  renderRows(filtered, emptyTitle, emptyCopy);
 }
 
 async function fetchVehicles() {
   if (!$grid) return;
+  stockExpanded = false;
   $grid.innerHTML = '<div class="empty-state"><strong>Cargando publicaciones…</strong><span>Esperá un momento.</span></div>';
 
   try {
-    let query = sb
+    const { data, error } = await sb
       .from('vehicles')
       .select('*')
       .neq('status', 'hidden');
 
-    const status = ($status?.value || 'all').trim();
-    if (status !== 'all') query = query.eq('status', status);
-
-    const category = ($category?.value || 'all').trim();
-    if (category !== 'all') query = query.eq('category', category);
-
-    const sort = $sort?.value || 'newest';
-    if (sort === 'price_asc') query = query.order('price', { ascending: true });
-    if (sort === 'price_desc') query = query.order('price', { ascending: false });
-    if (sort === 'newest') query = query.order('is_recent', { ascending: false }).order('created_at', { ascending: false });
-    if (sort === 'featured') query = query.order('featured', { ascending: false }).order('created_at', { ascending: false });
-
-    const { data, error } = await query;
     if (error) throw error;
 
-    vehiclesCache = data || [];
-
-    const filtered = filteredVehicles(vehiclesCache);
-    updateResultsMeta(filtered.length);
-
-    renderRows(filtered, 'No encontramos vehículos con esos filtros.', 'Probá quitando algún filtro o usando otra búsqueda.');
+    vehiclesCache = Array.isArray(data) ? data : [];
+    updateBrandOptions(vehiclesCache);
+    renderSearchResults();
   } catch (error) {
     console.error(error);
-    $grid.innerHTML = `<div class="empty-state"><strong>No se pudo cargar el catálogo.</strong><span>${window.RGShared.escapeHTML(error.message || 'Error inesperado.')}</span></div>`;
-    if ($resultsMeta) $resultsMeta.textContent = 'Error cargando publicaciones.';
+    $grid.innerHTML = `<div class="empty-state"><strong>No se pudo cargar el catálogo.</strong><span>${escape(error.message || 'Error inesperado.')}</span></div>`;
   }
 }
 
-function renderSearchResults(messageTitle = 'No encontramos vehículos con esa búsqueda.', messageCopy = 'Probá con otra palabra clave o quitando filtros.') {
-  const filtered = filteredVehicles(vehiclesCache);
-  updateResultsMeta(filtered.length);
-  renderRows(filtered, messageTitle, messageCopy);
+function bindFilterEvents() {
+  const rerender = () => {
+    stockExpanded = false;
+    renderSearchResults();
+  };
+
+  $q?.addEventListener('input', rerender);
+  $sort?.addEventListener('change', rerender);
+  [$filterFeatured, $filterZeroKm, $filterUsed, $filterBrand, $filterFuel, $filterTransmission, $filterDrivetrain, $filterColor, $filterYearMin, $filterYearMax, $filterPriceMin, $filterPriceMax]
+    .forEach((control) => control?.addEventListener('input', rerender));
+  [$filterFeatured, $filterZeroKm, $filterUsed, $filterBrand, $filterFuel, $filterTransmission, $filterDrivetrain]
+    .forEach((control) => control?.addEventListener('change', rerender));
+
+  $clearFilters?.addEventListener('click', () => {
+    if ($q) $q.value = '';
+    if ($sort) $sort.value = 'newest';
+    if ($filterFeatured) $filterFeatured.checked = false;
+    if ($filterZeroKm) $filterZeroKm.checked = false;
+    if ($filterUsed) $filterUsed.checked = false;
+    if ($filterBrand) $filterBrand.value = '';
+    if ($filterFuel) $filterFuel.value = '';
+    if ($filterTransmission) $filterTransmission.value = '';
+    if ($filterDrivetrain) $filterDrivetrain.value = '';
+    if ($filterColor) $filterColor.value = '';
+    if ($filterYearMin) $filterYearMin.value = '';
+    if ($filterYearMax) $filterYearMax.value = '';
+    if ($filterPriceMin) $filterPriceMin.value = '';
+    if ($filterPriceMax) $filterPriceMax.value = '';
+    stockExpanded = false;
+    renderSearchResults();
+  });
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => renderSearchResults(), 140);
+  });
 }
-
-function handleSearchInput(event) {
-  syncSearchInputs(event.currentTarget);
-  renderSearchResults();
-}
-
-$q?.addEventListener('input', handleSearchInput);
-$catalogSearch?.addEventListener('input', handleSearchInput);
-
-$status?.addEventListener('change', fetchVehicles);
-$category?.addEventListener('change', fetchVehicles);
-$sort?.addEventListener('change', () => renderSearchResults('No encontramos vehículos con esos filtros.', 'Probá quitando algún filtro.'));
-[$filterAvailable, $filterFeatured, $filterZeroKm, $filterUsed].forEach((control) => {
-  control?.addEventListener('change', () => renderSearchResults('No encontramos vehículos con esos filtros.', 'Probá quitando algún filtro.'));
-});
-
-$clearFilters?.addEventListener('click', () => {
-  if ($q) $q.value = '';
-  if ($catalogSearch) $catalogSearch.value = '';
-  if ($category) $category.value = 'all';
-  if ($status) $status.value = 'all';
-  if ($sort) $sort.value = 'newest';
-  if ($filterAvailable) $filterAvailable.checked = false;
-  if ($filterFeatured) $filterFeatured.checked = false;
-  if ($filterZeroKm) $filterZeroKm.checked = false;
-  if ($filterUsed) $filterUsed.checked = false;
-  renderSearchResults('No encontramos vehículos con esos filtros.', 'Probá quitando algún filtro.');
-});
 
 initFilterMenu();
+bindFilterEvents();
 fetchVehicles();
-
-let __rgResizeTimer = null;
-window.addEventListener('resize', () => {
-  clearTimeout(__rgResizeTimer);
-  __rgResizeTimer = setTimeout(() => {
-    renderSearchResults('No encontramos vehículos con esos filtros.', 'Probá cambiando la búsqueda, categoría o estado.');
-  }, 120);
-});
