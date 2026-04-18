@@ -30,7 +30,11 @@ function escape(value) {
 }
 
 function formatText(value) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
 }
 
 function imagesHTML(vehicle) {
@@ -105,9 +109,17 @@ function updateApplyButton(count) {
 function updateBrandOptions(rows) {
   if (!$filterBrand) return;
   const current = $filterBrand.value;
-  const brands = [...new Set((rows || []).map((vehicle) => String(vehicle.brand || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  const brandsMap = new Map();
+  (rows || []).forEach((vehicle) => {
+    const brand = String(vehicle.brand || '').trim();
+    if (!brand) return;
+    const key = formatText(brand);
+    if (!brandsMap.has(key)) brandsMap.set(key, brand);
+  });
+  const brands = [...brandsMap.values()].sort((a, b) => a.localeCompare(b, 'es'));
   $filterBrand.innerHTML = '<option value="">Todas</option>' + brands.map((brand) => `<option value="${escape(brand)}">${escape(brand)}</option>`).join('');
-  if (brands.includes(current)) $filterBrand.value = current;
+  const currentKey = formatText(current);
+  if (currentKey && brandsMap.has(currentKey)) $filterBrand.value = brandsMap.get(currentKey);
 }
 
 function openFilterDialog() {
@@ -139,7 +151,7 @@ function initFilterMenu() {
 }
 
 function currentSearchQuery() {
-  return ($q?.value || '').trim().toLowerCase();
+  return formatText($q?.value || '');
 }
 
 function isZeroKm(vehicle) {
@@ -180,9 +192,18 @@ function filteredVehicles(rows) {
   const query = currentSearchQuery();
   return rows.filter((vehicle) => {
     if (query) {
-      const haystack = [vehicle.title, vehicle.brand, vehicle.model, vehicle.year, vehicle.category, vehicle.description, vehicle.color, vehicle.fuel_type, vehicle.transmission, vehicle.drivetrain]
-        .join(' ')
-        .toLowerCase();
+      const haystack = formatText([
+        vehicle.title,
+        vehicle.brand,
+        vehicle.model,
+        vehicle.year,
+        vehicle.category,
+        vehicle.description,
+        vehicle.color,
+        vehicle.fuel_type,
+        vehicle.transmission,
+        vehicle.drivetrain,
+      ].join(' '));
       if (!haystack.includes(query)) return false;
     }
 

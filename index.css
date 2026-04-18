@@ -6546,3 +6546,591 @@ body.public-theme .vehicle-card .status-pill {
     min-height: 46px;
   }
 }
+
+/* ===== 2026-04-18 · home cleanup + mobile polish ===== */
+body.public-theme.home-page .hero-content {
+  gap: 16px;
+  padding: 92px 0 88px;
+  justify-items: center;
+  text-align: center;
+}
+
+body.public-theme.home-page .hero-badge {
+  max-width: min(840px, 100%);
+  padding: 9px 16px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+body.public-theme.home-page .hero-content h1 {
+  max-width: none;
+  white-space: nowrap !important;
+  text-wrap: nowrap;
+  font-size: clamp(2.6rem, 4.6vw, 4.1rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+body.public-theme.home-page .hero-content > p {
+  max-width: 680px;
+  font-size: 1.04rem;
+  line-height: 1.62;
+}
+
+body.public-theme.home-page .hero-location-badge {
+  max-width: min(720px, 100%);
+  margin-top: 2px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+body.public-theme.home-page .hero-search-card {
+  width: min(720px, 100%);
+  gap: 12px;
+}
+
+body.public-theme.home-page .hero-search-bar {
+  gap: 12px;
+  padding: 10px;
+  border-radius: 20px;
+}
+
+body.public-theme.home-page .hero-search-input,
+body.public-theme.home-page .hero-search-button {
+  min-height: 48px;
+}
+
+body.public-theme.home-page .hero-search-input {
+  padding: 0 14px 0 10px;
+  font-size: 0.95rem;
+}
+
+body.public-theme.home-page .hero-search-button {
+  min-width: 128px;
+  font-size: 0.92rem;
+  border-radius: 14px;
+}
+
+body.public-theme.home-page .hero-pill-row {
+  gap: 10px;
+}
+
+body.public-theme.home-page .pill-link {
+  min-width: 136px;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 0.87rem;
+  text-align: center;
+}
+
+body.public-theme.home-page .home-highlights--final {
+  margin-top: 28px;
+}
+
+body.public-theme.home-page .highlight-grid--final {
+  gap: 16px;
+}
+
+body.public-theme.home-page .highlight-card {
+  min-height: 192px;
+  padding: 20px;
+  border-radius: 22px;
+}
+
+body.public-theme.home-page .mini-kicker {
+  font-size: 0.68rem;
+}
+
+body.public-theme.home-page .highlight-card h2 {
+  font-size: 1.28rem;
+  line-height: 1.1;
+}
+
+body.public-theme.home-page .highlight-card p,
+body.public-theme.home-page .catalog-head .section-meta,
+body.public-theme.home-page .footer-brand-block p,
+body.public-theme.home-page .footer-column a,
+body.public-theme.home-page .footer-column span,
+body.public-theme.home-page .footer-bottom p,
+body.public-theme.home-page .footer-bottom-links a {
+  font-size: 0.92rem;
+  line-height: 1.58;
+}
+
+body.public-theme.home-page .compact-search-shell {
+  padding-top: 20px;
+}
+
+body.public-theme.home-page .catalog-toolbar--button-only {
+  margin-bottom: 16px;
+}
+
+body.public-theme.home-page .filter-trigger,
+body.public-theme.home-page .stock-more-button,
+body.public-theme.home-page .contact-strip-actions .btn,
+body.public-theme.home-page .site-header .btn {
+  min-height: 42px;
+  font-size: 0.88rem;
+}
+
+body.public-theme.home-page .catalog-head h2 {
+  font-size: clamp(1.52rem, 2.7vw, 2rem);
+  line-height: 1.08;
+}
+
+body.public-theme.home-page .vehicle-grid {
+  gap: 14px;
+}
+
+body.public-theme.home-page .vehicle-card {
+  border-radius: 22px;
+}
+
+body.public-theme.home-page .vehicle-card h3 {
+  font-size: 1rem;
+  line-height: 1.24;
+}
+
+body.public-theme.home-page .vehicle-price {
+  font-size: 1.02rem;
+}
+
+body.public-theme.home-page .empty-state {
+  padding: 24px 20px;
+}
+
+body.public-theme.home-page .contact-strip-shell--final {
+  padding-top: 30px;
+  padding-bottom: 12px;
+}
+
+body.public-theme.home-page .contact-strip-card--enhanced {
+  gap: 24px;
+  padding: 26px;
+}
+
+body.public-theme.home-page .contact-strip-card--enhanced h2 {
+  max-width: 20ch;
+  font-size: clamp(1.82rem, 2.8vw, 2.25rem);
+  line-height: 1.05;
+}
+
+body.public-theme.home-page .contact-strip-card--enhanced p,
+body.public-theme.home-page .contact-strip-panel__text {
+  font-size: 0.94rem;
+  line-height: 1.58;
+}
+
+body.public-theme.home-page .contact-strip-copy__points span,
+body.public-theme.home-page .contact-strip-badges span {
+  min-height: 32px;
+  font-size: 0.77rem;
+}
+
+body.public-theme.home-page .contact-strip-panel {
+  padding: 20px 22px;
+}
+
+body.public-theme.home-page .contact-strip-panel__title {
+  font-size: 1.18rem;
+}
+
+body.public-theme.home-page .footer-main {
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  body.public-theme.home-page .header-inner {
+    min-height: 68px;
+    gap: 14px;
+  }
+
+  body.public-theme.home-page .brand img {
+    width: clamp(104px, 28vw, 132px);
+  }
+
+  body.public-theme.home-page .site-header .btn {
+    padding: 0 16px;
+  }
+
+  body.public-theme.home-page .hero-content {
+    padding: 72px 0 62px;
+  }
+
+  body.public-theme.home-page .hero-content h1 {
+    font-size: clamp(1.86rem, 4vw, 2.7rem);
+  }
+
+  body.public-theme.home-page .highlight-grid--final {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.public-theme.home-page .contact-strip-card--enhanced {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  body.public-theme.home-page {
+    font-size: 15px;
+    --home-mobile-hero-line-width: min(298px, calc(100vw - 34px));
+    --home-mobile-search-width: min(356px, calc(100vw - 8px));
+  }
+
+  body.public-theme .site-header .header-inner {
+    position: relative;
+    display: block;
+    min-height: 66px;
+  }
+
+  body.public-theme .site-header .brand {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0 !important;
+    z-index: 2;
+  }
+
+  body.public-theme .site-header .brand img {
+    width: clamp(108px, 28vw, 138px);
+  }
+
+  body.public-theme .site-header .header-nav--desktop,
+  body.public-theme .site-header .header-actions--desktop {
+    display: none !important;
+  }
+
+  body.public-theme .site-header .header-nav,
+  body.public-theme .site-header .header-mobile-actions {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    min-width: 0;
+    margin: 0 !important;
+    justify-content: flex-end;
+  }
+
+  body.public-theme .site-header .header-mobile-actions {
+    display: inline-flex;
+    justify-self: auto;
+  }
+
+  body.public-theme .site-header .services-dropdown,
+  body.public-theme .mobile-menu-panel {
+    left: auto !important;
+    right: 10px !important;
+    transform: none !important;
+  }
+
+  body.public-theme.home-page .container {
+    width: min(calc(100% - 28px), 1280px);
+  }
+
+  body.public-theme.home-page .home-video-hero {
+    min-height: 332px;
+  }
+
+  body.public-theme.home-page .hero-content {
+    width: 100%;
+    justify-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 24px 0 20px;
+  }
+
+  body.public-theme.home-page .hero-content h1 {
+    width: var(--home-mobile-hero-line-width);
+    max-width: 100%;
+    white-space: normal !important;
+    text-wrap: balance;
+    font-size: clamp(1.46rem, 6.8vw, 1.92rem);
+    line-height: 0.96;
+    letter-spacing: -0.05em;
+  }
+
+  body.public-theme.home-page .hero-location-badge {
+    width: var(--home-mobile-hero-line-width);
+    max-width: 100%;
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 0.58rem;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  body.public-theme.home-page .hero-search-card {
+    width: var(--home-mobile-search-width);
+    max-width: 100%;
+    gap: 8px;
+  }
+
+  body.public-theme.home-page .hero-search-bar {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    padding: 9px;
+    border-radius: 16px;
+  }
+
+  body.public-theme.home-page .hero-search-input,
+  body.public-theme.home-page .hero-search-button {
+    min-height: 42px;
+  }
+
+  body.public-theme.home-page .hero-search-input {
+    font-size: 0.83rem;
+    padding: 0 12px;
+  }
+
+  body.public-theme.home-page .hero-search-button {
+    width: 100%;
+    min-width: 0;
+    font-size: 0.84rem;
+  }
+
+  body.public-theme.home-page .hero-pill-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  body.public-theme.home-page .pill-link {
+    min-width: 0;
+    width: 100%;
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 0.74rem;
+    line-height: 1.2;
+  }
+
+  body.public-theme.home-page .home-highlights--final {
+    margin-top: 18px;
+    padding-inline: 0;
+  }
+
+  body.public-theme.home-page .highlight-grid--final {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(84vw, 84vw);
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 14px 12px;
+    margin-inline: calc(50% - 50vw);
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 14px;
+    scrollbar-width: none;
+  }
+
+  body.public-theme.home-page .highlight-grid--final::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.public-theme.home-page .highlight-card {
+    min-height: auto;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 18px;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  body.public-theme.home-page .highlight-card h2,
+  body.public-theme.home-page .catalog-head h2,
+  body.public-theme.home-page .contact-strip-card--enhanced h2 {
+    font-size: 1.36rem;
+    line-height: 1.1;
+  }
+
+  body.public-theme.home-page .highlight-card p,
+  body.public-theme.home-page .catalog-head .section-meta,
+  body.public-theme.home-page .contact-strip-card--enhanced p,
+  body.public-theme.home-page .contact-strip-panel__text,
+  body.public-theme.home-page .footer-brand-block p,
+  body.public-theme.home-page .footer-column a,
+  body.public-theme.home-page .footer-column span,
+  body.public-theme.home-page .footer-bottom p,
+  body.public-theme.home-page .footer-bottom-links a {
+    font-size: 0.84rem;
+    line-height: 1.52;
+  }
+
+  body.public-theme.home-page .catalog-toolbar {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  body.public-theme.home-page .catalog-toolbar--button-only {
+    margin-bottom: 14px;
+  }
+
+  body.public-theme.home-page .filter-trigger {
+    width: 100%;
+    justify-content: center;
+    padding: 0 16px;
+  }
+
+  body.public-theme.home-page .filter-trigger::before {
+    display: none;
+  }
+
+  body.public-theme.home-page .filter-dialog {
+    width: min(calc(100vw - 20px), 420px);
+    max-height: calc(100dvh - 20px);
+    border-radius: 24px;
+  }
+
+  body.public-theme.home-page .filter-dialog__header,
+  body.public-theme.home-page .filter-dialog__footer {
+    padding-inline: 16px;
+  }
+
+  body.public-theme.home-page .filter-dialog__body {
+    padding: 12px 16px 14px;
+  }
+
+  body.public-theme.home-page .filter-dialog__footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  body.public-theme.home-page .filter-dialog__footer .btn {
+    width: 100%;
+  }
+
+  body.public-theme.home-page .vehicle-grid {
+    gap: 12px;
+  }
+
+  body.public-theme.home-page .vehicle-body {
+    padding: 12px 12px 14px;
+  }
+
+  body.public-theme.home-page .vehicle-card h3 {
+    font-size: 0.92rem;
+  }
+
+  body.public-theme.home-page .vehicle-year {
+    font-size: 0.66rem;
+  }
+
+  body.public-theme.home-page .vehicle-price {
+    font-size: 0.92rem;
+  }
+
+  body.public-theme.home-page .stock-more-button,
+  body.public-theme.home-page .contact-strip-actions .btn,
+  body.public-theme.home-page .site-header .btn {
+    min-height: 40px;
+    font-size: 0.84rem;
+  }
+
+  body.public-theme.home-page .contact-strip-shell--final {
+    padding-top: 24px;
+  }
+
+  body.public-theme.home-page .contact-strip-card--enhanced {
+    gap: 16px;
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  body.public-theme.home-page .contact-strip-copy {
+    gap: 10px;
+  }
+
+  body.public-theme.home-page .contact-strip-copy__points {
+    gap: 8px;
+  }
+
+  body.public-theme.home-page .contact-strip-copy__points span,
+  body.public-theme.home-page .contact-strip-badges span {
+    min-height: 28px;
+    padding: 0 9px;
+    font-size: 0.72rem;
+  }
+
+  body.public-theme.home-page .contact-strip-panel {
+    gap: 10px;
+    padding: 16px 14px;
+    border-radius: 16px;
+  }
+
+  body.public-theme.home-page .contact-strip-panel__title {
+    font-size: 1.02rem;
+  }
+
+  body.public-theme.home-page .contact-strip-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  body.public-theme.home-page .footer-main,
+  body.public-theme.home-page .footer-columns,
+  body.public-theme.home-page .footer-bottom,
+  body.public-theme.home-page .footer-bottom-links {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 520px) {
+  body.public-theme.home-page .hero-pill-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  body.public-theme.home-page .container {
+    width: min(calc(100% - 24px), 1280px);
+  }
+
+  body.public-theme.home-page {
+    --home-mobile-hero-line-width: min(286px, calc(100vw - 24px));
+    --home-mobile-search-width: min(338px, calc(100vw - 6px));
+  }
+
+  body.public-theme.home-page .home-video-hero {
+    min-height: 304px;
+  }
+
+  body.public-theme.home-page .hero-content {
+    width: 100%;
+    padding: 20px 0 18px;
+  }
+
+  body.public-theme.home-page .hero-content h1 {
+    font-size: clamp(1.34rem, 6vw, 1.56rem);
+  }
+
+  body.public-theme.home-page .hero-location-badge {
+    padding: 6px 10px;
+    font-size: 0.54rem;
+  }
+
+  body.public-theme.home-page .hero-search-card {
+    width: var(--home-mobile-search-width);
+  }
+
+  body.public-theme.home-page .hero-search-input,
+  body.public-theme.home-page .hero-search-button {
+    min-height: 40px;
+  }
+
+  body.public-theme.home-page .highlight-grid--final {
+    grid-auto-columns: minmax(86vw, 86vw);
+    padding: 4px 12px 12px;
+    scroll-padding-inline: 12px;
+  }
+
+  body.public-theme.home-page .highlight-card,
+  body.public-theme.home-page .catalog-toolbar,
+  body.public-theme.home-page .contact-strip-card--enhanced {
+    padding-inline: 14px;
+  }
+}
