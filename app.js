@@ -8,6 +8,7 @@ const $filterButton = document.getElementById('filterButton');
 const $filterDialog = document.getElementById('filterDialog');
 const $filterBackdrop = document.getElementById('filterBackdrop');
 const $filterClose = document.getElementById('filterClose');
+const $filterDismiss = document.getElementById('filterDismiss');
 const $sort = document.getElementById('sort');
 const $filterFeatured = document.getElementById('filterFeatured');
 const $filterZeroKm = document.getElementById('filterZeroKm');
@@ -143,6 +144,7 @@ function initFilterMenu() {
   updateFilterButton();
   $filterButton?.addEventListener('click', () => ($filterDialog?.hidden ? openFilterDialog() : closeFilterDialog()));
   $filterClose?.addEventListener('click', closeFilterDialog);
+  $filterDismiss?.addEventListener('click', closeFilterDialog);
   $filterBackdrop?.addEventListener('click', closeFilterDialog);
   $applyFilters?.addEventListener('click', closeFilterDialog);
   document.addEventListener('keydown', (event) => {

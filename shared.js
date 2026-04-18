@@ -517,9 +517,15 @@
     { key: 'peritaje', href: './peritaje.html', label: 'Peritajes pre-compra' },
   ];
 
+  const SOCIAL_ICON_ASSETS = {
+    instagram: './imagenes/instagram.png',
+    facebook: './imagenes/facebook.png',
+    whatsapp: './imagenes/whatsapp-black.png',
+  };
+
   const HEADER_SOCIAL_LINKS = [
-    { key: 'instagram', href: String(window.RG?.INSTAGRAM_URL || '').trim(), label: 'Instagram' },
-    { key: 'facebook', href: String(window.RG?.FACEBOOK_URL || '').trim(), label: 'Facebook' },
+    { key: 'instagram', href: String(window.RG?.INSTAGRAM_URL || '').trim(), label: 'Instagram', icon: SOCIAL_ICON_ASSETS.instagram },
+    { key: 'facebook', href: String(window.RG?.FACEBOOK_URL || '').trim(), label: 'Facebook', icon: SOCIAL_ICON_ASSETS.facebook },
   ].filter((item) => item.href);
 
   const HEADER_MOBILE_LINKS = [
@@ -645,7 +651,9 @@
       desktopActions.className = 'header-actions header-actions--desktop';
       desktopActions.setAttribute('aria-label', 'Redes y acciones principales');
       desktopActions.innerHTML = HEADER_SOCIAL_LINKS.map((item) => `
-        <a class="btn btn-ghost header-social-link" href="${item.href}" target="_blank" rel="noreferrer">${item.label}</a>
+        <a class="header-social-link" href="${item.href}" target="_blank" rel="noreferrer" aria-label="Abrir ${item.label}" title="${item.label}">
+          <img class="header-social-link__icon" src="${item.icon}" alt="" aria-hidden="true" />
+        </a>
       `).join('');
 
       const mobileActions = document.createElement('div');
