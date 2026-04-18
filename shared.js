@@ -330,7 +330,7 @@
       <div class="feedback-modal__backdrop" data-feedback-close="true"></div>
       <div class="feedback-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
         <button type="button" class="feedback-modal__close" aria-label="Cerrar" data-feedback-close="true">×</button>
-        <div class="feedback-modal__eyebrow">Ayudanos a mejorar</div>
+        <div class="feedback-modal__eyebrow">Ayudanos a mejorar !!!</div>
         <h3 id="feedbackModalTitle">Dejanos tu sugerencia</h3>
         <p class="feedback-modal__copy">Tu mensaje se guarda directamente en la plataforma para que el equipo de RG Cars lo revise.</p>
         <form class="feedback-form" data-feedback-form="true">
@@ -410,6 +410,16 @@
     },
   };
 
+
+  const LEAD_STAGE_META = {
+    lead: { label: 'Lead', className: 'is-hidden' },
+    opportunity: { label: 'Oportunidad', className: 'is-reserved' },
+    proposal: { label: 'Propuesta', className: 'is-reserved' },
+    negotiation: { label: 'Negociación', className: 'is-available' },
+    won: { label: 'Ganado', className: 'is-available' },
+    lost: { label: 'Perdido', className: 'is-sold' },
+  };
+
   function leadStatusMeta(type, status) {
     return LEAD_STATUS_META?.[type]?.[status] || null;
   }
@@ -425,6 +435,22 @@
   function leadStatusOptions(type, current) {
     const set = LEAD_STATUS_META[type] || {};
     return Object.entries(set).map(([value, meta]) => `<option value="${escapeHTML(value)}" ${value === current ? 'selected' : ''}>${escapeHTML(meta.label)}</option>`).join('');
+  }
+
+  function leadStageMeta(stage) {
+    return LEAD_STAGE_META?.[stage] || LEAD_STAGE_META.lead;
+  }
+
+  function leadStageLabel(stage) {
+    return leadStageMeta(stage)?.label || stage || 'Lead';
+  }
+
+  function leadStageClass(stage) {
+    return leadStageMeta(stage)?.className || 'is-hidden';
+  }
+
+  function leadStageOptions(current = 'lead') {
+    return Object.entries(LEAD_STAGE_META).map(([value, meta]) => `<option value="${escapeHTML(value)}" ${value === current ? 'selected' : ''}>${escapeHTML(meta.label)}</option>`).join('');
   }
 
   function notificationChannel(contactPreference, email, phone) {
@@ -487,9 +513,14 @@
   ];
 
   const HEADER_SERVICE_LINKS = [
-    { key: 'seguros', href: './seguros.html', label: 'Seguros' },
-    { key: 'peritaje', href: './peritaje.html', label: 'Peritaje' },
+    { key: 'seguros', href: './seguros.html', label: 'Seguros del automotor' },
+    { key: 'peritaje', href: './peritaje.html', label: 'Peritajes pre-compra' },
   ];
+
+  const HEADER_SOCIAL_LINKS = [
+    { key: 'instagram', href: String(window.RG?.INSTAGRAM_URL || '').trim(), label: 'Instagram' },
+    { key: 'facebook', href: String(window.RG?.FACEBOOK_URL || '').trim(), label: 'Facebook' },
+  ].filter((item) => item.href);
 
   const HEADER_MOBILE_LINKS = [
     ...HEADER_PRIMARY_LINKS,
@@ -612,10 +643,17 @@
 
       const desktopActions = document.createElement('nav');
       desktopActions.className = 'header-actions header-actions--desktop';
+<<<<<<< HEAD
       desktopActions.setAttribute('aria-label', 'Acciones principales');
       desktopActions.innerHTML = `
         <a class="btn btn-primary header-wa-link" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
       `;
+=======
+      desktopActions.setAttribute('aria-label', 'Redes y acciones principales');
+      desktopActions.innerHTML = HEADER_SOCIAL_LINKS.map((item) => `
+        <a class="btn btn-ghost header-social-link" href="${item.href}" target="_blank" rel="noreferrer">${item.label}</a>
+      `).join('');
+>>>>>>> 59d7de0 (Upgrades Ale)
 
       const mobileActions = document.createElement('div');
       mobileActions.className = 'header-mobile-actions';
@@ -713,7 +751,7 @@
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'feedback-floating-button';
-    button.textContent = 'Ayudanos a mejorar 🙌';
+    button.textContent = 'Ayudanos a mejorar !!! 🙌';
     button.addEventListener('click', openFeedbackModal);
     document.body.appendChild(button);
     buildFeedbackModal();
@@ -784,39 +822,111 @@
     upsertMetaAttribute('name', 'theme-color', '#0f1720');
   }
 
+  function currentPageKey() {
+    const pathname = String(window.location.pathname || '').toLowerCase();
+    if (pathname.includes('/admin/')) return '';
+    if (pathname.endsWith('/index.html') || pathname === '/' || pathname.endsWith('/')) return 'home';
+    if (pathname.endsWith('/vehicle.html')) return 'vehicle';
+    if (pathname.endsWith('/consignacion.html')) return 'consignment';
+    if (pathname.endsWith('/scouting.html')) return 'scouting';
+    if (pathname.endsWith('/financiacion.html')) return 'financing';
+    if (pathname.endsWith('/seguros.html')) return 'insurance';
+    if (pathname.endsWith('/peritaje.html')) return 'peritaje';
+    return 'other';
+  }
+
+  function getStoredKey(storage, key) {
+    try {
+      let value = storage.getItem(key);
+      if (!value) {
+        value = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+        storage.setItem(key, value);
+      }
+      return value;
+    } catch {
+      return '';
+    }
+  }
+
+  async function trackPageView() {
+    const pageKey = currentPageKey();
+    if (!pageKey || !window.supabase || !window.RG?.SUPABASE_URL || !window.RG?.SUPABASE_ANON_KEY) return;
+
+    try {
+      const dedupeKey = `rgcars:pageview:${window.location.pathname}${window.location.search}`;
+      const lastHit = Number(sessionStorage.getItem(dedupeKey) || 0);
+      const now = Date.now();
+      if (lastHit && now - lastHit < 15000) return;
+      sessionStorage.setItem(dedupeKey, String(now));
+
+      const visitorKey = getStoredKey(window.localStorage, 'rgcars:visitor-key');
+      const sessionKey = getStoredKey(window.sessionStorage, 'rgcars:session-key');
+      const params = new URLSearchParams(window.location.search || '');
+      const vehicleId = params.get('id') || params.get('vehicle_id') || null;
+      const client = window.supabase.createClient(window.RG.SUPABASE_URL, window.RG.SUPABASE_ANON_KEY);
+      const payload = {
+        page_key: pageKey,
+        page_path: `${window.location.pathname || '/'}${window.location.search || ''}`,
+        page_title: document.title || null,
+        referrer: document.referrer || null,
+        visitor_key: visitorKey || null,
+        session_key: sessionKey || null,
+        vehicle_id: vehicleId || null,
+        user_agent: navigator.userAgent || null,
+      };
+      await client.from('web_page_views').insert(payload);
+    } catch (error) {
+      console.warn('No se pudo registrar la visita web:', error?.message || error);
+    }
+  }
+
   function injectFooterBackofficeLink() {
     if (!document.body?.classList.contains('public-theme')) return;
+    const address = String(window.RG?.AGENCY_ADDRESS || 'Sarmiento 2760 · Río Grande, Tierra del Fuego').trim();
+    const instagramUrl = String(window.RG?.INSTAGRAM_URL || '').trim();
+    const facebookUrl = String(window.RG?.FACEBOOK_URL || '').trim();
+    const fiscalParts = [window.RG?.FISCAL_NAME, window.RG?.FISCAL_CUIT && `CUIT ${window.RG.FISCAL_CUIT}`, window.RG?.FISCAL_STATUS].filter(Boolean);
     document.querySelectorAll('.site-footer').forEach((footer) => {
       footer.innerHTML = `
         <div class="container footer-main">
           <div class="footer-brand-block">
             <img src="./imagenes/isotipo-white.png" alt="RG Cars TDF" class="footer-brand-logo" />
-            <p>Compra, venta y servicios para tu vehículo con atención clara, directa y personalizada.</p>
+            <p>Compra, venta y servicios automotores con atención comercial clara, seguimiento real y foco en operaciones seguras.</p>
           </div>
 
           <div class="footer-columns">
             <div class="footer-column">
               <h3>Comprar</h3>
-              <a href="./index.html#explorar-stock">Explorar stock</a>
-              <a href="./index.html#stock">Catálogo</a>
+              <a href="./index.html#explorar-stock">Stock disponible</a>
+              <a href="./financiacion.html">Financiación prendaria y propia</a>
             </div>
             <div class="footer-column">
               <h3>Servicios</h3>
-              <a href="./consignacion.html">Consignación</a>
+              <a href="./consignacion.html">Vendé tu auto</a>
               <a href="./scouting.html">Búsqueda personalizada</a>
-              <a href="./financiacion.html">Financiación</a>
-              <a href="./seguros.html">Seguros</a>
-              <a href="./peritaje.html">Peritaje</a>
+              <a href="./seguros.html">Seguros del automotor</a>
+              <a href="./peritaje.html">Peritajes pre-compra</a>
+              <a href="./peritaje.html#gestoria">Gestoría</a>
+            </div>
+            <div class="footer-column">
+              <h3>Legal y ayuda</h3>
+              <a href="./terminos-y-condiciones.html">Términos y condiciones</a>
+              <a href="./politica-de-privacidad.html">Política de privacidad</a>
+              <a href="./faq.html">FAQ</a>
+              <a href="./sitemap.html">Sitemap</a>
+              <a href="https://www.argentina.gob.ar/economia/industria-y-comercio/defensadelconsumidor" target="_blank" rel="noreferrer">Defensa del Consumidor</a>
             </div>
             <div class="footer-column">
               <h3>Contacto</h3>
-              <a href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">WhatsApp</a>
-              <a href="https://taplink.cc/rgcarstdf?from=qr" target="_blank" rel="noreferrer">Redes</a>
-              <span class="footer-address">Sarmiento 2760 · Río Grande, TDF</span>
+              <a href="https://wa.me/${String(window.RG?.WHATSAPP || '5492964588267').replace(/\D+/g, '')}" target="_blank" rel="noreferrer">WhatsApp</a>
+              ${instagramUrl ? `<a href="${instagramUrl}" target="_blank" rel="noreferrer">Instagram</a>` : ''}
+              ${facebookUrl ? `<a href="${facebookUrl}" target="_blank" rel="noreferrer">Facebook</a>` : ''}
+              <a href="mailto:${String(window.RG?.ADMIN_EMAIL || 'rgcarstdf@gmail.com').trim()}">${String(window.RG?.ADMIN_EMAIL || 'rgcarstdf@gmail.com').trim()}</a>
             </div>
           </div>
         </div>
 
+<<<<<<< HEAD
         <div class="container footer-bottom">
           <p>Copyright © 2026 RG Cars TDF. Todos los derechos reservados.</p>
           <div class="footer-bottom-links">
@@ -824,6 +934,12 @@
             <a href="./consignacion.html">Vendé tu auto</a>
             <a href="./scouting.html">Búsqueda personalizada</a>
           </div>
+=======
+        <div class="container footer-bottom footer-bottom--centered">
+          <p class="footer-copyright">Copyright © 2026 RG Cars TDF. Todos los derechos reservados.</p>
+          <p class="footer-address footer-address--bottom">${address}</p>
+          ${fiscalParts.length ? `<p class="footer-fiscal">${fiscalParts.join(' · ')}</p>` : ''}
+>>>>>>> 59d7de0 (Upgrades Ale)
         </div>
       `;
     });
@@ -839,12 +955,14 @@
       initUnifiedPublicHeader();
       injectFooterBackofficeLink();
       injectFeedbackButton();
+      trackPageView();
     });
   } else {
     injectSeoTags();
     initUnifiedPublicHeader();
     injectFooterBackofficeLink();
     injectFeedbackButton();
+    trackPageView();
   }
 
   window.RGShared = {
@@ -876,6 +994,10 @@
     leadStatusLabel,
     leadStatusClass,
     leadStatusOptions,
+    leadStageMeta,
+    leadStageLabel,
+    leadStageClass,
+    leadStageOptions,
     buildLeadNotification,
     sendLeadNotification,
   };

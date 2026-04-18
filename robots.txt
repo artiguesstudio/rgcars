@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /admin
+Sitemap: https://www.rgcars.com.ar/sitemap.xml

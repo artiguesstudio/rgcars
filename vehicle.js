@@ -91,10 +91,11 @@ function commercialBlocks(vehicle) {
   if (vehicle.insurance_available) {
     blocks.push(`
       <div class="commercial-panel">
-        <h3>Seguros, peritaje y servicios</h3>
-        <p class="commercial-note">Podés pedir una pre-cotización de seguro, coordinar un peritaje y sumar gestoría, inspección o guarda según la operación.</p>
+        <h3>Seguros, peritaje pre-compra y gestoría</h3>
+        <p class="commercial-note">Podés pedir una pre-cotización de seguro, coordinar un peritaje pre-compra con checklist y diagnóstico computarizado, y sumar gestoría para ordenar mejor la operación.</p>
         <div class="detail-actions detail-actions-tight">
           <a class="btn btn-ghost" href="${window.RGShared.insuranceUrl(vehicle)}">Pre-cotizar seguro</a>
+          <a class="btn btn-soft" href="${window.RGShared.peritajeUrl(vehicle)}">Solicitar peritaje</a>
         </div>
       </div>
     `);

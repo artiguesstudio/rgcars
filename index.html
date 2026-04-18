@@ -60,9 +60,10 @@
       <div class="hero-overlay"></div>
 
       <div class="container hero-content">
-        <span class="hero-badge">Compraventa, financiación, seguros y peritaje en un solo lugar</span>
-        <h1>Encontrá tu camino</h1>
-        <p>Sarmiento 2760 · Río Grande, Tierra del Fuego.</p>
+        <span class="hero-badge">Usados seleccionados, financiación prendaria y propia, peritaje pre-compra y gestoría</span>
+        <h1>Tu próximo vehículo, con respaldo real</h1>
+        <p>Compra, vendé o resolvé tu operación con acompañamiento comercial claro, atención local y seguimiento directo.</p>
+        <div class="hero-location-badge"><strong>Dirección:</strong> Sarmiento 2760 · Río Grande, Tierra del Fuego</div>
 
         <form id="heroSearchForm" class="hero-search-card" action="#stock">
           <div class="hero-search-bar">
@@ -89,7 +90,7 @@
           <div>
             <span class="mini-kicker">Stock</span>
             <h2>Explorá unidades disponibles</h2>
-            <p>Filtros visibles, fichas claras y contacto directo cuando una unidad te interesa.</p>
+            <p>Filtros claros, fichas completas y contacto directo cuando una unidad realmente te interesa.</p>
           </div>
           <a href="#explorar-stock">Ver stock</a>
         </article>
@@ -97,8 +98,8 @@
         <article class="highlight-card is-steel">
           <div>
             <span class="mini-kicker">Consignación</span>
-            <h2>Vendé tu auto con respaldo</h2>
-            <p>Dejá los datos de tu unidad y profesionalizá la operación con RG Cars.</p>
+            <h2>Vendé tu auto más fácil y más rápido</h2>
+            <p>Te ayudamos a mostrarlo mejor, ordenar la gestión y defender el valor que querés conseguir por tu unidad.</p>
           </div>
           <a href="./consignacion.html">Vendé tu auto</a>
         </article>
@@ -106,17 +107,17 @@
         <article class="highlight-card is-graphite">
           <div>
             <span class="mini-kicker">Búsqueda personalizada</span>
-            <h2>Te avisamos cuando haya match</h2>
-            <p>Cargá la búsqueda y recibí aviso cuando ingrese una unidad compatible.</p>
+            <h2>Te avisamos cuando haya coincidencia</h2>
+            <p>Cargá tu búsqueda y recibí aviso cuando ingrese una unidad compatible con lo que necesitás.</p>
           </div>
           <a href="./scouting.html">Crear búsqueda</a>
         </article>
 
         <article class="highlight-card is-dark">
           <div>
-            <span class="mini-kicker">Financiación, seguros y peritaje</span>
-            <h2>Más soluciones para cerrar mejor</h2>
-            <p>Financiación, seguros, peritaje y asesoramiento para resolver todo en un solo lugar.</p>
+            <span class="mini-kicker">Financiación, peritaje, gestoría y más</span>
+            <h2>Más recursos para concretar tu operación</h2>
+            <p>Financiación prendaria y/o propia, peritaje pre-compra, gestoría y asesoramiento comercial para avanzar con más respaldo.</p>
           </div>
           <a href="./financiacion.html">Ver soluciones</a>
         </article>
@@ -140,17 +141,13 @@
         </div>
 
         <div class="filter-dialog__body">
-          <label class="filter-check">
-            <input id="filterAvailable" type="checkbox" />
-            <span>Solo disponibles</span>
-          </label>
-          <label class="filter-check">
+                    <label class="filter-check">
             <input id="filterFeatured" type="checkbox" />
-            <span>Destacados</span>
+            <span>Ofertas / oportunidades</span>
           </label>
           <label class="filter-check">
             <input id="filterZeroKm" type="checkbox" />
-            <span>0 km</span>
+            <span>0KM</span>
           </label>
           <label class="filter-check">
             <input id="filterUsed" type="checkbox" />
@@ -161,12 +158,77 @@
             <span>Orden</span>
             <select id="sort" class="select toolbar-sort__select">
               <option value="newest">Recién ingresados</option>
-              <option value="featured">Destacados primero</option>
+              <option value="featured">Ofertas / oportunidades primero</option>
               <option value="price_asc">Precio: menor a mayor</option>
               <option value="price_desc">Precio: mayor a menor</option>
             </select>
           </label>
-        </div>
+        
+          <label class="filter-inline-field" for="filterBrand">
+            <span>Marca</span>
+            <select id="filterBrand" class="select toolbar-sort__select">
+              <option value="">Todas</option>
+            </select>
+          </label>
+          <label class="filter-inline-field" for="filterFuel">
+            <span>Combustible</span>
+            <select id="filterFuel" class="select toolbar-sort__select">
+              <option value="">Todos</option>
+              <option value="Nafta">Nafta</option>
+              <option value="Diésel">Diésel</option>
+              <option value="Diesel">Diesel</option>
+              <option value="Híbrido">Híbrido</option>
+              <option value="Eléctrico">Eléctrico</option>
+              <option value="GNC">GNC</option>
+              <option value="Flex">Flex</option>
+            </select>
+          </label>
+          <label class="filter-inline-field" for="filterTransmission">
+            <span>Transmisión</span>
+            <select id="filterTransmission" class="select toolbar-sort__select">
+              <option value="">Todas</option>
+              <option value="Manual">Manual</option>
+              <option value="Automática">Automática</option>
+              <option value="Automatica">Automática</option>
+              <option value="CVT">CVT</option>
+            </select>
+          </label>
+          <label class="filter-inline-field" for="filterDrivetrain">
+            <span>Tracción</span>
+            <select id="filterDrivetrain" class="select toolbar-sort__select">
+              <option value="">Todas</option>
+              <option value="4x2">4x2</option>
+              <option value="4x4">4x4</option>
+              <option value="AWD">AWD</option>
+              <option value="Delantera">Delantera</option>
+              <option value="Trasera">Trasera</option>
+            </select>
+          </label>
+          <label class="filter-inline-field" for="filterColor">
+            <span>Color</span>
+            <input id="filterColor" class="input toolbar-sort__select" placeholder="Ej: blanco, gris, negro" />
+          </label>
+          <div class="filter-range-grid">
+            <label class="filter-inline-field" for="filterYearMin">
+              <span>Año desde</span>
+              <input id="filterYearMin" class="input toolbar-sort__select" type="number" min="1950" max="2035" placeholder="2018" />
+            </label>
+            <label class="filter-inline-field" for="filterYearMax">
+              <span>Año hasta</span>
+              <input id="filterYearMax" class="input toolbar-sort__select" type="number" min="1950" max="2035" placeholder="2026" />
+            </label>
+          </div>
+          <div class="filter-range-grid">
+            <label class="filter-inline-field" for="filterPriceMin">
+              <span>Precio desde</span>
+              <input id="filterPriceMin" class="input toolbar-sort__select" type="number" min="0" placeholder="15000000" />
+            </label>
+            <label class="filter-inline-field" for="filterPriceMax">
+              <span>Precio hasta</span>
+              <input id="filterPriceMax" class="input toolbar-sort__select" type="number" min="0" placeholder="35000000" />
+            </label>
+          </div>
+</div>
 
         <div class="filter-dialog__footer">
           <button type="button" class="btn btn-ghost search-clear-btn" id="clearFilters">Limpiar</button>
@@ -182,6 +244,7 @@
           <div>
 
             <h2>Unidades listas para explorar</h2>
+            <p class="section-meta">Stock disponible, ordenado y centrado para recorrerlo rápido desde cualquier dispositivo.</p>
           </div>
          
         </div>
@@ -191,18 +254,41 @@
     </section>
 
     <section class="container contact-strip-shell contact-strip-shell--final" id="contacto">
-      <article class="contact-strip-card">
-        <div>
+      <article class="contact-strip-card contact-strip-card--enhanced">
+        <div class="contact-strip-copy">
           <span class="mini-kicker">Contacto</span>
-          <h2>Visitanos o escribinos y seguimos la operación por el canal que te quede más cómodo</h2>
-          <p>Sarmiento 2760 · Río Grande, Tierra del Fuego. Atención comercial y seguimiento directo por WhatsApp y redes.</p>
+          <h2>Te esperamos en la agencia o seguimos la operación por el canal que te resulte más cómodo</h2>
+          <p>Atención comercial directa, respuestas ágiles y seguimiento real para stock, consignación, financiación, peritajes pre-compra y gestoría.</p>
+          <div class="contact-strip-copy__points" aria-label="Canales disponibles">
+            <span>Atención en agencia</span>
+            <span>Respuesta comercial ágil</span>
+            <span>Seguimiento real de la operación</span>
+          </div>
         </div>
-        <div class="contact-strip-info">
-          <strong>Contacto directo RG Cars TDF</strong>
-          <span>Stock, consignación, financiación, seguros, peritaje y búsquedas personalizadas.</span>
-          <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">Hablar por WhatsApp</a>
-        </div>
+        <aside class="contact-strip-panel" aria-label="Datos de contacto de la agencia">
+          <span class="contact-strip-panel__eyebrow">Agencia y canales</span>
+          <strong class="contact-strip-panel__title">RG Cars TDF · Sarmiento 2760</strong>
+          <p class="contact-strip-panel__text">Río Grande, Tierra del Fuego. Coordiná por WhatsApp o seguí tu consulta desde Instagram y Facebook.</p>
+          <div class="contact-strip-badges" aria-hidden="true">
+            <span>WhatsApp</span>
+            <span>Instagram</span>
+            <span>Facebook</span>
+          </div>
+          <div class="contact-strip-actions">
+            <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">Hablar por WhatsApp</a>
+            <a class="btn btn-ghost" href="https://www.instagram.com/rgcars.tdf/" target="_blank" rel="noreferrer">Instagram</a>
+          </div>
+        </aside>
       </article>
+    </section>
+    <section class="container testimonials-shell" id="testimonios">
+      <div class="section-head">
+        <div>
+          <span class="mini-kicker">Opiniones</span>
+          <h2>Próximamente vamos a sumar testimonios reales de clientes</h2>
+          <p class="section-meta">Esta sección queda prevista para incorporar reseñas verificadas, entregas y experiencias de compra reales a medida que la operación siga creciendo.</p>
+        </div>
+      </div>
     </section>
   </main>
 

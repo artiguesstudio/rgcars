@@ -1,28 +1,28 @@
 const sb = window.supabase.createClient(RG.SUPABASE_URL, RG.SUPABASE_ANON_KEY);
 
-const panels = Array.from(document.querySelectorAll('#consignmentForm .wizard-panel'));
-const navButtons = Array.from(document.querySelectorAll('#consignmentStepsNav [data-step-nav]'));
-const title = document.getElementById('wizardTitle');
-const progressBar = document.getElementById('wizardProgressBar');
+const form = document.getElementById('consignmentForm');
+const panels = Array.from(document.querySelectorAll('.wizard-panel'));
+const navButtons = Array.from(document.querySelectorAll('[data-step-nav]'));
 const prevBtn = document.getElementById('consignmentPrev');
 const nextBtn = document.getElementById('consignmentNext');
 const submitBtn = document.getElementById('consignmentSubmit');
-const form = document.getElementById('consignmentForm');
+const progressBar = document.getElementById('wizardProgressBar');
+const title = document.getElementById('wizardTitle');
 const message = document.getElementById('consignmentMessage');
 const photosInput = document.getElementById('photos');
 const photoPreview = document.getElementById('photoPreview');
-const categorySelect = document.getElementById('category');
 const brandSelect = document.getElementById('brand');
 const modelSelect = document.getElementById('model');
+const yearSelect = document.getElementById('year');
+const kmSelect = document.getElementById('km');
+const citySelect = document.getElementById('owner_city');
 
 const STEP_TITLES = [
   'Paso 1 · Datos del vehículo',
-  'Paso 2 · Estado y precio',
-  'Paso 3 · Contacto y fotos',
+  'Paso 2 · Contacto y fotos',
 ];
 
 let currentStep = 0;
-
 
 function initFaqAccordion() {
   document.querySelectorAll('.accordion-trigger').forEach((trigger) => {
@@ -35,8 +35,7 @@ function initFaqAccordion() {
       const isOpen = item.classList.contains('is-open');
       list.querySelectorAll('.accordion-item').forEach((entry) => {
         entry.classList.remove('is-open');
-        const entryTrigger = entry.querySelector('.accordion-trigger');
-        if (entryTrigger) entryTrigger.setAttribute('aria-expanded', 'false');
+        entry.querySelector('.accordion-trigger')?.setAttribute('aria-expanded', 'false');
       });
       item.classList.toggle('is-open', !isOpen);
       trigger.setAttribute('aria-expanded', String(!isOpen));
@@ -78,17 +77,19 @@ function selectedOrOther(select, otherId) {
   return value || null;
 }
 
-function populateCatalog() {
-  window.RGShared.populateBrandSelect(brandSelect, categorySelect.value || 'auto', brandSelect.value);
-  window.RGShared.populateModelSelect(modelSelect, brandSelect.value === 'Otro' ? '' : brandSelect.value, categorySelect.value || 'auto', modelSelect.value);
+function populateStaticOptions() {
+  window.RGShared.populateBrandSelect(brandSelect, '', brandSelect.value);
+  window.RGShared.populateModelSelect(modelSelect, brandSelect.value === 'Otro' ? '' : brandSelect.value, '', modelSelect.value);
+  window.RGShared.populateYearRange(yearSelect, { start: 1990, end: new Date().getFullYear(), allowBlank: false });
+  window.RGShared.populateSelect(kmSelect, window.RGShared.kmRangeOptions().map((item) => item.label), { placeholder: 'Seleccioná un rango', allowBlank: false });
+  window.RGShared.populateCitySelect(citySelect);
 }
 
-function populateStaticOptions() {
-  window.RGShared.populateYearRange(document.getElementById('year'), { start: 1990, end: new Date().getFullYear() + 1, allowBlank: false });
-  window.RGShared.populateSelect(document.getElementById('fuel'), window.RGCatalog?.fuelOptions || [], { placeholder: 'Seleccioná una opción', allowBlank: false });
-  window.RGShared.populateSelect(document.getElementById('transmission'), window.RGCatalog?.transmissionOptions || ['Manual', 'Automática'], { placeholder: 'Seleccioná una opción', allowBlank: false });
-  window.RGShared.populateCitySelect(document.getElementById('owner_city'));
-  populateCatalog();
+function normalizeKmRange(label) {
+  if (!label) return null;
+  const clean = String(label).replace(/\./g, '').replace(/,/g, '').match(/(\d+)/g);
+  if (!clean?.length) return null;
+  return Number(clean[clean.length - 1]) || null;
 }
 
 function setStep(index) {
@@ -106,22 +107,19 @@ function validateStep(index) {
   const panel = panels[index];
   if (!panel) return true;
   const requiredFields = Array.from(panel.querySelectorAll('[required]')).filter((field) => !field.closest('.is-hidden'));
-
   for (const field of requiredFields) {
-    if (!field.value?.trim()) {
+    const value = field.type === 'checkbox' ? field.checked : field.value?.trim();
+    if (!value) {
       field.focus();
       field.reportValidity?.();
       return false;
     }
   }
 
-  if (index === 1) {
-    const expected = Number(form.expected_price.value || 0);
-    const min = Number(form.min_acceptable_price.value || 0);
-    if (min > expected) {
-      showMessage('El mínimo aceptable no puede ser mayor al precio ideal.', false);
-      return false;
-    }
+  const phone = document.getElementById('owner_phone')?.value || '';
+  if (index === 1 && phone.replace(/\D+/g, '').length < 8) {
+    showMessage('Ingresá un celular válido para que podamos contactarte.', false);
+    return false;
   }
 
   clearMessage();
@@ -131,7 +129,7 @@ function validateStep(index) {
 function previewFiles(files) {
   if (!photoPreview) return;
   if (!files?.length) {
-    photoPreview.innerHTML = '<div class="empty-inline">Podés subir frente, laterales, interior, tablero, motor y detalles.</div>';
+    photoPreview.innerHTML = '<div class="empty-inline">Las fotos son opcionales, pero ayudan a revisar mejor el caso.</div>';
     return;
   }
   photoPreview.innerHTML = Array.from(files).map((file, index) => {
@@ -154,16 +152,6 @@ async function uploadPhotos(leadId, files) {
   return uploaded;
 }
 
-function syncDebtField() {
-  const select = document.getElementById('has_debt');
-  const input = document.getElementById('debt_notes');
-  const wrapper = document.getElementById('debtNotesField');
-  const active = select.value === 'yes';
-  wrapper.classList.toggle('is-hidden', !active);
-  input.required = active;
-  if (!active) input.value = '';
-}
-
 async function handleSubmit(event) {
   event.preventDefault();
   if (!validateStep(currentStep)) return;
@@ -181,26 +169,26 @@ async function handleSubmit(event) {
       model: selectedOrOther(modelSelect, 'model_other'),
       version: form.version.value.trim() || null,
       year: form.year.value ? Number(form.year.value) : null,
-      km: form.km.value ? Number(form.km.value) : null,
-      plate: window.RGShared.normalizePlate(form.plate.value) || null,
-      category: form.category.value || 'auto',
-      fuel: form.fuel.value || null,
-      transmission: form.transmission.value || null,
-      condition_summary: form.condition_summary.value.trim(),
+      km: normalizeKmRange(form.km.value),
+      plate: null,
+      category: 'auto',
+      fuel: null,
+      transmission: null,
+      condition_summary: null,
       mechanical_notes: null,
-      cosmetic_notes: form.cosmetic_notes.value.trim() || null,
-      service_history: form.service_history.value.trim() || null,
-      accepts_trade_in: form.accepts_trade_in.value === 'true',
-      ready_to_transfer: form.ready_to_transfer.value === 'true',
-      has_debt: form.has_debt.value === 'yes',
-      debt_notes: form.debt_notes.value.trim() || null,
-      expected_price: form.expected_price.value ? Number(form.expected_price.value) : null,
-      min_acceptable_price: form.min_acceptable_price.value ? Number(form.min_acceptable_price.value) : null,
+      cosmetic_notes: null,
+      service_history: null,
+      accepts_trade_in: false,
+      ready_to_transfer: null,
+      has_debt: false,
+      debt_notes: null,
+      expected_price: null,
+      min_acceptable_price: null,
       max_expected_price: null,
       pricing_notes: form.pricing_notes.value.trim() || null,
       owner_name: form.owner_name.value.trim(),
       owner_phone: form.owner_phone.value.trim(),
-      owner_email: form.owner_email.value.trim(),
+      owner_email: form.owner_email.value.trim() || null,
       owner_city: form.owner_city.value.trim() || null,
       contact_preference: 'whatsapp',
       status: 'new',
@@ -224,14 +212,15 @@ async function handleSubmit(event) {
 
     form.reset();
     populateStaticOptions();
-    syncDebtField();
     previewFiles([]);
     setStep(0);
-    await window.RGShared.sendLeadNotification('consignment', 'new', payload, { event: 'created' }).catch((error) => console.warn('No se pudo enviar el email de consignación:', error.message));
-    showMessage('Tu solicitud fue enviada correctamente. Ya quedó en curso y pronto nos vamos a poner en contacto.', true);
+    await window.RGShared.sendLeadNotification('consignment', 'new', payload, { event: 'created' }).catch((error) => {
+      console.warn('No se pudo enviar el email de consignación:', error.message);
+    });
+    showMessage('Tu consulta fue enviada correctamente. Ya quedó registrada y pronto nos vamos a poner en contacto.', true);
   } catch (error) {
     console.error(error);
-    showMessage(error.message || 'No se pudo enviar la ficha.', false);
+    showMessage(error.message || 'No se pudo enviar la consulta.', false);
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = originalText;
@@ -251,19 +240,12 @@ nextBtn?.addEventListener('click', () => {
 prevBtn?.addEventListener('click', () => setStep(currentStep - 1));
 photosInput?.addEventListener('change', (event) => previewFiles(event.target.files));
 form?.addEventListener('submit', handleSubmit);
-categorySelect?.addEventListener('change', () => {
-  brandSelect.value = '';
-  modelSelect.value = '';
-  populateCatalog();
-});
 brandSelect?.addEventListener('change', () => {
-  window.RGShared.populateModelSelect(modelSelect, brandSelect.value === 'Otro' ? '' : brandSelect.value, categorySelect.value || 'auto');
+  window.RGShared.populateModelSelect(modelSelect, brandSelect.value === 'Otro' ? '' : brandSelect.value, '');
 });
-document.getElementById('has_debt')?.addEventListener('change', syncDebtField);
 
 toggleManualField(brandSelect, 'brand_other');
 toggleManualField(modelSelect, 'model_other');
 populateStaticOptions();
-syncDebtField();
 setStep(0);
 initFaqAccordion();

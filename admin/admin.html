@@ -49,6 +49,13 @@
         </details>
 
         <details class="admin-nav-group" open>
+          <summary>Inteligencia</summary>
+          <div class="admin-nav-group__items">
+            <button type="button" class="admin-nav-link" data-view="metrics">Métricas</button>
+          </div>
+        </details>
+
+        <details class="admin-nav-group" open>
           <summary>Sistema</summary>
           <div class="admin-nav-group__items">
             <button type="button" class="admin-nav-link" data-view="settings">Configuración</button>
@@ -68,6 +75,7 @@
         <div class="admin-topbar__actions">
           <button type="button" class="btn btn-ghost" data-quick-view="vehicles">Nuevo vehículo</button>
           <button type="button" class="btn btn-ghost" data-quick-view="leads">Ver leads</button>
+          <button type="button" class="btn btn-ghost" data-quick-view="metrics">Ver métricas</button>
           <button type="button" class="btn btn-primary" id="logout">Cerrar sesión</button>
         </div>
       </header>
@@ -114,6 +122,95 @@
                 <p class="admin-muted" id="overviewMeta">Cargando datos…</p>
               </div>
               <div id="overviewHighlights" class="admin-summary-list"></div>
+            </article>
+          </div>
+
+          <div class="admin-overview-grid admin-overview-grid--reports">
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head admin-panel-head--inline">
+                <div>
+                  <span class="eyebrow">Seguimiento</span>
+                  <h2>Vehículos sin movimiento</h2>
+                </div>
+                <p class="admin-muted" id="vehicleAlertsMeta">Cargando monitoreo…</p>
+              </div>
+              <div id="vehicleAlertsList" class="admin-summary-list admin-summary-list--clean"></div>
+            </article>
+
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">Lectura rápida</span>
+                  <h2>Qué mirar hoy</h2>
+                </div>
+                <p class="admin-muted">Un resumen corto para decidir qué revisar primero.</p>
+              </div>
+              <div id="overviewActionsToday" class="admin-summary-list admin-summary-list--clean"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="admin-view" data-view-panel="metrics">
+          <div class="admin-overview-grid admin-overview-grid--reports admin-metrics-hero-grid">
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">Dashboard</span>
+                  <h2>Métricas del negocio</h2>
+                </div>
+                <p class="admin-muted" id="metricsMeta">Visión consolidada de tráfico, leads y stock.</p>
+              </div>
+              <div id="metricsAreas" class="admin-summary-strip"></div>
+            </article>
+
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">Embudo CRM</span>
+                  <h2>Etapas comerciales</h2>
+                </div>
+                <p class="admin-muted">Lectura rápida del pipeline para dirección y ventas.</p>
+              </div>
+              <div id="metricsFunnel" class="admin-summary-list admin-summary-list--clean"></div>
+            </article>
+          </div>
+
+          <div class="admin-overview-grid admin-overview-grid--reports admin-overview-grid--traffic">
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">Tráfico</span>
+                  <h2>Visitas diarias</h2>
+                </div>
+                <p class="admin-muted" id="trafficMeta">Últimos 14 días medidos desde la web.</p>
+              </div>
+              <div id="trafficSummary" class="admin-summary-strip admin-summary-strip--compact"></div>
+              <div id="trafficDailyChart" class="admin-chart admin-chart--bars"></div>
+            </article>
+
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head">
+                <div>
+                  <span class="eyebrow">Interés</span>
+                  <h2>Páginas y áreas con más tracción</h2>
+                </div>
+                <p class="admin-muted">Distribución de visitas y mix comercial para seguimiento diario.</p>
+              </div>
+              <div id="trafficPagesChart" class="admin-chart admin-chart--rows"></div>
+              <div id="leadMixChart" class="admin-chart admin-chart--rows admin-chart--secondary"></div>
+            </article>
+          </div>
+
+          <div class="admin-overview-grid admin-overview-grid--reports">
+            <article class="admin-card admin-panel-card">
+              <div class="admin-panel-head admin-panel-head--inline">
+                <div>
+                  <span class="eyebrow">Alertas</span>
+                  <h2>Vehículos sin movimiento</h2>
+                </div>
+                <p class="admin-muted" id="vehicleAlertsMetaMetrics">Cargando monitoreo…</p>
+              </div>
+              <div id="vehicleAlertsListMetrics" class="admin-summary-list admin-summary-list--clean"></div>
             </article>
           </div>
         </section>
@@ -179,7 +276,7 @@
                     <div class="field col-3"><label for="year">Año</label><input id="year" class="input" type="number" placeholder="Año" /></div>
                     <div class="field col-3"><label for="plate">Patente</label><input id="plate" class="input" placeholder="AB123CD" /></div>
                     <div class="field col-4"><label for="km">Kilómetros</label><input id="km" class="input" type="number" placeholder="Kilómetros" /></div>
-                    <div class="field col-4"><label for="price">Precio</label><input id="price" class="input" type="number" placeholder="Precio" /></div>
+                    <div class="field col-4"><label for="price">Precio</label><input id="price" class="input" type="text" inputmode="numeric" autocomplete="off" placeholder="15.900.000" /></div>
                     <div class="field col-4"><label for="currency">Moneda</label><select id="currency" class="select"><option value="ARS">ARS</option><option value="USD">USD</option></select></div>
                     <div class="field col-4"><label for="category">Categoría</label><select id="category" class="select"><option value="auto">Auto</option><option value="camioneta">Camioneta</option><option value="suv">SUV</option><option value="camion">Camión</option><option value="moto">Moto</option><option value="utilitario">Utilitario</option><option value="otro">Otro</option></select></div>
                     <div class="field col-4"><label for="status">Estado</label><select id="status" class="select"><option value="available">Disponible</option><option value="incoming">Próximo a ingresar</option><option value="reserved">Reservado</option><option value="sold">Vendido</option><option value="hidden">Oculto</option></select></div>
@@ -240,7 +337,8 @@
                     <div class="field col-4"><label for="private_financing_enabled">Compra entre particulares</label><select id="private_financing_enabled" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
                     <div class="field col-4"><label for="finance_max_months">Máximo de cuotas</label><input id="finance_max_months" class="input" type="number" min="0" placeholder="Ej: 48" /></div>
                     <div class="field col-6"><label for="min_down_payment">Entrega mínima sugerida</label><input id="min_down_payment" class="input" type="number" min="0" placeholder="Monto estimado" /></div>
-                    <div class="field col-6"><label for="finance_entities">Entidades / convenios</label><input id="finance_entities" class="input" placeholder="Santander, Prendo, BNA" /></div>
+                    <div class="field col-3"><label for="stock_alert_days">Alerta sin movimientos (días)</label><input id="stock_alert_days" class="input" type="number" min="1" placeholder="Ej: 30" /></div>
+                    <div class="field col-9"><label for="finance_entities">Entidades / convenios</label><input id="finance_entities" class="input" placeholder="Santander, Prendo, BNA" /></div>
                     <div class="field col-12"><label for="finance_note">Aclaración comercial</label><textarea id="finance_note" class="input textarea" rows="3" placeholder="Ej: sujeto a scoring, documentación y condiciones vigentes"></textarea></div>
                   </div>
                 </div>
@@ -259,7 +357,38 @@
                     <input id="photos" class="input" type="file" accept="image/*" multiple />
                     <p class="field-help">Las imágenes se almacenan en el bucket <strong>vehicles</strong>.</p>
                   </div>
+                  <div class="photo-toolbar">
+                    <button type="button" class="btn btn-ghost" id="photoMoveLeft" disabled>Mover antes</button>
+                    <button type="button" class="btn btn-ghost" id="photoMoveRight" disabled>Mover después</button>
+                    <button type="button" class="btn btn-danger" id="photoDeleteSelected" disabled>Eliminar seleccionada</button>
+                  </div>
                   <div id="photoList" class="photo-list"></div>
+                </div>
+              </details>
+
+              <details class="admin-fold">
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Postventa</span>
+                    <strong>Mantenimiento y alertas</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <p class="field-help" id="vehicleMaintenanceMeta">Guardá el vehículo primero para habilitar historial, ficha imprimible y monitoreo.</p>
+                  <div class="form-grid">
+                    <div class="field col-3"><label for="maintenanceDate">Fecha</label><input id="maintenanceDate" class="input" type="date" /></div>
+                    <div class="field col-3"><label for="maintenanceType">Tipo</label><select id="maintenanceType" class="select"><option value="revision">Revisión</option><option value="service">Service</option><option value="reparacion">Reparación</option><option value="estetica">Estética</option><option value="documentacion">Documentación</option><option value="movimiento">Movimiento comercial</option><option value="otro">Otro</option></select></div>
+                    <div class="field col-3"><label for="maintenanceKm">Km</label><input id="maintenanceKm" class="input" type="number" min="0" placeholder="Kilometraje" /></div>
+                    <div class="field col-3"><label for="maintenanceCost">Costo (ARS)</label><input id="maintenanceCost" class="input" type="number" min="0" placeholder="Monto" /></div>
+                    <div class="field col-6"><label for="maintenanceTitle">Título</label><input id="maintenanceTitle" class="input" placeholder="Ej: cambio de aceite y filtros" /></div>
+                    <div class="field col-6"><label for="maintenanceNextDue">Próximo control</label><input id="maintenanceNextDue" class="input" type="date" /></div>
+                    <div class="field col-12"><label for="maintenanceNotes">Detalle</label><textarea id="maintenanceNotes" class="input textarea" rows="3" placeholder="Trabajo realizado, observaciones, repuestos, próximos pasos"></textarea></div>
+                  </div>
+                  <div class="action-row action-row--admin action-row--compact">
+                    <button id="saveMaintenance" class="btn btn-primary" type="button">Guardar movimiento</button>
+                    <button id="downloadMaintenanceSheet" class="btn btn-ghost" type="button">Descargar ficha de mantenimiento</button>
+                  </div>
+                  <div id="vehicleMaintenanceList" class="admin-summary-list admin-summary-list--clean"></div>
                 </div>
               </details>
 
@@ -385,6 +514,7 @@
   <script src="../config.js"></script>
   <script src="../finance-rate-defaults.js"></script>
   <script src="../shared.js"></script>
+  <script src="./admin-access.js"></script>
   <script src="../ficha.js"></script>
   <script src="./admin.js" defer></script>
 </body>

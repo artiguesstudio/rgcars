@@ -1,1 +1,13 @@
-- /bin/cp sitemap.xml $DEPLOYPATH/
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.rgcars.com.ar/</loc></url>
+  <url><loc>https://www.rgcars.com.ar/consignacion.html</loc></url>
+  <url><loc>https://www.rgcars.com.ar/scouting.html</loc></url>
+  <url><loc>https://www.rgcars.com.ar/financiacion.html</loc></url>
+  <url><loc>https://www.rgcars.com.ar/seguros.html</loc></url>
+  <url><loc>https://www.rgcars.com.ar/peritaje.html</loc></url>
+  <url><loc>https://www.rgcars.com.ar/faq.html</loc></url>
+  <url><loc>https://www.rgcars.com.ar/terminos-y-condiciones.html</loc></url>
+  <url><loc>https://www.rgcars.com.ar/politica-de-privacidad.html</loc></url>
+  <url><loc>https://www.rgcars.com.ar/sitemap.html</loc></url>
+</urlset>
