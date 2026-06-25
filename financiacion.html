@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./styles.css?v=20260625-deploy-refresh" />
-  <link rel="stylesheet" href="./index.css?v=20260625-deploy-refresh" />
+  <link rel="stylesheet" href="./index.css?v=20260625-financing-options-modal" />
 </head>
 <body class="public-theme wizard-page financing-page">
   <header class="site-header">
@@ -56,18 +56,54 @@
         </div>
 
         <div class="financing-options-grid" role="list" aria-label="Opciones de financiación">
-          <article class="financing-option-card" role="listitem">
-            <img src="./imagenes/bna.png" alt="BNA + Autos" loading="lazy" />
-          </article>
-          <article class="financing-option-card" role="listitem">
-            <img src="./imagenes/santander.png" alt="Santander SuperMovilidad" loading="lazy" />
-          </article>
-          <article class="financing-option-card" role="listitem">
-            <img src="./imagenes/prendo.png" alt="Prendo" loading="lazy" />
-          </article>
-          <article class="financing-option-card" role="listitem">
-            <img src="./imagenes/propia.png" alt="Financiación propia RG Cars TDF" loading="lazy" />
-          </article>
+          <div class="financing-option-item" role="listitem">
+            <button
+              type="button"
+              class="financing-option-card"
+              data-financing-option="bna"
+              aria-label="Ver información sobre BNA +Autos"
+              aria-haspopup="dialog"
+              aria-controls="financingOptionModal"
+            >
+              <img src="./imagenes/bna.png" alt="" loading="lazy" aria-hidden="true" />
+            </button>
+          </div>
+          <div class="financing-option-item" role="listitem">
+            <button
+              type="button"
+              class="financing-option-card"
+              data-financing-option="santander"
+              aria-label="Ver información sobre Santander SuperMovilidad"
+              aria-haspopup="dialog"
+              aria-controls="financingOptionModal"
+            >
+              <img src="./imagenes/santander.png" alt="" loading="lazy" aria-hidden="true" />
+            </button>
+          </div>
+          <div class="financing-option-item" role="listitem">
+            <button
+              type="button"
+              class="financing-option-card"
+              data-financing-option="prendo"
+              aria-label="Ver información sobre Prendo"
+              aria-haspopup="dialog"
+              aria-controls="financingOptionModal"
+            >
+              <img src="./imagenes/prendo.png" alt="" loading="lazy" aria-hidden="true" />
+            </button>
+          </div>
+          <div class="financing-option-item" role="listitem">
+            <button
+              type="button"
+              class="financing-option-card"
+              data-financing-option="propia"
+              aria-label="Ver información sobre Financiación propia RG Cars"
+              aria-haspopup="dialog"
+              aria-controls="financingOptionModal"
+            >
+              <img src="./imagenes/propia.png" alt="" loading="lazy" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         <p class="financing-options-disclaimer">Las condiciones pueden variar según evaluación crediticia, unidad seleccionada y entidad financiera.</p>
@@ -165,6 +201,6 @@
   <script src="./catalog-data.js?v=20260625-deploy-refresh"></script>
   <script src="./finance-rate-defaults.js?v=20260625-deploy-refresh"></script>
   <script src="./shared.js?v=20260625-deploy-refresh"></script>
-  <script src="./financiacion.js?v=20260625-deploy-refresh" defer></script>
+  <script src="./financiacion.js?v=20260625-financing-options-modal" defer></script>
 </body>
 </html>
