@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="./index.css" />
+  <link rel="stylesheet" href="./index.css?v=20260616-service-cleanup" />
 </head>
 <body class="public-theme detail-page">
   <header class="site-header">
@@ -29,7 +29,6 @@
         <a href="./index.html#explorar-stock">Comprá un auto</a>
         <a href="./consignacion.html">Vendé tu auto</a>
         <a href="./scouting.html">Búsqueda personalizada</a>
-        <a href="./financiacion.html">Financiación</a>
           <a href="./seguros.html">Seguros</a>
         <a href="./peritaje.html">Peritaje</a>
       </nav>
@@ -44,7 +43,10 @@
     <section class="detail-shell">
       <div class="container">
         <div class="detail-backline">
-          <a href="./index.html#explorar-stock" class="text-link">← Volver al catálogo</a>
+          <a href="./index.html#explorar-stock" class="btn btn-primary back-to-catalog" aria-label="Volver al catálogo de vehículos">
+            <span aria-hidden="true">←</span>
+            <span>Volver al catálogo</span>
+          </a>
         </div>
 
         <section id="detail" aria-live="polite"></section>
@@ -104,7 +106,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="./config.js"></script>
-  <script src="./shared.js"></script>
+  <script src="./shared.js?v=20260616-contacto-whatsapp"></script>
   <script src="./vehicle.js" defer></script>
 </body>
 </html>

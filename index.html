@@ -27,7 +27,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="./index.css" />
+  <link rel="stylesheet" href="./index.css?v=20260616-home-header-dropdown" />
 </head>
 <body class="public-theme home-page">
   <header class="site-header">
@@ -40,7 +40,6 @@
         <a href="#explorar-stock">Stock</a>
         <a href="./consignacion.html">Vendé tu auto</a>
         <a href="./scouting.html">Búsqueda personalizada</a>
-        <a href="./financiacion.html">Financiación</a>
         <a href="./seguros.html">Seguros</a>
         <a href="./peritaje.html">Peritaje</a>
         <a href="#contacto">Contacto</a>
@@ -74,9 +73,45 @@
             <a class="pill-link is-active" href="#explorar-stock">Comprar</a>
             <a class="pill-link" href="./consignacion.html">Vender</a>
             <a class="pill-link" href="./scouting.html">Búsqueda personalizada</a>
-            <a class="pill-link" href="./financiacion.html">Financiación</a>
+            <a class="pill-link" href="#supermovilidad">Financiación</a>
           </div>
         </form>
+      </div>
+    </section>
+
+    <section class="container supermovilidad-home-shell" id="supermovilidad" aria-labelledby="supermovilidadTitle">
+      <div class="supermovilidad-banner supermovilidad-banner--home">
+        <h2 id="supermovilidadTitle" class="sr-only">Financiación Santander SuperMovilidad</h2>
+        <picture>
+          <source media="(max-width: 767px)" srcset="./imagenes/supermovlidad-mobile.png" />
+          <img
+            src="./imagenes/supermovilidad-desktop.png"
+            alt="Financiación Santander SuperMovilidad para vehículos RG Cars TDF"
+            loading="lazy"
+          />
+        </picture>
+        <a
+          class="supermovilidad-banner__cta supermovilidad-banner__cta--desktop"
+          href="https://supermovilidad.com.ar/cars-inventory?seller=RGCARS%20TDF"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Simular financiación con Santander SuperMovilidad"
+          data-label="Simular financiación"
+          data-supermovilidad-cta
+        >
+          <span class="sr-only">Simular financiación con Santander SuperMovilidad</span>
+        </a>
+        <a
+          class="supermovilidad-banner__cta supermovilidad-banner__cta--mobile"
+          href="https://supermovilidad.com.ar/cars-inventory?seller=RGCARS%20TDF"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Simular financiación con Santander SuperMovilidad"
+          data-label="Simular financiación"
+          data-supermovilidad-cta
+        >
+          <span class="sr-only">Simular financiación con Santander SuperMovilidad</span>
+        </a>
       </div>
     </section>
 
@@ -117,7 +152,7 @@
             <h2>Más recursos para concretar tu operación</h2>
             <p>Financiación prendaria y/o propia, peritaje pre-compra, gestoría y asesoramiento comercial para avanzar con más respaldo.</p>
           </div>
-          <a href="./financiacion.html">Ver soluciones</a>
+          <a href="#supermovilidad">Ver soluciones</a>
         </article>
       </div>
     </section>
@@ -316,7 +351,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="./config.js"></script>
   <script src="./catalog-data.js"></script>
-  <script src="./shared.js"></script>
+  <script src="./shared.js?v=20260616-contacto-whatsapp"></script>
   <script src="./app.js" defer></script>
   <script src="./home-ui.js" defer></script>
 </body>

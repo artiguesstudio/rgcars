@@ -9,6 +9,11 @@
     otro: 'Otro',
   };
 
+  const LEAD_SUCCESS_EMAIL_MESSAGE = 'Recibimos tu consulta. Un asesor de RG Cars TDF se va a contactar con vos a la brevedad. También te enviamos una confirmación por email.';
+  const LEAD_SUCCESS_SAVED_ONLY_MESSAGE = 'Recibimos tu consulta. Un asesor de RG Cars TDF se va a contactar con vos a la brevedad. No pudimos enviar la confirmación por email, pero tu solicitud quedó registrada.';
+  const LEAD_SUCCESS_MESSAGE = LEAD_SUCCESS_EMAIL_MESSAGE;
+  const LEAD_ERROR_MESSAGE = 'No pudimos enviar la consulta. Intentá nuevamente o escribinos por WhatsApp.';
+
   function formatPrice(value, currency = 'ARS') {
     if (value == null || value === '') return '-';
     try {
@@ -98,6 +103,12 @@
     return url.toString();
   }
 
+  function supermovilidadSectionUrl() {
+    const url = new URL(`${siteRoot()}index.html`);
+    url.hash = 'supermovilidad';
+    return url.toString();
+  }
+
   function insuranceUrl(vehicle = null) {
     const url = new URL(`${siteRoot()}seguros.html`);
     if (vehicle?.id) url.searchParams.set('vehicle_id', vehicle.id);
@@ -122,6 +133,68 @@
 
   function textOrDash(value) {
     return value == null || value === '' ? '-' : value;
+  }
+
+  function normalizeLeadText(value) {
+    return String(value || '').trim();
+  }
+
+  function leadPhoneDigits(value) {
+    return normalizeLeadText(value).replace(/\D+/g, '');
+  }
+
+  function isValidLeadName(value) {
+    return normalizeLeadText(value).length >= 2;
+  }
+
+  function isValidLeadPhone(value) {
+    const phone = normalizeLeadText(value);
+    if (!phone) return false;
+    if (!/^[\d\s()+-]+$/.test(phone)) return false;
+    return leadPhoneDigits(phone).length >= 6;
+  }
+
+  function isValidLeadEmail(value) {
+    const email = normalizeLeadText(value).toLowerCase();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email);
+  }
+
+  async function submitServiceLead(payload) {
+    const supabaseUrl = String(window.RG?.SUPABASE_URL || '').trim().replace(/\/+$/g, '');
+    const anonKey = String(window.RG?.SUPABASE_ANON_KEY || '').trim();
+
+    if (!supabaseUrl || !anonKey) {
+      throw new Error(LEAD_ERROR_MESSAGE);
+    }
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/create-lead`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify(payload || {}),
+    });
+
+    let result = null;
+    try {
+      result = await response.json();
+    } catch {
+      result = null;
+    }
+
+    if (!response.ok || !result?.ok) {
+      throw new Error(normalizeLeadText(result?.error) || LEAD_ERROR_MESSAGE);
+    }
+
+    return result;
+  }
+
+  function leadSubmissionSuccessMessage(result) {
+    if (result?.saved && result?.emailSentToUser) return LEAD_SUCCESS_EMAIL_MESSAGE;
+    if (result?.saved) return LEAD_SUCCESS_SAVED_ONLY_MESSAGE;
+    return LEAD_ERROR_MESSAGE;
   }
 
   function firstImage(vehicle) {
@@ -507,12 +580,12 @@
 
   const HEADER_PRIMARY_LINKS = [
     { key: 'stock', href: './index.html#explorar-stock', label: 'Comprar un auto' },
-    { key: 'consignacion', href: './consignacion.html', label: 'Vendé tu auto' },
-    { key: 'scouting', href: './scouting.html', label: 'Búsqueda personalizada' },
-    { key: 'financiacion', href: './financiacion.html', label: 'Financiación' },
   ];
 
   const HEADER_SERVICE_LINKS = [
+    { key: 'consignacion', href: './consignacion.html', label: 'Vendé tu auto' },
+    { key: 'scouting', href: './scouting.html', label: 'Búsqueda personalizada' },
+    { key: 'financiacion', href: './financiacion.html', label: 'Financiación' },
     { key: 'seguros', href: './seguros.html', label: 'Seguros del automotor' },
     { key: 'peritaje', href: './peritaje.html', label: 'Peritajes pre-compra' },
   ];
@@ -527,11 +600,12 @@
     { key: 'instagram', href: String(window.RG?.INSTAGRAM_URL || '').trim(), label: 'Instagram', icon: SOCIAL_ICON_ASSETS.instagram },
     { key: 'facebook', href: String(window.RG?.FACEBOOK_URL || '').trim(), label: 'Facebook', icon: SOCIAL_ICON_ASSETS.facebook },
   ].filter((item) => item.href);
+  const HEADER_CONTACT_WHATSAPP_URL = `https://wa.me/${String(window.RG?.WHATSAPP || '5492964588267').replace(/\D+/g, '')}`;
 
   const HEADER_MOBILE_LINKS = [
     ...HEADER_PRIMARY_LINKS,
     ...HEADER_SERVICE_LINKS,
-    { key: 'contacto', href: './index.html#contacto', label: 'Contacto' },
+    { key: 'contacto', href: HEADER_CONTACT_WHATSAPP_URL, label: 'Contacto', target: '_blank', rel: 'noopener noreferrer' },
   ];
 
   function currentHeaderServiceKey() {
@@ -554,6 +628,8 @@
     link.href = item.href;
     link.textContent = item.label;
     if (extraClass) link.className = extraClass;
+    if (item.target) link.target = item.target;
+    if (item.rel) link.rel = item.rel;
     if (item.key === currentKey) link.setAttribute('aria-current', 'page');
     return link;
   }
@@ -579,6 +655,50 @@
       if (toggle) toggle.setAttribute('aria-expanded', 'false');
       document.body.classList.remove('has-mobile-menu-open');
     });
+  }
+
+  function isDesktopHeaderDropdownLayout() {
+    return window.matchMedia('(min-width: 761px)').matches;
+  }
+
+  function positionDesktopHeaderMenu(shell, toggle) {
+    if (!shell || !toggle || !isDesktopHeaderDropdownLayout()) return;
+    const panel = shell.querySelector('.mobile-menu-panel');
+    if (!panel) return;
+
+    const viewportPadding = 16;
+    const triggerGap = 12;
+    const toggleRect = toggle.getBoundingClientRect();
+    const panelWidth = Math.min(panel.offsetWidth || 296, Math.max(240, window.innerWidth - (viewportPadding * 2)));
+    const preferredRight = Math.round(window.innerWidth - toggleRect.right);
+    const maxRight = Math.max(viewportPadding, Math.round(window.innerWidth - panelWidth - viewportPadding));
+    const right = Math.min(Math.max(preferredRight, viewportPadding), maxRight);
+    const top = Math.max(viewportPadding, Math.round(toggleRect.bottom + triggerGap));
+    const maxHeight = Math.max(220, Math.round(window.innerHeight - top - viewportPadding));
+
+    shell.style.setProperty('--desktop-header-menu-top', `${top}px`);
+    shell.style.setProperty('--desktop-header-menu-right', `${right}px`);
+    shell.style.setProperty('--desktop-header-menu-max-height', `${maxHeight}px`);
+  }
+
+  function syncOpenHeaderMenusForViewport() {
+    const openShells = document.querySelectorAll('.site-header .mobile-menu-shell.is-open');
+    if (!openShells.length) {
+      document.body.classList.remove('has-mobile-menu-open');
+      return;
+    }
+
+    if (isDesktopHeaderDropdownLayout()) {
+      document.body.classList.remove('has-mobile-menu-open');
+      openShells.forEach((shell) => {
+        const header = shell.closest('.site-header');
+        const toggle = header?.querySelector('.header-mobile-toggle');
+        positionDesktopHeaderMenu(shell, toggle);
+      });
+      return;
+    }
+
+    document.body.classList.add('has-mobile-menu-open');
   }
 
   function initUnifiedPublicHeader() {
@@ -692,8 +812,12 @@
         closeHeaderServicesMenus();
         mobileShell.hidden = false;
         mobileShell.classList.add('is-open');
+        if (isDesktopHeaderDropdownLayout()) {
+          positionDesktopHeaderMenu(mobileShell, mobileToggle);
+        } else {
+          document.body.classList.add('has-mobile-menu-open');
+        }
         mobileToggle.setAttribute('aria-expanded', 'true');
-        document.body.classList.add('has-mobile-menu-open');
       };
       const closeMobileMenu = () => closeHeaderMobileMenus();
 
@@ -742,6 +866,15 @@
         closeHeaderServicesMenus();
         closeHeaderMobileMenus();
       }
+    });
+
+    let headerMenuViewportFrame = 0;
+    window.addEventListener('resize', () => {
+      if (headerMenuViewportFrame) return;
+      headerMenuViewportFrame = window.requestAnimationFrame(() => {
+        headerMenuViewportFrame = 0;
+        syncOpenHeaderMenusForViewport();
+      });
     });
   }
 
@@ -881,6 +1014,32 @@
     }
   }
 
+  function trackEvent(eventName, payload = {}) {
+    if (!eventName) return;
+    const eventPayload = payload && typeof payload === 'object' ? payload : {};
+
+    try {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', eventName, eventPayload);
+      }
+    } catch {}
+
+    try {
+      if (Array.isArray(window.dataLayer)) {
+        window.dataLayer.push({ event: eventName, ...eventPayload });
+      }
+    } catch {}
+
+    try {
+      window.dispatchEvent(new CustomEvent('rg:track', {
+        detail: {
+          event: eventName,
+          payload: eventPayload,
+        },
+      }));
+    } catch {}
+  }
+
   function injectFooterBackofficeLink() {
     if (!document.body?.classList.contains('public-theme')) return;
     const address = String(window.RG?.AGENCY_ADDRESS || 'Sarmiento 2760 · Río Grande, Tierra del Fuego').trim();
@@ -967,12 +1126,24 @@
     waLink,
     vehicleUrl,
     financingUrl,
+    supermovilidadSectionUrl,
     insuranceUrl,
     peritajeUrl,
     textOrDash,
     firstImage,
     loadImageAsDataUrl,
     normalizePlate,
+    normalizeLeadText,
+    leadPhoneDigits,
+    isValidLeadName,
+    isValidLeadPhone,
+    isValidLeadEmail,
+    LEAD_SUCCESS_MESSAGE,
+    LEAD_SUCCESS_EMAIL_MESSAGE,
+    LEAD_SUCCESS_SAVED_ONLY_MESSAGE,
+    LEAD_ERROR_MESSAGE,
+    submitServiceLead,
+    leadSubmissionSuccessMessage,
     fetchVehicleById,
     arrayFromUnknown,
     populateSelect,
@@ -991,5 +1162,6 @@
     leadStageOptions,
     buildLeadNotification,
     sendLeadNotification,
+    trackEvent,
   };
 })();

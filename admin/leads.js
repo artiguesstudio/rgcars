@@ -36,6 +36,14 @@ function leadMatchesCount(requestId) {
   return state.matches.filter((item) => item.scouting_request_id === requestId).length;
 }
 
+function scoutingServiceLabel(item) {
+  const labels = {
+    comprar_auto: 'Comprar un auto',
+    busqueda_personalizada: 'Búsqueda personalizada',
+  };
+  return labels[item?.use_case] || 'Búsqueda personalizada';
+}
+
 function noteActionsHTML(type, id, currentStatus, notes = '') {
   return `
     <div class="lead-admin-box">
@@ -104,17 +112,19 @@ function consignmentCardHTML(item) {
 
 function scoutingCardHTML(item) {
   const matches = leadMatchesCount(item.id);
+  const serviceLabel = scoutingServiceLabel(item);
   return `
     <article class="lead-card lead-card-full">
       <div class="lead-card-body">
         <div class="lead-card-head">
           <div>
-            <h3>${escape([item.brand, item.model, item.version].filter(Boolean).join(' ')) || 'Búsqueda personalizada'}</h3>
+            <h3>${escape([item.brand, item.model, item.version].filter(Boolean).join(' ')) || serviceLabel}</h3>
             <p>${escape(item.customer_name || '')} · ${escape(item.phone || '')} · ${escape(item.email || '')}</p>
           </div>
           <span class="status-pill is-inline ${item.status === 'active' ? 'is-available' : item.status === 'paused' ? 'is-reserved' : 'is-hidden'}">${escape(item.status || 'active')}</span>
         </div>
         <div class="lead-meta">
+          <span>${escape(serviceLabel)}</span>
           <span>${escape(window.RGShared.categoryLabel(item.category))}</span>
           <span>${item.year_min || '-'} / ${item.year_max || '-'}</span>
           <span>${window.RGShared.formatPrice(item.price_min, item.currency)} - ${window.RGShared.formatPrice(item.price_max, item.currency)}</span>

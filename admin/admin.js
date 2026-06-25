@@ -216,6 +216,14 @@ function leadMatchesCount(requestId) {
   return state.leads.matches.filter((item) => item.scouting_request_id === requestId).length;
 }
 
+function scoutingServiceLabel(item) {
+  const labels = {
+    comprar_auto: 'Comprar un auto',
+    busqueda_personalizada: 'Búsqueda personalizada',
+  };
+  return labels[item?.use_case] || 'Búsqueda personalizada';
+}
+
 function statusOptions(type, current) {
   return window.RGShared.leadStatusOptions(type, current);
 }
@@ -703,8 +711,10 @@ function consignmentCardHTML(item) {
 
 function scoutingCardHTML(item) {
   const matches = leadMatchesCount(item.id);
+  const serviceLabel = scoutingServiceLabel(item);
   const previewHtml = `
     <div class="lead-meta">
+      <span>${escape(serviceLabel)}</span>
       <span>${escape(window.RGShared.categoryLabel(item.category))}</span>
       <span>${item.year_min || '-'} / ${item.year_max || '-'}</span>
       <span>${window.RGShared.formatPrice(item.price_min, item.currency)} - ${window.RGShared.formatPrice(item.price_max, item.currency)}</span>
@@ -722,7 +732,7 @@ function scoutingCardHTML(item) {
   return leadCardShell({
     type: 'scouting',
     item,
-    title: escape([item.brand, item.model, item.version].filter(Boolean).join(' ')) || 'Búsqueda personalizada',
+    title: escape([item.brand, item.model, item.version].filter(Boolean).join(' ')) || serviceLabel,
     subtitle: `${escape(item.customer_name || '')} · ${escape(item.phone || '')} · ${escape(item.email || '')}`,
     statusLabel: window.RGShared.leadStatusLabel('scouting', item.status || 'active'),
     statusClass: window.RGShared.leadStatusClass('scouting', item.status || 'active'),
