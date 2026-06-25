@@ -9,6 +9,11 @@ deployment:
     - /bin/mkdir -p $DEPLOYPATH/imagenes
     - /bin/mkdir -p $DEPLOYPATH/videos
 
+    # Limpiar artefactos temporales que no deben quedar publicados
+    - /bin/rm -f $DEPLOYPATH/financiacion-desktop-layout-check.png
+    - /bin/rm -f $DEPLOYPATH/financiacion-mobile-layout-check.png
+    - /bin/rm -f $DEPLOYPATH/financiacion-title-break-desktop.png
+
     # Carpetas públicas
     - /bin/cp -R admin/. $DEPLOYPATH/admin/
     - /bin/cp -R imagenes/. $DEPLOYPATH/imagenes/
@@ -22,14 +27,10 @@ deployment:
     - /bin/cp scouting.html $DEPLOYPATH/
     - /bin/cp seguros.html $DEPLOYPATH/
     - /bin/cp peritaje.html $DEPLOYPATH/
-
-    # Acceso / gestión
-    - /bin/cp admin.html $DEPLOYPATH/
-    - /bin/cp admin.js $DEPLOYPATH/
-    - /bin/cp leads.html $DEPLOYPATH/
-    - /bin/cp leads.js $DEPLOYPATH/
-    - /bin/cp login.html $DEPLOYPATH/
-    - /bin/cp reset.html $DEPLOYPATH/
+    - /bin/cp faq.html $DEPLOYPATH/
+    - /bin/cp politica-de-privacidad.html $DEPLOYPATH/
+    - /bin/cp terminos-y-condiciones.html $DEPLOYPATH/
+    - /bin/cp sitemap.html $DEPLOYPATH/
 
     # CSS
     - /bin/cp styles.css $DEPLOYPATH/
@@ -54,4 +55,4 @@ deployment:
 
     # SEO / utilitarios
     - /bin/cp robots.txt $DEPLOYPATH/
-    - /bin/cp sitemap.xml.example $DEPLOYPATH/sitemap.xml
+    - /bin/cp sitemap.xml $DEPLOYPATH/
