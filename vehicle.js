@@ -67,26 +67,7 @@ function commercialPills(vehicle) {
 }
 
 function commercialBlocks(vehicle) {
-  const financeEntities = window.RGShared.arrayFromUnknown(vehicle.finance_entities);
   const blocks = [];
-
-  if (vehicle.financing_enabled || vehicle.private_financing_enabled) {
-    blocks.push(`
-      <div class="commercial-panel">
-        <h3>Financiación</h3>
-        <ul class="feature-list compact-list">
-          ${vehicle.min_down_payment ? `<li>Entrega estimada desde ${window.RGShared.formatPrice(vehicle.min_down_payment, vehicle.currency || 'ARS')}</li>` : '<li>Entrega mínima a confirmar con un asesor</li>'}
-          ${vehicle.finance_max_months ? `<li>Plazo de trabajo hasta ${vehicle.finance_max_months} cuotas</li>` : '<li>Plazo sujeto a perfil y convenio</li>'}
-          ${financeEntities.length ? `<li>Operable con ${window.RGShared.escapeHTML(financeEntities.join(', '))}</li>` : '<li>Consultá alternativas disponibles para esta unidad</li>'}
-        </ul>
-        ${vehicle.finance_note ? `<p class="commercial-note">${window.RGShared.escapeHTML(vehicle.finance_note)}</p>` : '<p class="commercial-note">La aprobación final depende del análisis de la entidad y la documentación presentada.</p>'}
-        <div class="detail-actions detail-actions-tight">
-          <a class="btn btn-soft" href="${window.RGShared.financingUrl(vehicle, 'agency')}">Simular financiación</a>
-          <a class="btn btn-ghost" href="${window.RGShared.financingUrl(vehicle, 'private')}">Compra entre particulares</a>
-        </div>
-      </div>
-    `);
-  }
 
   if (vehicle.insurance_available) {
     blocks.push(`
@@ -140,6 +121,14 @@ function equipmentMarkup(vehicle) {
 
 function detailMarkup(vehicle) {
   const images = Array.isArray(vehicle.images) ? vehicle.images : [];
+  const financingAvailable = !!(vehicle.financing_enabled || vehicle.private_financing_enabled);
+  const dotsMarkup = images.length > 1
+    ? `
+          <div class="detail-main-dots" aria-label="Fotos del vehiculo">
+            ${images.map((_, index) => `<button class="detail-main-dot ${index === 0 ? 'is-active' : ''}" type="button" data-detail-dot="${index}" aria-label="Ver foto ${index + 1}"></button>`).join('')}
+          </div>
+      `
+    : '';
   const mainMedia = images.length
     ? `<img id="mainVehicleImage" src="${images[0]}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}">`
     : `<div class="media-placeholder large">Sin foto principal</div>`;
@@ -149,12 +138,12 @@ function detailMarkup(vehicle) {
       <section class="detail-gallery-card">
         <div class="detail-main-media">
           ${mainMedia}
-          <span class="status-pill ${window.RGShared.statusClass(vehicle.status)} is-large">${window.RGShared.statusLabel(vehicle.status)}</span>
+          ${dotsMarkup}
           <div class="detail-top-pills">${commercialPills(vehicle)}</div>
         </div>
         <div class="detail-thumbs">
           ${images.length ? images.map((src, index) => `
-            <button class="thumb-button ${index === 0 ? 'is-active' : ''}" type="button" data-thumb-src="${src}" aria-label="Ver imagen ${index + 1}">
+            <button class="thumb-button ${index === 0 ? 'is-active' : ''}" type="button" data-thumb-src="${src}" data-thumb-index="${index}" aria-label="Ver imagen ${index + 1}">
               <img src="${src}" alt="Miniatura ${index + 1}">
             </button>
           `).join('') : '<div class="empty-inline">Todavía no hay miniaturas cargadas.</div>'}
@@ -176,7 +165,7 @@ function detailMarkup(vehicle) {
 
         <div class="detail-actions">
           <a class="btn btn-primary" href="${window.RGShared.waLink(vehicle)}" target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
-          ${vehicle.financing_enabled ? `<a class="btn btn-soft" href="${window.RGShared.financingUrl(vehicle, 'agency')}">Financiación</a>` : ''}
+          ${financingAvailable ? `<a class="btn btn-soft vehicle-financing-link" href="${window.RGShared.supermovilidadSectionUrl()}" data-vehicle-financing-link>Financiación</a>` : ''}
           ${vehicle.insurance_available ? `<a class="btn btn-ghost" href="${window.RGShared.insuranceUrl(vehicle)}">Seguro</a>` : ''}
         </div>
 
@@ -215,12 +204,79 @@ function bindDetailEvents() {
   const mainImage = document.getElementById('mainVehicleImage');
   if (!mainImage) return;
 
-  document.querySelectorAll('[data-thumb-src]').forEach((button) => {
+  const mainMedia = mainImage.closest('.detail-main-media');
+  const thumbButtons = [...document.querySelectorAll('[data-thumb-src]')];
+  const dotButtons = [...document.querySelectorAll('[data-detail-dot]')];
+  const imageSources = thumbButtons
+    .map((button) => button.getAttribute('data-thumb-src'))
+    .filter(Boolean);
+
+  if (!imageSources.length) return;
+
+  let currentIndex = Math.max(0, imageSources.indexOf(mainImage.getAttribute('src') || imageSources[0]));
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  function syncGallery(index) {
+    const total = imageSources.length;
+    if (!total) return;
+    currentIndex = (index + total) % total;
+    mainImage.src = imageSources[currentIndex];
+    thumbButtons.forEach((item) => {
+      const itemIndex = Number(item.getAttribute('data-thumb-index') || '0');
+      item.classList.toggle('is-active', itemIndex === currentIndex);
+    });
+    dotButtons.forEach((item) => {
+      const itemIndex = Number(item.getAttribute('data-detail-dot') || '0');
+      item.classList.toggle('is-active', itemIndex === currentIndex);
+    });
+  }
+
+  thumbButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      const src = button.getAttribute('data-thumb-src');
-      if (!src) return;
-      mainImage.src = src;
-      document.querySelectorAll('[data-thumb-src]').forEach((item) => item.classList.toggle('is-active', item === button));
+      const nextIndex = Number(button.getAttribute('data-thumb-index') || '0');
+      syncGallery(nextIndex);
+    });
+  });
+
+  dotButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const nextIndex = Number(button.getAttribute('data-detail-dot') || '0');
+      syncGallery(nextIndex);
+    });
+  });
+
+  mainMedia?.addEventListener('touchstart', (event) => {
+    if (!window.matchMedia('(max-width: 760px)').matches || imageSources.length < 2) return;
+    const touch = event.changedTouches?.[0];
+    if (!touch) return;
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  }, { passive: true });
+
+  mainMedia?.addEventListener('touchend', (event) => {
+    if (!window.matchMedia('(max-width: 760px)').matches || imageSources.length < 2) return;
+    const touch = event.changedTouches?.[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+    if (Math.abs(deltaX) < 36 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    syncGallery(deltaX < 0 ? currentIndex + 1 : currentIndex - 1);
+  }, { passive: true });
+
+  syncGallery(currentIndex);
+}
+
+function bindVehicleFinancingAction(vehicle) {
+  const button = document.querySelector('[data-vehicle-financing-link]');
+  if (!button) return;
+
+  button.addEventListener('click', () => {
+    window.RGShared.trackEvent?.('vehicle_financing_click', {
+      vehicle_id: vehicle.id || null,
+      vehicle_title: vehicle.title || [vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(' ') || 'Vehículo',
+      source: 'vehicle_detail',
+      destination: 'home_supermovilidad_section',
     });
   });
 }
@@ -304,6 +360,7 @@ async function load() {
     updateSeo(data);
     $detail.innerHTML = detailMarkup(data);
     bindDetailEvents();
+    bindVehicleFinancingAction(data);
     await loadRelated(data);
   } catch (error) {
     console.error(error);

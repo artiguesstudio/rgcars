@@ -1,93 +1,95 @@
-const sb = window.supabase.createClient(RG.SUPABASE_URL, RG.SUPABASE_ANON_KEY);
-
 const form = document.getElementById('insuranceForm');
 const message = document.getElementById('insuranceMessage');
 const submitButton = document.getElementById('insuranceSubmit');
+const urlParams = new URLSearchParams(window.location.search);
 
 function showMessage(text, ok = true) {
+  if (!message) return;
   message.textContent = text;
   message.className = `form-message ${ok ? 'is-success' : 'is-error'}`;
   message.hidden = false;
 }
 
 function clearMessage() {
+  if (!message) return;
   message.textContent = '';
   message.className = 'form-message';
   message.hidden = true;
 }
 
 function prefillFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('vehicle_id')) form.vehicle_id.value = params.get('vehicle_id');
-  if (params.get('vehicle_title')) form.vehicle_title.value = params.get('vehicle_title');
-  if (params.get('brand')) form.vehicle_brand.value = params.get('brand');
-  if (params.get('model')) form.vehicle_model.value = params.get('model');
-  if (params.get('year')) form.vehicle_year.value = params.get('year');
+  const vehicleId = urlParams.get('vehicle_id');
+  const vehicleTitle = window.RGShared.normalizeLeadText(urlParams.get('vehicle_title'));
+  if (vehicleId) form.vehicle_id.value = vehicleId;
+  if (vehicleTitle) {
+    form.vehicle_title.value = vehicleTitle;
+    form.dataset.vehicleTitle = vehicleTitle;
+  } else {
+    delete form.dataset.vehicleTitle;
+  }
+}
+
+function resetForm() {
+  form.reset();
+  prefillFromUrl();
+  clearMessage();
 }
 
 function validate() {
-  const required = Array.from(form.querySelectorAll('[required]'));
-  for (const field of required) {
-    if (field.type === 'checkbox') {
-      if (!field.checked) {
-        field.focus();
-        field.reportValidity?.();
-        return false;
-      }
-      continue;
-    }
-    if (!field.value?.trim()) {
-      field.focus();
-      field.reportValidity?.();
-      return false;
-    }
+  if (!window.RGShared.isValidLeadName(form.customer_name.value)) {
+    form.customer_name.focus();
+    showMessage('Ingresá un nombre completo válido.', false);
+    return false;
   }
+
+  if (!window.RGShared.isValidLeadPhone(form.phone.value)) {
+    form.phone.focus();
+    showMessage('Ingresá un WhatsApp válido para que podamos contactarte.', false);
+    return false;
+  }
+
+  if (!window.RGShared.isValidLeadEmail(form.email.value)) {
+    form.email.focus();
+    showMessage('Ingresá un email válido para enviarte la confirmación.', false);
+    return false;
+  }
+
+  clearMessage();
   return true;
 }
 
 async function handleSubmit(event) {
   event.preventDefault();
-  clearMessage();
   if (!validate()) return;
 
   submitButton.disabled = true;
   const original = submitButton.textContent;
   submitButton.textContent = 'Enviando…';
+  clearMessage();
 
   try {
-    const payload = {
-      status: 'new',
-      customer_name: form.customer_name.value.trim(),
-      cuil: form.cuil.value.trim(),
-      phone: form.phone.value.trim(),
-      email: form.email.value.trim(),
-      city: form.city.value.trim() || null,
-      vehicle_id: form.vehicle_id.value || null,
-      vehicle_title: form.vehicle_title.value.trim(),
-      vehicle_brand: form.vehicle_brand.value.trim() || null,
-      vehicle_model: form.vehicle_model.value.trim() || null,
-      vehicle_year: form.vehicle_year.value ? Number(form.vehicle_year.value) : null,
-      plate: form.plate.value.trim() || null,
-      insured_amount: form.insured_amount.value ? Number(form.insured_amount.value) : null,
-      coverage_type: form.coverage_type.value,
-      use_type: form.use_type.value || 'particular',
-      insurer_preference: form.insurer_preference.value || null,
-      current_insurer: form.current_insurer.value.trim() || null,
-      needs_financing: form.needs_financing.checked,
-      notes: form.notes.value.trim() || null,
-      source_page: window.location.pathname.split('/').pop() || 'seguros.html',
-    };
+    const vehicleTitle = window.RGShared.normalizeLeadText(form.vehicle_title.value) || form.dataset.vehicleTitle || null;
+    const note = window.RGShared.normalizeLeadText(form.notes.value);
+    const result = await window.RGShared.submitServiceLead({
+      serviceType: form.service_type.value || 'seguro_automotor',
+      source: form.source.value || 'servicio_seguro_automotor',
+      name: window.RGShared.normalizeLeadText(form.customer_name.value),
+      phone: window.RGShared.normalizeLeadText(form.phone.value),
+      email: window.RGShared.normalizeLeadText(form.email.value),
+      message: note || null,
+      vehicleId: form.vehicle_id.value || null,
+      vehicleTitle: vehicleTitle || null,
+      metadata: {
+        insurance_vehicle: vehicleTitle || null,
+        vehicle_year: urlParams.get('year') ? Number(urlParams.get('year')) : null,
+      },
+    });
 
-    const { error } = await sb.from('insurance_leads').insert(payload);
-    if (error) throw error;
-
-    form.reset();
-    prefillFromUrl();
-    await window.RGShared.sendLeadNotification('insurance', 'new', payload, { event: 'created' }).catch((error) => console.warn('No se pudo enviar el email de seguros:', error.message));
-    showMessage('La pre-cotización quedó enviada. Tu solicitud ya está en curso y pronto nos vamos a poner en contacto.', true);
+    resetForm();
+    showMessage(window.RGShared.leadSubmissionSuccessMessage(result), true);
   } catch (error) {
     console.error(error);
-    showMessage(error.message || 'No se pudo enviar la pre-cotización.', false);
+    showMessage(error?.message || window.RGShared.LEAD_ERROR_MESSAGE, false);
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = original;
@@ -95,5 +97,5 @@ async function handleSubmit(event) {
 }
 
 form?.addEventListener('submit', handleSubmit);
-document.getElementById('insuranceReset')?.addEventListener('click', () => { form.reset(); prefillFromUrl(); clearMessage(); });
+document.getElementById('insuranceReset')?.addEventListener('click', resetForm);
 prefillFromUrl();

@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="./index.css" />
+  <link rel="stylesheet" href="./index.css?v=20260616-service-cleanup" />
 </head>
 <body class="public-theme wizard-page peritaje-page">
   <header class="site-header">
@@ -23,7 +23,6 @@
         <a href="./index.html#explorar-stock">Comprá un auto</a>
         <a href="./consignacion.html">Vendé tu auto</a>
         <a href="./scouting.html">Búsqueda personalizada</a>
-        <a href="./financiacion.html">Financiación</a>
         <a href="./seguros.html">Seguros</a>
         <a href="./peritaje.html" aria-current="page">Peritaje</a>
       </nav>
@@ -33,110 +32,52 @@
     </div>
   </header>
 
-  <main class="wizard-shell peritaje-shell">
+  <main class="wizard-shell peritaje-shell service-form-shell">
     <section class="container wizard-intro peritaje-intro">
       <span class="eyebrow">Peritajes pre-compra</span>
-      <h1>Revisá una unidad antes de decidir</h1>
-      <p>Coordiná un peritaje pre-compra con checklist técnico, diagnóstico computarizado y una devolución clara para comprar con más respaldo.</p>
+      <h1>Solicitá un peritaje sin fricción</h1>
+      <p>Dejanos tus datos y la unidad a revisar si ya la tenés identificada. Después coordinamos el resto con contacto directo.</p>
     </section>
 
     <section class="container wizard-grid peritaje-grid">
-      <aside class="wizard-side-card" id="gestoria">
-        <h2>Qué incluye el servicio</h2>
-        <ul class="feature-list compact-list">
-          <li>Checklist general del vehículo y observaciones visibles</li>
-          <li>Diagnóstico computarizado según disponibilidad de la unidad</li>
-          <li>Datos ordenados para avanzar con más criterio en una compra</li>
-        </ul>
-        <p class="wizard-side-copy">La confirmación final del turno queda sujeta a disponibilidad operativa del equipo de RG Cars y al tipo de unidad a revisar.</p>
-        <p class="wizard-side-copy">Si la operación lo requiere, también podemos orientarte con gestoría para ordenar documentación y próximos pasos.</p>
-      </aside>
-
       <article class="wizard-card peritaje-card">
         <div class="section-head compact">
           <div>
-            <span class="eyebrow">Agenda guiada</span>
-            <h2>Solicitud de peritaje</h2>
+            <h2>Solicitar peritaje</h2>
           </div>
-          <p class="section-meta">Completá el formulario y descargá la ficha para tener la operación ordenada desde el inicio.</p>
+          <p class="section-meta">Nombre, WhatsApp y una referencia del vehículo si ya la tenés.</p>
         </div>
 
         <form id="peritajeForm" class="form-grid" novalidate>
           <input type="hidden" id="vehicle_id" name="vehicle_id" />
+          <input type="hidden" id="service_type" name="service_type" value="peritaje_precompra" />
+          <input type="hidden" id="source" name="source" value="servicio_peritaje_precompra" />
 
-          <div class="field col-4">
-            <label for="customer_name">Nombre y apellido</label>
-            <input id="customer_name" name="customer_name" class="input" required />
+          <div class="field col-6">
+            <label for="customer_name">Nombre completo</label>
+            <input id="customer_name" name="customer_name" class="input" autocomplete="name" required />
           </div>
-          <div class="field col-4">
-            <label for="phone">Celular</label>
-            <input id="phone" name="phone" class="input" placeholder="Ej: 2964 58-0000" required />
+          <div class="field col-6">
+            <label for="phone">WhatsApp</label>
+            <input id="phone" name="phone" class="input" inputmode="tel" autocomplete="tel" placeholder="Ej: 2964 58-0000" required />
           </div>
-          <div class="field col-4">
-            <label for="email">E-mail</label>
-            <input id="email" name="email" class="input" type="email" placeholder="Opcional" />
-          </div>
-
-          <div class="field col-4">
-            <label for="city">Ciudad</label>
-            <select id="city" name="city" class="select" required></select>
-          </div>
-          <div class="field col-4">
-            <label for="appointment_date">Fecha tentativa</label>
-            <input id="appointment_date" name="appointment_date" class="input" type="date" required />
-          </div>
-          <div class="field col-4">
-            <label for="appointment_time">Horario</label>
-            <select id="appointment_time" name="appointment_time" class="select" required></select>
-          </div>
-
-          <div class="field col-4">
-            <label for="vehicle_brand">Marca</label>
-            <input id="vehicle_brand" name="vehicle_brand" class="input" required />
-          </div>
-          <div class="field col-4">
-            <label for="vehicle_model">Modelo</label>
-            <input id="vehicle_model" name="vehicle_model" class="input" required />
-          </div>
-          <div class="field col-4">
-            <label for="vehicle_year">Año</label>
-            <input id="vehicle_year" name="vehicle_year" class="input" type="number" min="1950" max="2030" required />
-          </div>
-
-          <div class="field col-4">
-            <label for="plate">Patente</label>
-            <input id="plate" name="plate" class="input" placeholder="AG123BC" />
-          </div>
-          <div class="field col-4">
-            <label for="km">Kilometraje</label>
-            <input id="km" name="km" class="input" type="number" min="0" placeholder="Ej: 61000" />
-          </div>
-          <div class="field col-4">
-            <label for="inspection_reason">Motivo del peritaje</label>
-            <select id="inspection_reason" name="inspection_reason" class="select" required>
-              <option value="">Seleccioná una opción</option>
-              <option value="pre-compra">Peritaje pre-compra</option>
-              <option value="consignacion">Consignación</option>
-              <option value="particulares">Operación entre particulares</option>
-              <option value="control-general">Control general</option>
-              <option value="otro">Otro</option>
-            </select>
-          </div>
-
           <div class="field col-12">
-            <label for="notes">Observaciones</label>
-            <textarea id="notes" name="notes" class="textarea" rows="5" placeholder="Contanos qué querés revisar, si ya hay una operación en curso o cualquier dato útil para coordinar mejor el peritaje."></textarea>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" class="input" inputmode="email" autocomplete="email" placeholder="tuemail@dominio.com" required />
           </div>
-
-          <label class="field col-12 field-check field-check--full">
-            <input id="authorization" name="authorization" type="checkbox" required />
-            <span>Autorizo a RG Cars TDF a guardar mis datos para coordinar este peritaje y contactarme.</span>
-          </label>
+          <div class="field col-12">
+            <label for="vehicle_reference">Vehículo a peritar</label>
+            <input id="vehicle_reference" name="vehicle_reference" class="input" placeholder="Opcional" />
+          </div>
+          <div class="field col-12">
+            <label for="notes">Comentario</label>
+            <textarea id="notes" name="notes" class="textarea" rows="4" placeholder="Opcional"></textarea>
+          </div>
 
           <div class="form-message col-12" role="status" aria-live="polite" id="peritajeMessage" hidden></div>
           <div class="wizard-actions col-12">
             <button type="button" id="peritajeReset" class="btn btn-ghost">Limpiar</button>
-            <button type="submit" id="peritajeSubmit" class="btn btn-primary">Enviar solicitud</button>
+            <button type="submit" id="peritajeSubmit" class="btn btn-primary">Solicitar peritaje</button>
           </div>
         </form>
       </article>
@@ -186,7 +127,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="./config.js"></script>
   <script src="./catalog-data.js"></script>
-  <script src="./shared.js"></script>
-  <script src="./peritaje.js" defer></script>
+  <script src="./shared.js?v=20260616-lead-email"></script>
+  <script src="./peritaje.js?v=20260616-lead-email" defer></script>
 </body>
 </html>

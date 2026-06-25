@@ -27,7 +27,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="./index.css" />
+  <link rel="stylesheet" href="./index.css?v=20260616-home-header-dropdown" />
 </head>
 <body class="public-theme home-page">
   <header class="site-header">
@@ -40,7 +40,6 @@
         <a href="#explorar-stock">Stock</a>
         <a href="./consignacion.html">Vendé tu auto</a>
         <a href="./scouting.html">Búsqueda personalizada</a>
-        <a href="./financiacion.html">Financiación</a>
         <a href="./seguros.html">Seguros</a>
         <a href="./peritaje.html">Peritaje</a>
         <a href="#contacto">Contacto</a>
@@ -60,15 +59,13 @@
       <div class="hero-overlay"></div>
 
       <div class="container hero-content">
-        <span class="hero-badge">Usados seleccionados, financiación prendaria y propia, peritaje pre-compra y gestoría</span>
-        <h1>Tu próximo vehículo, con respaldo real</h1>
-        <p>Compra, vendé o resolvé tu operación con acompañamiento comercial claro, atención local y seguimiento directo.</p>
+        <h1>Cuidamos el valor de tu esfuerzo</h1>
         <div class="hero-location-badge"><strong>Dirección:</strong> Sarmiento 2760 · Río Grande, Tierra del Fuego</div>
 
         <form id="heroSearchForm" class="hero-search-card" action="#stock">
           <div class="hero-search-bar">
             <label class="sr-only" for="q">Buscar vehículos</label>
-            <input id="q" class="hero-search-input" placeholder="Buscá por marca, modelo o segmento" />
+            <input id="q" class="hero-search-input" type="search" inputmode="search" autocomplete="off" enterkeyhint="search" placeholder="Buscá por marca, modelo o segmento" />
             <button class="hero-search-button" type="submit">Buscar</button>
           </div>
 
@@ -76,9 +73,45 @@
             <a class="pill-link is-active" href="#explorar-stock">Comprar</a>
             <a class="pill-link" href="./consignacion.html">Vender</a>
             <a class="pill-link" href="./scouting.html">Búsqueda personalizada</a>
-            <a class="pill-link" href="./financiacion.html">Financiación</a>
+            <a class="pill-link" href="#supermovilidad">Financiación</a>
           </div>
         </form>
+      </div>
+    </section>
+
+    <section class="container supermovilidad-home-shell" id="supermovilidad" aria-labelledby="supermovilidadTitle">
+      <div class="supermovilidad-banner supermovilidad-banner--home">
+        <h2 id="supermovilidadTitle" class="sr-only">Financiación Santander SuperMovilidad</h2>
+        <picture>
+          <source media="(max-width: 767px)" srcset="./imagenes/supermovlidad-mobile.png" />
+          <img
+            src="./imagenes/supermovilidad-desktop.png"
+            alt="Financiación Santander SuperMovilidad para vehículos RG Cars TDF"
+            loading="lazy"
+          />
+        </picture>
+        <a
+          class="supermovilidad-banner__cta supermovilidad-banner__cta--desktop"
+          href="https://supermovilidad.com.ar/cars-inventory?seller=RGCARS%20TDF"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Simular financiación con Santander SuperMovilidad"
+          data-label="Simular financiación"
+          data-supermovilidad-cta
+        >
+          <span class="sr-only">Simular financiación con Santander SuperMovilidad</span>
+        </a>
+        <a
+          class="supermovilidad-banner__cta supermovilidad-banner__cta--mobile"
+          href="https://supermovilidad.com.ar/cars-inventory?seller=RGCARS%20TDF"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Simular financiación con Santander SuperMovilidad"
+          data-label="Simular financiación"
+          data-supermovilidad-cta
+        >
+          <span class="sr-only">Simular financiación con Santander SuperMovilidad</span>
+        </a>
       </div>
     </section>
 
@@ -119,7 +152,7 @@
             <h2>Más recursos para concretar tu operación</h2>
             <p>Financiación prendaria y/o propia, peritaje pre-compra, gestoría y asesoramiento comercial para avanzar con más respaldo.</p>
           </div>
-          <a href="./financiacion.html">Ver soluciones</a>
+          <a href="#supermovilidad">Ver soluciones</a>
         </article>
       </div>
     </section>
@@ -176,7 +209,6 @@
               <option value="">Todos</option>
               <option value="Nafta">Nafta</option>
               <option value="Diésel">Diésel</option>
-              <option value="Diesel">Diesel</option>
               <option value="Híbrido">Híbrido</option>
               <option value="Eléctrico">Eléctrico</option>
               <option value="GNC">GNC</option>
@@ -189,7 +221,6 @@
               <option value="">Todas</option>
               <option value="Manual">Manual</option>
               <option value="Automática">Automática</option>
-              <option value="Automatica">Automática</option>
               <option value="CVT">CVT</option>
             </select>
           </label>
@@ -231,6 +262,7 @@
 </div>
 
         <div class="filter-dialog__footer">
+          <button type="button" class="btn btn-ghost filter-dismiss-btn" id="filterDismiss">Cerrar</button>
           <button type="button" class="btn btn-ghost search-clear-btn" id="clearFilters">Limpiar</button>
           <button type="button" class="btn btn-primary" id="applyFilters">Mostrar resultados</button>
         </div>
@@ -244,10 +276,8 @@
           <div>
 
             <h2>Unidades listas para explorar</h2>
-            <p class="section-meta">Stock disponible, ordenado y centrado para recorrerlo rápido desde cualquier dispositivo.</p>
           </div>
-         
-        </div>
+         </div>
 
         <section id="grid" class="vehicle-grid" aria-live="polite"></section>
       </div>
@@ -257,38 +287,24 @@
       <article class="contact-strip-card contact-strip-card--enhanced">
         <div class="contact-strip-copy">
           <span class="mini-kicker">Contacto</span>
-          <h2>Te esperamos en la agencia o seguimos la operación por el canal que te resulte más cómodo</h2>
-          <p>Atención comercial directa, respuestas ágiles y seguimiento real para stock, consignación, financiación, peritajes pre-compra y gestoría.</p>
-          <div class="contact-strip-copy__points" aria-label="Canales disponibles">
-            <span>Atención en agencia</span>
-            <span>Respuesta comercial ágil</span>
-            <span>Seguimiento real de la operación</span>
-          </div>
         </div>
         <aside class="contact-strip-panel" aria-label="Datos de contacto de la agencia">
           <span class="contact-strip-panel__eyebrow">Agencia y canales</span>
           <strong class="contact-strip-panel__title">RG Cars TDF · Sarmiento 2760</strong>
-          <p class="contact-strip-panel__text">Río Grande, Tierra del Fuego. Coordiná por WhatsApp o seguí tu consulta desde Instagram y Facebook.</p>
-          <div class="contact-strip-badges" aria-hidden="true">
-            <span>WhatsApp</span>
-            <span>Instagram</span>
-            <span>Facebook</span>
-          </div>
-          <div class="contact-strip-actions">
-            <a class="btn btn-primary" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer">Hablar por WhatsApp</a>
-            <a class="btn btn-ghost" href="https://www.instagram.com/rgcars.tdf/" target="_blank" rel="noreferrer">Instagram</a>
+          <p class="contact-strip-panel__text">Río Grande, Tierra del Fuego.</p>
+          <div class="contact-strip-actions contact-strip-actions--icons" aria-label="Redes sociales y contacto directo">
+            <a class="social-icon-button" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer" aria-label="Abrir WhatsApp" title="WhatsApp">
+              <img src="./imagenes/whatsapp-black.png" alt="" aria-hidden="true" />
+            </a>
+            <a class="social-icon-button" href="https://www.instagram.com/rgcars.tdf/" target="_blank" rel="noreferrer" aria-label="Abrir Instagram" title="Instagram">
+              <img src="./imagenes/instagram.png" alt="" aria-hidden="true" />
+            </a>
+            <a class="social-icon-button" href="https://www.facebook.com/profile.php?id=61582999230196" target="_blank" rel="noreferrer" aria-label="Abrir Facebook" title="Facebook">
+              <img src="./imagenes/facebook.png" alt="" aria-hidden="true" />
+            </a>
           </div>
         </aside>
       </article>
-    </section>
-    <section class="container testimonials-shell" id="testimonios">
-      <div class="section-head">
-        <div>
-          <span class="mini-kicker">Opiniones</span>
-          <h2>Próximamente vamos a sumar testimonios reales de clientes</h2>
-          <p class="section-meta">Esta sección queda prevista para incorporar reseñas verificadas, entregas y experiencias de compra reales a medida que la operación siga creciendo.</p>
-        </div>
-      </div>
     </section>
   </main>
 
@@ -335,7 +351,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="./config.js"></script>
   <script src="./catalog-data.js"></script>
-  <script src="./shared.js"></script>
+  <script src="./shared.js?v=20260616-contacto-whatsapp"></script>
   <script src="./app.js" defer></script>
   <script src="./home-ui.js" defer></script>
 </body>
