@@ -645,14 +645,18 @@
     });
   }
 
-  function closeHeaderMobileMenus(except = null) {
+  function closeHeaderMobileMenus(except = null, restoreFocus = true) {
     document.querySelectorAll('.site-header .mobile-menu-shell.is-open').forEach((shell) => {
       if (except && shell === except) return;
       const header = shell.closest('.site-header');
       const toggle = header?.querySelector('.header-mobile-toggle');
       shell.classList.remove('is-open');
       shell.hidden = true;
-      if (toggle) toggle.setAttribute('aria-expanded', 'false');
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Abrir menú de servicios');
+        if (restoreFocus) toggle.focus({ preventScroll: true });
+      }
       document.body.classList.remove('has-mobile-menu-open');
     });
   }
@@ -779,8 +783,9 @@
       const mobileActions = document.createElement('div');
       mobileActions.className = 'header-mobile-actions';
       mobileActions.innerHTML = `
-        <button type="button" class="header-mobile-toggle" aria-expanded="false" aria-controls="mobileSiteMenu-${index + 1}" aria-label="Abrir menú">
-          <span></span><span></span><span></span>
+        <button type="button" class="header-mobile-toggle" aria-expanded="false" aria-controls="mobileSiteMenu-${index + 1}" aria-label="Abrir menú de servicios">
+          <span class="header-mobile-toggle__label">Servicios</span>
+          <span class="header-mobile-toggle__icon" aria-hidden="true"><span></span><span></span><span></span></span>
         </button>
       `;
 
@@ -790,9 +795,9 @@
       mobileShell.hidden = true;
       mobileShell.innerHTML = `
         <button type="button" class="mobile-menu-backdrop" aria-label="Cerrar menú"></button>
-        <div class="mobile-menu-panel" role="dialog" aria-modal="true" aria-label="Menú principal">
+        <div class="mobile-menu-panel" role="dialog" aria-modal="true" aria-label="Servicios">
           <div class="mobile-menu-head">
-            <span>Menú</span>
+            <span>Servicios</span>
             <button type="button" class="mobile-menu-close" aria-label="Cerrar menú">×</button>
           </div>
           <nav class="mobile-menu-nav" aria-label="Navegación móvil"></nav>
@@ -802,13 +807,13 @@
       const mobileNav = mobileShell.querySelector('.mobile-menu-nav');
       HEADER_MOBILE_LINKS.forEach((item) => {
         const link = buildHeaderLink(item, currentKey, 'mobile-menu-link');
-        link.addEventListener('click', () => closeHeaderMobileMenus());
+        link.addEventListener('click', () => closeHeaderMobileMenus(null, false));
         mobileNav.appendChild(link);
       });
 
       const mobileToggle = mobileActions.querySelector('.header-mobile-toggle');
       const openMobileMenu = () => {
-        closeHeaderMobileMenus(mobileShell);
+        closeHeaderMobileMenus(mobileShell, false);
         closeHeaderServicesMenus();
         mobileShell.hidden = false;
         mobileShell.classList.add('is-open');
@@ -818,6 +823,7 @@
           document.body.classList.add('has-mobile-menu-open');
         }
         mobileToggle.setAttribute('aria-expanded', 'true');
+        mobileToggle.setAttribute('aria-label', 'Cerrar menú de servicios');
       };
       const closeMobileMenu = () => closeHeaderMobileMenus();
 
