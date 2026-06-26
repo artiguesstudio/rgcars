@@ -1348,6 +1348,156 @@ body.public-theme .footer-bottom-links {
   scroll-margin-top: 104px;
 }
 
+.supermovilidad-benefits-shell {
+  margin-top: 22px;
+}
+
+.supermovilidad-benefits {
+  --supermovilidad-accent: #00a6b4;
+  padding: 28px;
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+}
+
+.supermovilidad-benefits__header {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.supermovilidad-benefits__header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.5rem, 2.3vw, 2.1rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.supermovilidad-benefits__header p {
+  margin: 0;
+  max-width: 56ch;
+  color: #5f6b7a;
+  line-height: 1.58;
+}
+
+.supermovilidad-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.02em;
+  white-space: nowrap;
+}
+
+.supermovilidad-wordmark__super {
+  color: #111827;
+}
+
+.supermovilidad-wordmark__movilidad {
+  color: #d61f26;
+}
+
+.supermovilidad-benefits__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.supermovilidad-benefit-card {
+  min-height: 196px;
+  padding: 24px 22px;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(0, 166, 180, 0.05) 0%, rgba(248, 250, 252, 0) 100%),
+    #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.supermovilidad-benefit-card__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 166, 180, 0.11);
+  color: var(--supermovilidad-accent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.supermovilidad-benefit-card__icon svg {
+  width: 28px;
+  height: 28px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.supermovilidad-benefit-card h3 {
+  margin: 16px 0 0;
+  color: #0f172a;
+  font-size: 1.08rem;
+  line-height: 1.1;
+}
+
+.supermovilidad-benefit-card p {
+  margin: 8px 0 0;
+  color: #536273;
+  line-height: 1.5;
+}
+
+.supermovilidad-benefits__indicators {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.supermovilidad-benefits__indicator {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.16);
+  cursor: pointer;
+  transition: width 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.supermovilidad-benefits__indicator.is-active,
+.supermovilidad-benefits__indicator[aria-current="true"] {
+  width: 28px;
+  background: var(--supermovilidad-accent);
+}
+
+.supermovilidad-benefits__indicator:focus-visible {
+  outline: 3px solid rgba(0, 166, 180, 0.2);
+  outline-offset: 3px;
+}
+
+.supermovilidad-benefits__disclaimer {
+  margin: 16px 0 0;
+  color: #6b7280;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.supermovilidad-benefits__disclaimer a {
+  color: #0f172a;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
+
 .supermovilidad-banner {
   position: relative;
   display: block;
@@ -8190,6 +8340,77 @@ body.public-theme .detail-main-dot.is-active {
     scroll-margin-top: 90px;
   }
 
+  body.public-theme .supermovilidad-benefits-shell {
+    margin-top: 16px;
+  }
+
+  body.public-theme .supermovilidad-benefits {
+    padding: 20px 0 18px;
+    border-radius: 22px;
+    overflow: hidden;
+  }
+
+  body.public-theme .supermovilidad-benefits__header {
+    padding-inline: 16px;
+    margin-bottom: 18px;
+  }
+
+  body.public-theme .supermovilidad-benefits__header h2 {
+    font-size: 1.42rem;
+    line-height: 1.06;
+  }
+
+  body.public-theme .supermovilidad-benefits__header p {
+    max-width: 30ch;
+    font-size: 0.96rem;
+    line-height: 1.5;
+  }
+
+  body.public-theme .supermovilidad-benefits__grid {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(84%, 84%);
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    padding: 0 16px 6px;
+  }
+
+  body.public-theme .supermovilidad-benefits__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  body.public-theme .supermovilidad-benefit-card {
+    min-height: 176px;
+    padding: 22px 18px;
+    border-radius: 20px;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  body.public-theme .supermovilidad-benefit-card__icon {
+    width: 58px;
+    height: 58px;
+  }
+
+  body.public-theme .supermovilidad-benefit-card h3 {
+    font-size: 1rem;
+  }
+
+  body.public-theme .supermovilidad-benefits__indicators {
+    display: flex;
+  }
+
+  body.public-theme .supermovilidad-benefits__disclaimer {
+    margin-top: 14px;
+    padding-inline: 16px;
+    font-size: 0.8rem;
+  }
+
   body.public-theme .supermovilidad-banner {
     border-radius: 18px;
   }
@@ -8659,18 +8880,16 @@ body.public-theme .financing-option-card img {
 }
 
 body.public-theme .financing-option-card__cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 28px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: rgba(214, 31, 38, 0.08);
-  color: #b1161c;
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
+  display: inline-block;
+  color: #111827;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
   white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
 }
 
 body.public-theme .financing-options-disclaimer {
@@ -8964,8 +9183,6 @@ body.public-theme .financing-modal__primary {
   }
 
   body.public-theme .financing-option-card__cta {
-    min-height: 26px;
-    padding: 0 10px;
     font-size: 0.72rem;
   }
 

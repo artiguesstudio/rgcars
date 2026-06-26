@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const stockGrid = document.getElementById('grid');
   const stockHeading = document.querySelector('#stock .section-head');
   const supermovilidadSection = document.getElementById('supermovilidad');
+  const supermovilidadBenefitsRail = document.querySelector('[data-supermovilidad-benefits-grid]');
+  const supermovilidadBenefitIndicators = [...document.querySelectorAll('[data-supermovilidad-benefit-indicator]')];
   const header = document.querySelector('.site-header');
   const highlightsRail = document.querySelector('.highlight-grid--final');
   const mobileMedia = window.matchMedia('(max-width: 760px)');
@@ -12,6 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let highlightsTimer = null;
   let highlightsResumeTimer = null;
   let highlightsIndex = 0;
+  let supermovilidadBenefitsTimer = null;
+  let supermovilidadBenefitsResumeTimer = null;
+  let supermovilidadBenefitsIndex = 0;
 
   const scrollToSection = (target, hash, behavior = 'smooth') => {
     if (!target) return;
@@ -30,59 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollToSection(target, 'stock');
   };
 
-  const getHighlightCards = () => [...document.querySelectorAll('.highlight-grid--final .highlight-card')];
-
-  const syncHighlightsIndex = () => {
-    if (!highlightsRail) return;
-    const cards = getHighlightCards();
-    if (!cards.length) return;
-    const paddingLeft = parseFloat(window.getComputedStyle(highlightsRail).paddingLeft || '0') || 0;
-    const currentLeft = highlightsRail.scrollLeft;
-    let nearestIndex = 0;
-    let nearestDistance = Number.POSITIVE_INFINITY;
-
-    cards.forEach((card, index) => {
-      const cardLeft = Math.max(0, card.offsetLeft - paddingLeft);
-      const distance = Math.abs(cardLeft - currentLeft);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestIndex = index;
-      }
-    });
-
-    highlightsIndex = nearestIndex;
-  };
-
-  const isHighlightsAutoplayEnabled = () => (
-    !!highlightsRail &&
-    mobileMedia.matches &&
-    !reducedMotionMedia.matches &&
-    getHighlightCards().length > 1
-  );
-
-  const stopHighlightsAutoplay = () => {
-    if (highlightsTimer) {
-      window.clearInterval(highlightsTimer);
-      highlightsTimer = null;
-    }
-    if (highlightsResumeTimer) {
-      window.clearTimeout(highlightsResumeTimer);
-      highlightsResumeTimer = null;
-    }
-  };
-
-  const scrollHighlightsTo = (nextIndex) => {
-    if (!highlightsRail) return;
-    const cards = getHighlightCards();
-    if (!cards.length) return;
-    const paddingLeft = parseFloat(window.getComputedStyle(highlightsRail).paddingLeft || '0') || 0;
-    const boundedIndex = (nextIndex + cards.length) % cards.length;
-    highlightsIndex = boundedIndex;
-    highlightsRail.scrollTo({
-      left: Math.max(0, cards[boundedIndex].offsetLeft - paddingLeft),
-      behavior: 'smooth',
-    });
-  };
+  const motionAwareBehavior = () => (reducedMotionMedia.matches ? 'auto' : 'smooth');
 
   const getHighlightCards = () => [...document.querySelectorAll('.highlight-grid--final .highlight-card')];
 
@@ -137,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
       behavior: 'smooth',
     });
   };
+
   const startHighlightsAutoplay = () => {
     stopHighlightsAutoplay();
     if (!isHighlightsAutoplayEnabled()) return;
@@ -180,6 +134,125 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', refreshHighlightsAutoplay);
     document.addEventListener('visibilitychange', refreshHighlightsAutoplay);
     startHighlightsAutoplay();
+  };
+
+  const getSupermovilidadBenefitCards = () => [...document.querySelectorAll('.supermovilidad-benefit-card')];
+
+  const setSupermovilidadBenefitIndicators = () => {
+    supermovilidadBenefitIndicators.forEach((indicator, index) => {
+      const isActive = index === supermovilidadBenefitsIndex;
+      indicator.classList.toggle('is-active', isActive);
+      indicator.setAttribute('aria-current', String(isActive));
+    });
+  };
+
+  const syncSupermovilidadBenefitsIndex = () => {
+    if (!supermovilidadBenefitsRail) return;
+    const cards = getSupermovilidadBenefitCards();
+    if (!cards.length) return;
+    const paddingLeft = parseFloat(window.getComputedStyle(supermovilidadBenefitsRail).paddingLeft || '0') || 0;
+    const currentLeft = supermovilidadBenefitsRail.scrollLeft;
+    let nearestIndex = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    cards.forEach((card, index) => {
+      const cardLeft = Math.max(0, card.offsetLeft - paddingLeft);
+      const distance = Math.abs(cardLeft - currentLeft);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+
+    supermovilidadBenefitsIndex = nearestIndex;
+    setSupermovilidadBenefitIndicators();
+  };
+
+  const isSupermovilidadBenefitsAutoplayEnabled = () => (
+    !!supermovilidadBenefitsRail &&
+    mobileMedia.matches &&
+    !reducedMotionMedia.matches &&
+    getSupermovilidadBenefitCards().length > 1
+  );
+
+  const stopSupermovilidadBenefitsAutoplay = () => {
+    if (supermovilidadBenefitsTimer) {
+      window.clearInterval(supermovilidadBenefitsTimer);
+      supermovilidadBenefitsTimer = null;
+    }
+    if (supermovilidadBenefitsResumeTimer) {
+      window.clearTimeout(supermovilidadBenefitsResumeTimer);
+      supermovilidadBenefitsResumeTimer = null;
+    }
+  };
+
+  const scrollSupermovilidadBenefitsTo = (nextIndex, behavior = motionAwareBehavior()) => {
+    if (!supermovilidadBenefitsRail) return;
+    const cards = getSupermovilidadBenefitCards();
+    if (!cards.length) return;
+    const paddingLeft = parseFloat(window.getComputedStyle(supermovilidadBenefitsRail).paddingLeft || '0') || 0;
+    const boundedIndex = (nextIndex + cards.length) % cards.length;
+    supermovilidadBenefitsIndex = boundedIndex;
+    setSupermovilidadBenefitIndicators();
+    supermovilidadBenefitsRail.scrollTo({
+      left: Math.max(0, cards[boundedIndex].offsetLeft - paddingLeft),
+      behavior,
+    });
+  };
+
+  const startSupermovilidadBenefitsAutoplay = () => {
+    stopSupermovilidadBenefitsAutoplay();
+    if (!isSupermovilidadBenefitsAutoplayEnabled()) return;
+    syncSupermovilidadBenefitsIndex();
+    supermovilidadBenefitsTimer = window.setInterval(() => {
+      const cards = getSupermovilidadBenefitCards();
+      if (cards.length < 2) return;
+      scrollSupermovilidadBenefitsTo(supermovilidadBenefitsIndex + 1);
+    }, 4600);
+  };
+
+  const queueSupermovilidadBenefitsAutoplay = () => {
+    stopSupermovilidadBenefitsAutoplay();
+    if (!isSupermovilidadBenefitsAutoplayEnabled()) return;
+    supermovilidadBenefitsResumeTimer = window.setTimeout(() => {
+      startSupermovilidadBenefitsAutoplay();
+    }, 6800);
+  };
+
+  const bindSupermovilidadBenefitsCarousel = () => {
+    if (!supermovilidadBenefitsRail) return;
+
+    supermovilidadBenefitIndicators.forEach((indicator, index) => {
+      indicator.addEventListener('click', () => {
+        queueSupermovilidadBenefitsAutoplay();
+        scrollSupermovilidadBenefitsTo(index);
+      });
+    });
+
+    ['pointerdown', 'touchstart', 'wheel', 'focusin', 'keydown'].forEach((eventName) => {
+      supermovilidadBenefitsRail.addEventListener(eventName, queueSupermovilidadBenefitsAutoplay, { passive: eventName !== 'keydown' });
+    });
+
+    supermovilidadBenefitsRail.addEventListener('scroll', () => {
+      if (!mobileMedia.matches) return;
+      syncSupermovilidadBenefitsIndex();
+    }, { passive: true });
+
+    const refreshSupermovilidadBenefitsAutoplay = () => {
+      if (document.hidden) {
+        stopSupermovilidadBenefitsAutoplay();
+        return;
+      }
+      startSupermovilidadBenefitsAutoplay();
+    };
+
+    mobileMedia.addEventListener('change', refreshSupermovilidadBenefitsAutoplay);
+    reducedMotionMedia.addEventListener('change', refreshSupermovilidadBenefitsAutoplay);
+    window.addEventListener('resize', refreshSupermovilidadBenefitsAutoplay);
+    document.addEventListener('visibilitychange', refreshSupermovilidadBenefitsAutoplay);
+
+    setSupermovilidadBenefitIndicators();
+    startSupermovilidadBenefitsAutoplay();
   };
 
   form?.addEventListener('submit', (event) => {
@@ -228,4 +301,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   bindHighlightsAutoplay();
+  bindSupermovilidadBenefitsCarousel();
 });
