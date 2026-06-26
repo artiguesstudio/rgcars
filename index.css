@@ -9364,3 +9364,22 @@ body.public-theme .financing-modal__primary {
     box-shadow: 0 22px 44px rgba(15, 23, 42, 0.16);
   }
 }
+
+/* ===== 2026-06-26 · correccion posicion boton servicios header ===== */
+@media (min-width: 761px) {
+  body.public-theme .site-header .header-mobile-actions {
+    align-items: center;
+  }
+
+  body.public-theme .site-header .header-mobile-toggle {
+    width: auto;
+    min-width: 0;
+    height: 42px;
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  body.public-theme .site-header .header-mobile-toggle__label {
+    display: inline-flex;
+  }
+}
