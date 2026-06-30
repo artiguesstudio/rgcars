@@ -114,8 +114,34 @@
     return url.toString();
   }
 
-  function vehicleFinancingAvailable() {
-    return true;
+  function availabilityValue(value, falseValues = ['no', 'false', '0', 'n']) {
+    if (value === undefined || value === null || value === '') return null;
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    const normalized = String(value).trim().toLowerCase();
+    if (!normalized) return null;
+    return !falseValues.includes(normalized);
+  }
+
+  function availabilityFromKeys(vehicle, keys, falseValues) {
+    if (!vehicle) return true;
+    const values = keys
+      .map((key) => availabilityValue(vehicle[key], falseValues))
+      .filter((value) => value !== null);
+    if (!values.length) return true;
+    return values.some(Boolean);
+  }
+
+  function vehicleFinancingAvailable(vehicle = null) {
+    return availabilityFromKeys(vehicle, [
+      'financing_available',
+      'has_financing',
+      'financingAvailable',
+      'financing',
+      'finance_available',
+      'financing_enabled',
+      'private_financing_enabled',
+    ]);
   }
 
   function supermovilidadSectionUrl() {
@@ -124,8 +150,26 @@
     return url.toString();
   }
 
-  function vehicleInsuranceAvailable() {
-    return true;
+  function vehicleInsuranceAvailable(vehicle = null) {
+    return availabilityFromKeys(vehicle, [
+      'insurance_available',
+      'has_insurance',
+      'insuranceAvailable',
+      'insurance',
+      'seguro_available',
+      'insurance_enabled',
+    ]);
+  }
+
+  function vehicleWebAvailable(vehicle = null) {
+    return availabilityFromKeys(vehicle, [
+      'is_visible',
+      'visible',
+      'show_on_web',
+      'web_available',
+      'web',
+      'web_enabled',
+    ], ['no', 'false', '0', 'n', 'oculto']);
   }
 
   function insuranceUrl(vehicle = null) {
@@ -1156,6 +1200,7 @@
     vehicleFinancingAvailable,
     supermovilidadSectionUrl,
     vehicleInsuranceAvailable,
+    vehicleWebAvailable,
     insuranceUrl,
     peritajeUrl,
     textOrDash,

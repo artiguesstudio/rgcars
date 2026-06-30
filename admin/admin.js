@@ -44,6 +44,16 @@ let supportsPlate = true;
 let lastSavedVehicle = null;
 const SIDEBAR_COLLAPSED_KEY = 'rg-admin-sidebar-collapsed';
 
+function vehicleFinancingAvailable(vehicle) {
+  const helper = window.RGShared?.vehicleFinancingAvailable;
+  return typeof helper === 'function' ? helper(vehicle) : true;
+}
+
+function vehicleInsuranceAvailable(vehicle) {
+  const helper = window.RGShared?.vehicleInsuranceAvailable;
+  return typeof helper === 'function' ? helper(vehicle) : true;
+}
+
 const ACCESS_DEFAULTS = {
   key: 'full_admin',
   label: 'Administrador',
@@ -2394,7 +2404,7 @@ function renderPostSaveActions(vehicle, highlight = true) {
       <button class="btn btn-soft" type="button" data-complete-advanced="${vehicle.id}">Completar ficha avanzada</button>
       <button class="btn btn-soft" type="button" data-duplicate="${vehicle.id}">Duplicar unidad</button>
       <button class="btn btn-ghost" type="button" data-vehicle-panel-target="prices">Ir al listado de precios</button>
-      ${window.RGShared.vehicleFinancingAvailable(vehicle) ? `<a class="btn btn-soft" href="${window.RGShared.financingUrl(vehicle)}" target="_blank" rel="noreferrer">Financiación</a>` : ''}
+      ${vehicleFinancingAvailable(vehicle) ? `<a class="btn btn-soft" href="${window.RGShared.financingUrl(vehicle)}" target="_blank" rel="noreferrer">Financiación</a>` : ''}
       <button class="btn btn-soft" type="button" data-quick-download="${vehicle.id}">Descargar ficha</button>
     </div>
   `;
@@ -2408,8 +2418,8 @@ function adminCardHTML(vehicle) {
     vehicle.featured ? '<span class="inline-tag">Destacado</span>' : '',
     vehicle.is_recent ? '<span class="inline-tag">Recién ingresado</span>' : '',
     vehicle.outlet ? '<span class="inline-tag">Outlet</span>' : '',
-    window.RGShared.vehicleFinancingAvailable(vehicle) ? '<span class="inline-tag">Financiación</span>' : '',
-    window.RGShared.vehicleInsuranceAvailable(vehicle) ? '<span class="inline-tag">Seguro</span>' : '',
+    vehicleFinancingAvailable(vehicle) ? '<span class="inline-tag">Financiación</span>' : '',
+    vehicleInsuranceAvailable(vehicle) ? '<span class="inline-tag">Seguro</span>' : '',
   ].filter(Boolean).join('');
 
   return `

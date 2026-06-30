@@ -66,10 +66,23 @@ function commercialPills(vehicle) {
   return pills.join('');
 }
 
+function sharedVehicleAvailability(helperName, vehicle) {
+  const helper = window.RGShared?.[helperName];
+  return typeof helper === 'function' ? helper(vehicle) : true;
+}
+
+function vehicleFinancingAvailable(vehicle) {
+  return sharedVehicleAvailability('vehicleFinancingAvailable', vehicle);
+}
+
+function vehicleInsuranceAvailable(vehicle) {
+  return sharedVehicleAvailability('vehicleInsuranceAvailable', vehicle);
+}
+
 function commercialBlocks(vehicle) {
   const blocks = [];
 
-  if (window.RGShared.vehicleInsuranceAvailable(vehicle)) {
+  if (vehicleInsuranceAvailable(vehicle)) {
     blocks.push(`
       <div class="commercial-panel">
         <h3>Seguros, peritaje pre-compra y gestoría</h3>
@@ -121,8 +134,8 @@ function equipmentMarkup(vehicle) {
 
 function detailMarkup(vehicle) {
   const images = Array.isArray(vehicle.images) ? vehicle.images : [];
-  const financingAvailable = window.RGShared.vehicleFinancingAvailable(vehicle);
-  const insuranceAvailable = window.RGShared.vehicleInsuranceAvailable(vehicle);
+  const financingAvailable = vehicleFinancingAvailable(vehicle);
+  const insuranceAvailable = vehicleInsuranceAvailable(vehicle);
   const minimumDownPayment = window.RGShared.minimumDownPaymentLabel(vehicle);
   const dotsMarkup = images.length > 1
     ? `
@@ -303,7 +316,7 @@ function relatedScore(baseVehicle, candidate) {
     else if (diff <= 0.35) score += 1;
   }
   if (candidate.featured) score += 1;
-  if (window.RGShared.vehicleFinancingAvailable(candidate) && window.RGShared.vehicleFinancingAvailable(baseVehicle)) score += 1;
+  if (vehicleFinancingAvailable(candidate) && vehicleFinancingAvailable(baseVehicle)) score += 1;
   return score;
 }
 

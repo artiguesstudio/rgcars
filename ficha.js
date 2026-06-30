@@ -18,6 +18,11 @@
       .filter(Boolean);
   }
 
+  function vehicleFinancingAvailable(vehicle) {
+    const helper = window.RGShared?.vehicleFinancingAvailable;
+    return typeof helper === 'function' ? helper(vehicle) : true;
+  }
+
   function specRows(vehicle) {
     return [
       ['Modelo', vehicle.title || [vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(' ') || 'Vehículo'],
@@ -132,7 +137,7 @@
     doc.setFontSize(10.5);
     doc.setTextColor(71, 85, 105);
     doc.text(`Estado publicación: ${window.RGShared.statusLabel(vehicle.status)}`, 150, 106, { align: 'center' });
-    doc.text(window.RGShared.vehicleFinancingAvailable(vehicle) ? 'Unidad con financiación disponible' : 'Consultar alternativas de financiación', 150, 114, { align: 'center' });
+    doc.text(vehicleFinancingAvailable(vehicle) ? 'Unidad con financiación disponible' : 'Consultar alternativas de financiación', 150, 114, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);

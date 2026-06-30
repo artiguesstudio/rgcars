@@ -163,12 +163,17 @@ function isZeroKm(vehicle) {
   return Number.isFinite(km) && km <= 100;
 }
 
+function vehicleFinancingAvailable(vehicle) {
+  const helper = window.RGShared?.vehicleFinancingAvailable;
+  return typeof helper === 'function' ? helper(vehicle) : true;
+}
+
 function vehiclePriority(vehicle) {
   let score = 0;
   if (vehicle.status === 'available') score += 25;
   if (vehicle.featured || vehicle.outlet) score += 20;
   if (vehicle.is_recent) score += 14;
-  if (window.RGShared.vehicleFinancingAvailable(vehicle)) score += 6;
+  if (vehicleFinancingAvailable(vehicle)) score += 6;
   return score;
 }
 
