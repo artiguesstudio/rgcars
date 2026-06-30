@@ -3,9 +3,12 @@ const $ = (id) => document.getElementById(id);
 
 const state = {
   currentView: 'overview',
-  currentLeadTab: 'consignment',
+  currentLeadTab: 'all',
+  currentVehiclePanel: 'stock',
+  vehicleFormMode: 'quick',
   vehicleSearch: '',
   vehicleStatusFilter: 'all',
+  quickPriceStatus: {},
   leadSearch: '',
   vehicles: [],
   leads: {
@@ -33,10 +36,13 @@ const state = {
   analyticsMissing: false,
   analyticsError: '',
   analyticsStatus: 'idle',
+  aiSuggestion: null,
+  sidebarCollapsed: false,
 };
 
 let supportsPlate = true;
 let lastSavedVehicle = null;
+const SIDEBAR_COLLAPSED_KEY = 'rg-admin-sidebar-collapsed';
 
 const ACCESS_DEFAULTS = {
   key: 'full_admin',
@@ -195,10 +201,85 @@ function setView(view) {
 }
 
 function setLeadTab(tab) {
-  state.currentLeadTab = ['consignment', 'scouting', 'financing', 'insurance', 'peritaje', 'feedback'].includes(tab) ? tab : 'consignment';
+  const tabs = ['all', 'consignment', 'scouting', 'financing', 'insurance', 'peritaje', 'feedback'];
+  state.currentLeadTab = tabs.includes(tab) ? tab : 'all';
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === state.currentLeadTab));
-  ['consignment', 'scouting', 'financing', 'insurance', 'peritaje', 'feedback'].forEach((key) => {
+  tabs.forEach((key) => {
     $(`${key}Panel`)?.classList.toggle('is-active', key === state.currentLeadTab);
+  });
+}
+
+function readSidebarPreference() {
+  try {
+    return window.localStorage?.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+  } catch (error) {
+    return false;
+  }
+}
+
+function persistSidebarPreference(collapsed) {
+  try {
+    window.localStorage?.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
+  } catch (error) {
+    // The layout still works when storage is disabled.
+  }
+}
+
+function setSidebarCollapsed(collapsed, { persist = true } = {}) {
+  state.sidebarCollapsed = !!collapsed;
+  const shell = document.querySelector('.admin-saas-shell');
+  shell?.classList.toggle('is-sidebar-collapsed', state.sidebarCollapsed);
+  document.body?.classList.toggle('admin-sidebar-collapsed', state.sidebarCollapsed);
+  if (state.sidebarCollapsed) {
+    document.querySelectorAll('.admin-nav-group').forEach((group) => {
+      group.open = true;
+    });
+  }
+
+  const expanded = !state.sidebarCollapsed;
+  const label = expanded ? 'Contraer menú lateral' : 'Expandir menú lateral';
+  const toggle = $('adminSidebarToggle');
+  if (toggle) {
+    toggle.setAttribute('aria-label', label);
+    toggle.setAttribute('aria-expanded', String(expanded));
+    toggle.title = label;
+    const icon = toggle.querySelector('[aria-hidden="true"]');
+    if (icon) icon.textContent = expanded ? '‹' : '›';
+  }
+
+  if (persist) persistSidebarPreference(state.sidebarCollapsed);
+}
+
+function initSidebarState() {
+  setSidebarCollapsed(readSidebarPreference(), { persist: false });
+}
+
+function setVehiclePanel(panel = 'stock') {
+  state.currentVehiclePanel = ['stock', 'prices', 'form'].includes(panel) ? panel : 'stock';
+  document.querySelectorAll('[data-vehicle-panel]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.vehiclePanel === state.currentVehiclePanel);
+  });
+  document.querySelectorAll('[data-vehicle-pane]').forEach((pane) => {
+    pane.classList.toggle('is-active', pane.dataset.vehiclePane === state.currentVehiclePanel);
+  });
+}
+
+function setVehicleFormMode(mode = 'quick') {
+  state.vehicleFormMode = mode === 'advanced' ? 'advanced' : 'quick';
+  const formPane = document.querySelector('[data-vehicle-pane="form"]');
+  if (formPane) formPane.dataset.formModeState = state.vehicleFormMode;
+  document.querySelectorAll('[data-form-mode]').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.formMode === state.vehicleFormMode);
+  });
+  document.querySelectorAll('[data-advanced-section]').forEach((section) => {
+    section.hidden = state.vehicleFormMode !== 'advanced';
+  });
+}
+
+function resetVehicleFoldState({ advanced = false } = {}) {
+  document.querySelectorAll('.vehicle-fold').forEach((fold) => {
+    const key = fold.dataset.fold;
+    fold.open = advanced ? true : ['primary', 'photos'].includes(key);
   });
 }
 
@@ -382,6 +463,89 @@ function leadTypeLabel(type) {
   return map[type] || 'Lead';
 }
 
+function leadContactName(type, item = {}) {
+  if (type === 'consignment') return item.owner_name || '';
+  if (type === 'feedback') return item.visitor_name || '';
+  return item.customer_name || '';
+}
+
+function leadPhone(type, item = {}) {
+  if (type === 'consignment') return item.owner_phone || '';
+  if (type === 'feedback') {
+    const contact = String(item.visitor_contact || '');
+    return contact.includes('@') ? '' : contact;
+  }
+  return item.phone || '';
+}
+
+function leadEmail(type, item = {}) {
+  if (type === 'consignment') return item.owner_email || '';
+  if (type === 'feedback') {
+    const contact = String(item.visitor_contact || '');
+    return contact.includes('@') ? contact : '';
+  }
+  return item.email || '';
+}
+
+function leadVehicleText(type, item = {}) {
+  if (type === 'consignment') return [item.brand, item.model, item.version].filter(Boolean).join(' ') || item.condition_summary || 'Vendé tu auto';
+  if (type === 'scouting') return [item.brand, item.model, item.version].filter(Boolean).join(' ') || item.must_have || 'Búsqueda personalizada';
+  if (type === 'financing') return item.vehicle_title || item.operation_context || 'Financiación';
+  if (type === 'insurance') return item.vehicle_title || [item.vehicle_brand, item.vehicle_model].filter(Boolean).join(' ') || 'Seguro automotor';
+  if (type === 'peritaje') return [item.vehicle_brand, item.vehicle_model, item.vehicle_year].filter(Boolean).join(' ') || item.vehicle_reference || 'Peritaje';
+  if (type === 'feedback') return item.source_title || item.message || 'Sugerencia web';
+  return '';
+}
+
+function leadOriginText(type, item = {}) {
+  return item.origin || item.source_page || item.source || leadTypeLabel(type);
+}
+
+function normalizeWhatsAppNumber(value = '') {
+  let digits = String(value || '').replace(/\D+/g, '');
+  digits = digits.replace(/^0+/, '');
+  if (!digits) return '';
+  if (digits.startsWith('54')) return digits;
+  if (digits.length >= 8 && digits.length <= 11) return `549${digits}`;
+  return digits;
+}
+
+function leadWhatsAppHref(type, item = {}) {
+  const phone = normalizeWhatsAppNumber(leadPhone(type, item));
+  if (!phone) return '';
+  const name = leadContactName(type, item) || 'Hola';
+  const service = leadTypeLabel(type).toLowerCase();
+  const message = `Hola ${name}, soy de RG Cars TDF. Recibimos tu consulta sobre ${service}. Te escribo para ayudarte.`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+}
+
+function leadCommercialStatus(type, item = {}) {
+  const stage = String(item.crm_stage || 'lead').toLowerCase();
+  const status = String(item.status || defaultLeadStatus(type)).toLowerCase();
+  if (status === 'archived') return { label: 'Archivado', className: 'is-hidden', rank: 3 };
+  if (stage === 'won' || ['done', 'completed'].includes(status)) return { label: 'Cerrado ganado', className: 'is-available', rank: 2 };
+  if (stage === 'lost' || ['rejected', 'closed', 'archived'].includes(status)) return { label: 'Cerrado perdido', className: 'is-sold', rank: 2 };
+  if (['contacted', 'quoted', 'sent_to_entity', 'scheduled'].includes(status)) return { label: 'Contactado', className: 'is-reserved', rank: 1 };
+  if (['paused'].includes(status) || item.follow_up_at) return { label: 'Esperando respuesta', className: 'is-reserved', rank: 1 };
+  if (['opportunity', 'proposal', 'negotiation'].includes(stage) || ['review', 'approved', 'prequalified'].includes(status)) return { label: 'En gestión', className: 'is-reserved', rank: 1 };
+  return { label: 'Nuevo', className: 'is-hidden', rank: 0 };
+}
+
+function leadQuickActionsHTML(type, item = {}) {
+  const id = item.id;
+  const email = leadEmail(type, item);
+  const waHref = leadWhatsAppHref(type, item);
+  return `
+    <div class="lead-quick-actions">
+      ${waHref ? `<a class="btn btn-ghost" href="${escape(waHref)}" target="_blank" rel="noreferrer">WhatsApp</a>` : ''}
+      ${email ? `<a class="btn btn-ghost" href="mailto:${escape(email)}">Email</a>` : ''}
+      <button type="button" class="btn btn-ghost" data-lead-copy="${type}" data-id="${id}">Copiar datos</button>
+      <button type="button" class="btn btn-ghost" data-lead-toggle="${type}" data-id="${id}">Detalle</button>
+      <button type="button" class="btn btn-soft" data-lead-archive="${type}" data-id="${id}">Archivar</button>
+    </div>
+  `;
+}
+
 function noteActionsHTML(type, item) {
   const id = item.id;
   const currentStatus = item.status || defaultLeadStatus(type);
@@ -509,6 +673,14 @@ function historyItemDetails(entry) {
   return rows.length ? `<div class="lead-history-deltas">${rows.join('')}</div>` : '';
 }
 
+function leadHistoryHeadline(entry) {
+  return historyItemTitle(entry);
+}
+
+function leadHistoryDetail(entry) {
+  return historyItemDetails(entry);
+}
+
 function leadHistoryHTML(type, id) {
   if (state.historyMissing) {
     return '<div class="lead-history-empty"><strong>Historial pendiente de SQL</strong><span>Ejecutá el patch incluido para activar trazabilidad por usuario.</span></div>';
@@ -624,12 +796,15 @@ function leadCardShell({ type, item, title, subtitle, statusLabel, statusClass, 
   const key = leadKey(type, id);
   const isOpen = !!state.openLeadKeys[key];
   const stage = item.crm_stage || 'lead';
+  const commercialStatus = leadCommercialStatus(type, item);
   const assigneeEmail = normalizeEmail(item.assigned_to_email || '');
   const crmMetaHtml = `
     <div class="lead-meta lead-meta--crm">
+      <span>Tipo: ${escape(leadTypeLabel(type))}</span>
       <span>Prioridad: ${escape(leadPriorityLabel(item.lead_priority || 'normal'))}</span>
       <span>${escape(assigneeEmail ? `Asignado a ${assigneeDisplayName(assigneeEmail, item.assigned_to_name)}` : 'Sin asignar')}</span>
       <span>${escape(item.follow_up_at ? `Seguimiento ${formatAdminDateTime(item.follow_up_at)}` : 'Sin seguimiento')}</span>
+      <span>Origen: ${escape(leadOriginText(type, item))}</span>
     </div>
   `;
 
@@ -640,6 +815,8 @@ function leadCardShell({ type, item, title, subtitle, statusLabel, statusClass, 
         <div class="lead-card-head lead-card-head--crm">
           <div>
             <div class="lead-pill-row">
+              <span class="status-pill is-inline ${commercialStatus.className}">${escape(commercialStatus.label)}</span>
+              <span class="status-pill is-inline is-reserved">${escape(leadTypeLabel(type))}</span>
               <span class="status-pill is-inline ${window.RGShared.leadStageClass(stage)}">${escape(window.RGShared.leadStageLabel(stage))}</span>
               <span class="status-pill is-inline ${statusClass}">${escape(statusLabel)}</span>
             </div>
@@ -649,6 +826,7 @@ function leadCardShell({ type, item, title, subtitle, statusLabel, statusClass, 
           </div>
           <button type="button" class="btn btn-soft lead-toggle-btn" data-lead-toggle="${type}" data-id="${id}" aria-expanded="${isOpen ? 'true' : 'false'}">${isOpen ? 'Cerrar lead' : 'Abrir lead'}</button>
         </div>
+        ${leadQuickActionsHTML(type, item)}
         ${isOpen ? `
           <div class="lead-detail-grid">
             <div class="lead-detail-main">
@@ -897,6 +1075,75 @@ function allLeadRows() {
   ];
 }
 
+function allLeadEntries() {
+  return [
+    ...state.leads.consignments.map((item) => ({ type: 'consignment', item })),
+    ...state.leads.scouting.map((item) => ({ type: 'scouting', item })),
+    ...state.leads.financing.map((item) => ({ type: 'financing', item })),
+    ...state.leads.insurance.map((item) => ({ type: 'insurance', item })),
+    ...state.leads.peritaje.map((item) => ({ type: 'peritaje', item })),
+    ...state.leads.feedback.map((item) => ({ type: 'feedback', item })),
+  ];
+}
+
+function leadCreatedAt(item = {}) {
+  return item.created_at || item.matched_at || item.updated_at || item.notified_at || '';
+}
+
+function filterLeadEntries(entries) {
+  if (!state.leadSearch) return entries;
+  return entries.filter(({ type, item }) => {
+    const haystack = [
+      leadTypeLabel(type),
+      leadContactName(type, item),
+      leadPhone(type, item),
+      leadEmail(type, item),
+      leadVehicleText(type, item),
+      leadOriginText(type, item),
+      item.status,
+      item.crm_stage,
+      item.assigned_to_name,
+      item.assigned_to_email,
+      item.next_action,
+      item.admin_notes,
+      item.notes,
+      item.message,
+      item.cuil,
+      item.plate,
+    ].join(' ').toLowerCase();
+    return haystack.includes(state.leadSearch);
+  });
+}
+
+function sortLeadEntries(entries) {
+  return [...entries].sort((a, b) => {
+    const statusDiff = leadCommercialStatus(a.type, a.item).rank - leadCommercialStatus(b.type, b.item).rank;
+    if (statusDiff) return statusDiff;
+    const aTime = new Date(leadCreatedAt(a.item)).getTime() || 0;
+    const bTime = new Date(leadCreatedAt(b.item)).getTime() || 0;
+    return bTime - aTime;
+  });
+}
+
+function renderAllLeadPanel(entries) {
+  const panel = $('allPanel');
+  if (!panel) return;
+  const rows = sortLeadEntries(filterLeadEntries(entries));
+  panel.innerHTML = rows.length
+    ? rows.map(({ type, item }) => {
+      const renderers = {
+        consignment: consignmentCardHTML,
+        scouting: scoutingCardHTML,
+        financing: financingCardHTML,
+        insurance: insuranceCardHTML,
+        peritaje: peritajeCardHTML,
+        feedback: feedbackCardHTML,
+      };
+      return renderers[type] ? renderers[type](item) : '';
+    }).join('')
+    : '<div class="empty-state"><strong>Sin leads para mostrar.</strong><span>No hay consultas cargadas o no coinciden con la búsqueda actual.</span></div>';
+}
+
 function leadStageCounts() {
   return allLeadRows().reduce((acc, item) => {
     const key = item.crm_stage || 'lead';
@@ -928,6 +1175,7 @@ function renderLeads() {
   const peritajeRows = filterItems(state.leads.peritaje, ['customer_name', 'phone', 'email', 'vehicle_brand', 'vehicle_model', 'plate']);
   const feedbackRows = filterItems(state.leads.feedback, ['visitor_name', 'visitor_contact', 'message', 'source_page', 'source_title']);
 
+  renderAllLeadPanel(allLeadEntries());
   renderPanel('consignmentPanel', consignmentRows, consignmentCardHTML, 'Sin leads de consignación.', 'Aún no hay fichas cargadas o no coinciden con la búsqueda actual.');
   renderPanel('scoutingPanel', scoutingRows, scoutingCardHTML, 'Sin búsquedas personalizadas.', 'Aún no hay búsquedas cargadas o no coinciden con la búsqueda actual.');
   renderPanel('financingPanel', financingRows, financingCardHTML, 'Sin leads de financiación.', 'Todavía no ingresaron simulaciones o no coinciden con la búsqueda actual.');
@@ -1081,6 +1329,79 @@ async function updateLead(type, id) {
   if (data && type !== 'feedback' && window.RGShared?.sendLeadNotification) {
     await window.RGShared.sendLeadNotification(type, status || data.status || defaultLeadStatus(type), data, { event: 'status_update' }).catch((err) => console.warn('No se pudo enviar el email de actualización:', err.message || err));
   }
+}
+
+function leadCopyText(type, item = {}) {
+  return [
+    `Tipo: ${leadTypeLabel(type)}`,
+    `Nombre: ${leadContactName(type, item) || '-'}`,
+    `WhatsApp: ${leadPhone(type, item) || '-'}`,
+    `Email: ${leadEmail(type, item) || '-'}`,
+    `Vehículo / consulta: ${leadVehicleText(type, item) || '-'}`,
+    `Estado comercial: ${leadCommercialStatus(type, item).label}`,
+    `Estado interno: ${window.RGShared.leadStatusLabel(type, item.status || defaultLeadStatus(type))}`,
+    `Origen: ${leadOriginText(type, item) || '-'}`,
+    `Asignado a: ${item.assigned_to_email || 'Sin asignar'}`,
+    `Próxima acción: ${item.next_action || '-'}`,
+    `Notas: ${item.admin_notes || item.notes || item.message || '-'}`,
+  ].join('\n');
+}
+
+async function copyLeadData(type, id) {
+  const item = findLeadByType(type, id);
+  if (!item) throw new Error('No encontramos ese lead.');
+  const text = leadCopyText(type, item);
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+  } else {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', 'readonly');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+  }
+}
+
+function archivedStatusForLead(type) {
+  const map = {
+    consignment: 'rejected',
+    scouting: 'closed',
+    financing: 'rejected',
+    insurance: 'rejected',
+    peritaje: 'rejected',
+    feedback: 'archived',
+  };
+  return map[type] || defaultLeadStatus(type);
+}
+
+async function archiveLead(type, id) {
+  const table = leadTableName(type);
+  const collection = leadCollectionKey(type);
+  if (!table || !collection) return;
+
+  const current = findLeadByType(type, id);
+  const nextStatus = archivedStatusForLead(type);
+  const payload = {
+    status: nextStatus,
+    crm_stage: 'lost',
+    last_touched_at: new Date().toISOString(),
+  };
+
+  let response = await sb.from(table).update(payload).eq('id', id).select('*').single();
+  if (response.error && (isSchemaMissingError(response.error, 'crm_stage') || isSchemaMissingError(response.error, 'last_touched_at'))) {
+    const { crm_stage, last_touched_at, ...fallbackPayload } = payload;
+    response = await sb.from(table).update(fallbackPayload).eq('id', id).select('*').single();
+  }
+  if (response.error) throw response.error;
+
+  const updated = response.data || { ...(current || {}), ...payload };
+  state.leads[collection] = (state.leads[collection] || []).map((item) => (String(item.id) === String(id) ? { ...item, ...updated } : item));
+  await loadLeadHistory(type, id, { force: true }).catch(() => []);
+  renderLeads();
 }
 
 async function deleteLead(type, id) {
@@ -1798,24 +2119,49 @@ function parseFormattedNumber(value) {
   return digits ? Number(digits) : null;
 }
 
+function parseMoneyInputValue(value, { required = false } = {}) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return required ? NaN : null;
+  if (raw.includes('-') || /[a-zA-Z]/.test(raw)) return NaN;
+  if (!/^[\d\s.]+$/.test(raw)) return NaN;
+  return parseFormattedNumber(raw);
+}
+
+function parseMoneyField(id) {
+  return parseMoneyInputValue($(id)?.value || '');
+}
+
+function vehicleMinimumDownPayment(vehicle = {}) {
+  const value = vehicle.minimum_down_payment ?? vehicle.min_down_payment ?? null;
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : null;
+}
+
 function setupPriceInputFormatting() {
-  const input = $('price');
-  if (!input || input.dataset.priceFormattingReady === 'true') return;
-  input.dataset.priceFormattingReady = 'true';
+  ['price', 'minimum_down_payment'].forEach((id) => {
+    const input = $(id);
+    if (!input || input.dataset.priceFormattingReady === 'true') return;
+    input.dataset.priceFormattingReady = 'true';
 
-  const applyFormat = () => {
-    input.value = formatNumberWithDots(input.value);
-  };
+    const applyFormat = () => {
+      input.value = formatNumberWithDots(input.value);
+    };
 
-  input.addEventListener('input', applyFormat);
-  input.addEventListener('blur', applyFormat);
-  input.addEventListener('paste', () => requestAnimationFrame(applyFormat));
-  applyFormat();
+    input.addEventListener('input', applyFormat);
+    input.addEventListener('blur', applyFormat);
+    input.addEventListener('paste', () => requestAnimationFrame(applyFormat));
+    applyFormat();
+  });
 }
 
 function isPlateSchemaError(error) {
   const message = String(error?.message || '').toLowerCase();
   return message.includes('column') && message.includes('plate');
+}
+
+function isMinimumDownPaymentSchemaError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  return message.includes('column') && message.includes('minimum_down_payment');
 }
 
 function warnPlateCompatibility() {
@@ -1824,6 +2170,9 @@ function warnPlateCompatibility() {
 
 function fillForm(vehicle) {
   if (!vehicle) return;
+  setVehiclePanel('form');
+  setVehicleFormMode('advanced');
+  resetVehicleFoldState({ advanced: false });
   if ($('id')) $('id').value = vehicle.id || '';
   if ($('title')) $('title').value = vehicle.title || '';
   if ($('brand')) $('brand').value = vehicle.brand || '';
@@ -1832,6 +2181,7 @@ function fillForm(vehicle) {
   if ($('plate')) $('plate').value = vehicle.plate || '';
   if ($('km')) $('km').value = vehicle.km ?? '';
   if ($('price')) $('price').value = formatNumberWithDots(vehicle.price ?? '');
+  if ($('minimum_down_payment')) $('minimum_down_payment').value = formatNumberWithDots(vehicleMinimumDownPayment(vehicle) ?? '');
   if ($('currency')) $('currency').value = vehicle.currency || 'ARS';
   if ($('category')) $('category').value = vehicle.category || 'auto';
   if ($('status')) $('status').value = vehicle.status || 'available';
@@ -1847,11 +2197,10 @@ function fillForm(vehicle) {
   if ($('featured_equipment')) $('featured_equipment').value = window.RGShared.arrayFromUnknown(vehicle.featured_equipment).join('\n');
   if ($('is_recent')) $('is_recent').value = String(!!vehicle.is_recent);
   if ($('outlet')) $('outlet').value = String(!!vehicle.outlet);
-  if ($('insurance_available')) $('insurance_available').value = String(!!vehicle.insurance_available);
-  if ($('financing_enabled')) $('financing_enabled').value = String(!!vehicle.financing_enabled);
-  if ($('private_financing_enabled')) $('private_financing_enabled').value = String(!!vehicle.private_financing_enabled);
+  if ($('insurance_available')) $('insurance_available').value = String(vehicle.insurance_available !== false);
+  if ($('financing_enabled')) $('financing_enabled').value = String(vehicle.financing_enabled !== false);
+  if ($('private_financing_enabled')) $('private_financing_enabled').value = String(vehicle.private_financing_enabled !== false);
   if ($('finance_max_months')) $('finance_max_months').value = vehicle.finance_max_months ?? '';
-  if ($('min_down_payment')) $('min_down_payment').value = vehicle.min_down_payment ?? '';
   if ($('finance_entities')) $('finance_entities').value = window.RGShared.arrayFromUnknown(vehicle.finance_entities).join(', ');
   if ($('finance_note')) $('finance_note').value = vehicle.finance_note || '';
   if ($('stock_alert_days')) $('stock_alert_days').value = vehicle.stock_alert_days ?? '';
@@ -1866,7 +2215,7 @@ function fillForm(vehicle) {
 
 function clearForm() {
   [
-    'id','title','brand','model','year','plate','km','price','description','engine','transmission','drivetrain','color','doors','fuel_type','vehicle_condition','featured_equipment','finance_max_months','min_down_payment','finance_entities','finance_note','stock_alert_days','maintenanceTitle','maintenanceKm','maintenanceCost','maintenanceNextDue','maintenanceNotes'
+    'id','title','brand','model','year','plate','km','price','minimum_down_payment','description','engine','transmission','drivetrain','color','doors','fuel_type','vehicle_condition','featured_equipment','finance_max_months','finance_entities','finance_note','stock_alert_days','maintenanceTitle','maintenanceKm','maintenanceCost','maintenanceNextDue','maintenanceNotes'
   ].forEach((id) => { if ($(id)) $(id).value = ''; });
   if ($('currency')) $('currency').value = 'ARS';
   if ($('category')) $('category').value = 'auto';
@@ -1874,9 +2223,9 @@ function clearForm() {
   if ($('featured')) $('featured').value = 'false';
   if ($('is_recent')) $('is_recent').value = 'false';
   if ($('outlet')) $('outlet').value = 'false';
-  if ($('insurance_available')) $('insurance_available').value = 'false';
-  if ($('financing_enabled')) $('financing_enabled').value = 'false';
-  if ($('private_financing_enabled')) $('private_financing_enabled').value = 'false';
+  if ($('insurance_available')) $('insurance_available').value = 'true';
+  if ($('financing_enabled')) $('financing_enabled').value = 'true';
+  if ($('private_financing_enabled')) $('private_financing_enabled').value = 'true';
   if ($('photos')) $('photos').value = '';
   state.selectedVehiclePhoto = '';
   if ($('photoList')) $('photoList').innerHTML = '<div class="empty-inline">Las fotos cargadas aparecerán acá.</div>';
@@ -1886,6 +2235,14 @@ function clearForm() {
   const plateField = $('plate');
   if (plateField) plateField.disabled = !supportsPlate;
   if ($('vehicleFormTitle')) $('vehicleFormTitle').textContent = 'Publicar vehículo';
+  state.aiSuggestion = null;
+  if ($('aiAssistantMessage')) $('aiAssistantMessage').textContent = '';
+  if ($('aiAssistantPreview')) {
+    $('aiAssistantPreview').hidden = true;
+    $('aiAssistantPreview').innerHTML = '';
+  }
+  setVehicleFormMode('quick');
+  resetVehicleFoldState({ advanced: false });
 }
 
 function renderSelectedFilesPreview(files) {
@@ -2033,7 +2390,11 @@ function renderPostSaveActions(vehicle, highlight = true) {
     </div>
     <div class="post-save-buttons">
       <a class="btn btn-ghost" href="${window.RGShared.vehicleUrl(vehicle.id)}" target="_blank" rel="noreferrer">Ver publicación</a>
-      ${vehicle.financing_enabled ? `<a class="btn btn-soft" href="${window.RGShared.financingUrl(vehicle)}" target="_blank" rel="noreferrer">Financiación</a>` : ''}
+      <button class="btn btn-soft" type="button" data-edit-photos="${vehicle.id}">Editar fotos</button>
+      <button class="btn btn-soft" type="button" data-complete-advanced="${vehicle.id}">Completar ficha avanzada</button>
+      <button class="btn btn-soft" type="button" data-duplicate="${vehicle.id}">Duplicar unidad</button>
+      <button class="btn btn-ghost" type="button" data-vehicle-panel-target="prices">Ir al listado de precios</button>
+      ${window.RGShared.vehicleFinancingAvailable(vehicle) ? `<a class="btn btn-soft" href="${window.RGShared.financingUrl(vehicle)}" target="_blank" rel="noreferrer">Financiación</a>` : ''}
       <button class="btn btn-soft" type="button" data-quick-download="${vehicle.id}">Descargar ficha</button>
     </div>
   `;
@@ -2047,8 +2408,8 @@ function adminCardHTML(vehicle) {
     vehicle.featured ? '<span class="inline-tag">Destacado</span>' : '',
     vehicle.is_recent ? '<span class="inline-tag">Recién ingresado</span>' : '',
     vehicle.outlet ? '<span class="inline-tag">Outlet</span>' : '',
-    vehicle.financing_enabled ? '<span class="inline-tag">Financiación</span>' : '',
-    vehicle.insurance_available ? '<span class="inline-tag">Seguro</span>' : '',
+    window.RGShared.vehicleFinancingAvailable(vehicle) ? '<span class="inline-tag">Financiación</span>' : '',
+    window.RGShared.vehicleInsuranceAvailable(vehicle) ? '<span class="inline-tag">Seguro</span>' : '',
   ].filter(Boolean).join('');
 
   return `
@@ -2070,6 +2431,7 @@ function adminCardHTML(vehicle) {
           <span><strong>Año:</strong> ${window.RGShared.textOrDash(vehicle.year)}</span>
           <span><strong>Km:</strong> ${window.RGShared.formatKm(vehicle.km)}</span>
           <span><strong>Precio:</strong> ${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</span>
+          ${vehicleMinimumDownPayment(vehicle) ? `<span><strong>Entrega mínima:</strong> ${window.RGShared.formatPrice(vehicleMinimumDownPayment(vehicle), vehicle.currency)}</span>` : ''}
         </div>
         <div class="table-actions">
           <button class="btn btn-soft" type="button" data-edit="${vehicle.id}">Editar</button>
@@ -2088,11 +2450,7 @@ function adminCardHTML(vehicle) {
   `;
 }
 
-function filterRowsLocally() {
-  const results = $('rows');
-  const meta = $('adminSearchMeta');
-  if (!results) return;
-
+function filteredVehicleRows() {
   let rows = [...state.vehicles];
   const status = state.vehicleStatusFilter;
   const search = state.vehicleSearch;
@@ -2101,15 +2459,107 @@ function filterRowsLocally() {
   if (search) {
     rows = rows.filter((vehicle) => [vehicle.title, vehicle.brand, vehicle.model, vehicle.category, vehicle.plate].join(' ').toLowerCase().includes(search));
   }
+  return rows;
+}
+
+function quickStatusHTML(vehicleId) {
+  const status = state.quickPriceStatus[String(vehicleId)];
+  if (!status) return '<span class="quick-row-status" aria-live="polite"></span>';
+  const className = status.ok === false ? 'is-error' : status.saving ? 'is-saving' : 'is-ok';
+  return `<span class="quick-row-status ${className}" aria-live="polite">${escape(status.message || '')}</span>`;
+}
+
+function vehicleStatusOptionsHTML(current) {
+  const options = [
+    ['available', 'Disponible'],
+    ['incoming', 'Próximo a ingresar'],
+    ['reserved', 'Reservado'],
+    ['sold', 'Vendido'],
+    ['hidden', 'Oculto'],
+  ];
+  return options.map(([value, label]) => `<option value="${value}" ${value === current ? 'selected' : ''}>${label}</option>`).join('');
+}
+
+function quickSaveButtonLabel(vehicleId) {
+  const status = state.quickPriceStatus[String(vehicleId)];
+  if (status?.saving) return 'Guardando…';
+  if (status?.ok === false) return 'Error';
+  if (status?.message === 'Guardado') return 'Guardado';
+  return 'Guardar';
+}
+
+function quickPriceRowHTML(vehicle) {
+  const image = window.RGShared.firstImage(vehicle);
+  const updated = vehicle.updated_at || vehicle.created_at || '';
+  const rowStatus = state.quickPriceStatus[String(vehicle.id)];
+  const saveDisabled = rowStatus?.saving ? 'disabled' : '';
+  return `
+    <tr data-quick-price-row="${vehicle.id}">
+      <td>
+        <div class="quick-vehicle-cell">
+          ${image ? `<img src="${image}" alt="${escape(vehicle.title || 'Vehículo')}" loading="lazy">` : '<div class="quick-vehicle-thumb">Sin foto</div>'}
+          <div>
+            <strong>${escape(vehicle.title || 'Vehículo')}</strong>
+            <span>${escape([vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(' · ') || window.RGShared.categoryLabel(vehicle.category))}</span>
+          </div>
+        </div>
+      </td>
+      <td>${escape(window.RGShared.normalizePlate(vehicle.plate || '') || '-')}</td>
+      <td><select class="select quick-status-select" data-price-status="${vehicle.id}">${vehicleStatusOptionsHTML(vehicle.status || 'available')}</select></td>
+      <td><input class="input quick-price-input quick-money-input" data-price-value="${vehicle.id}" value="${formatNumberWithDots(vehicle.price ?? '')}" inputmode="numeric" autocomplete="off" /></td>
+      <td><input class="input quick-minimum-input quick-money-input" data-price-minimum="${vehicle.id}" value="${formatNumberWithDots(vehicleMinimumDownPayment(vehicle) ?? '')}" inputmode="numeric" autocomplete="off" placeholder="Opcional" /></td>
+      <td><select class="select quick-currency-select" data-price-currency="${vehicle.id}"><option value="ARS" ${vehicle.currency !== 'USD' ? 'selected' : ''}>ARS</option><option value="USD" ${vehicle.currency === 'USD' ? 'selected' : ''}>USD</option></select></td>
+      <td><span>${escape(updated ? formatDateTime(updated) : '-')}</span>${quickStatusHTML(vehicle.id)}</td>
+      <td>
+        <div class="quick-actions">
+          <button type="button" class="btn btn-primary" data-price-save="${vehicle.id}" ${saveDisabled}>${escape(quickSaveButtonLabel(vehicle.id))}</button>
+          <button type="button" class="btn btn-ghost" data-edit="${vehicle.id}">Editar ficha</button>
+          <a class="btn btn-ghost" href="${window.RGShared.vehicleUrl(vehicle.id)}" target="_blank" rel="noreferrer">Ver</a>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function renderQuickPrices(rows = filteredVehicleRows()) {
+  const body = $('quickPricesRows');
+  const meta = $('quickPricesMeta');
+  if (!body) return;
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="8"><div class="empty-state compact-empty"><strong>Sin resultados.</strong><span>Probá con otra búsqueda o ajustá el filtro de estado.</span></div></td></tr>';
+    if (meta) meta.textContent = 'No encontramos unidades para editar con ese filtro.';
+    return;
+  }
+  body.innerHTML = rows.map(quickPriceRowHTML).join('');
+  if (meta) meta.textContent = `${rows.length} unidad${rows.length === 1 ? '' : 'es'} lista${rows.length === 1 ? '' : 's'} para edición rápida.`;
+}
+
+function setQuickPriceStatus(vehicleId, message, options = {}) {
+  state.quickPriceStatus[String(vehicleId)] = {
+    message,
+    saving: !!options.saving,
+    ok: options.ok !== false,
+  };
+  renderQuickPrices();
+}
+
+function filterRowsLocally() {
+  const results = $('rows');
+  const meta = $('adminSearchMeta');
+  if (!results) return;
+
+  const rows = filteredVehicleRows();
 
   if (!rows.length) {
     results.innerHTML = '<div class="empty-state compact-empty"><strong>Sin resultados.</strong><span>Probá con otra búsqueda o ajustá el filtro de estado.</span></div>';
-    if (meta) meta.textContent = search || status !== 'all' ? 'No encontramos coincidencias para ese filtro.' : 'Todavía no hay vehículos cargados.';
+    if (meta) meta.textContent = state.vehicleSearch || state.vehicleStatusFilter !== 'all' ? 'No encontramos coincidencias para ese filtro.' : 'Todavía no hay vehículos cargados.';
+    renderQuickPrices(rows);
     return;
   }
 
   results.innerHTML = rows.map(adminCardHTML).join('');
   if (meta) meta.textContent = `${rows.length} vehículo${rows.length === 1 ? '' : 's'} listados.`;
+  renderQuickPrices(rows);
   renderOverview();
 }
 
@@ -2130,9 +2580,10 @@ async function loadRows() {
   filterRowsLocally();
 }
 
-async function saveVehicle() {
+async function saveVehicle(triggerButton = $('save')) {
   hideMsg();
   const id = $('id').value || null;
+  const minimumDownPayment = parseMoneyField('minimum_down_payment');
   const payload = {
     title: $('title').value.trim(),
     brand: $('brand').value.trim() || null,
@@ -2140,7 +2591,8 @@ async function saveVehicle() {
     year: $('year').value ? Number($('year').value) : null,
     ...(supportsPlate ? { plate: window.RGShared.normalizePlate($('plate').value) || null } : {}),
     km: $('km').value ? Number($('km').value) : null,
-    price: parseFormattedNumber($('price').value),
+    price: parseMoneyField('price'),
+    minimum_down_payment: minimumDownPayment,
     currency: $('currency').value || 'ARS',
     category: $('category').value || 'auto',
     status: $('status').value,
@@ -2160,7 +2612,6 @@ async function saveVehicle() {
     financing_enabled: boolValue('financing_enabled'),
     private_financing_enabled: boolValue('private_financing_enabled'),
     finance_max_months: $('finance_max_months').value ? Number($('finance_max_months').value) : null,
-    min_down_payment: $('min_down_payment').value ? Number($('min_down_payment').value) : null,
     stock_alert_days: $('stock_alert_days')?.value ? Number($('stock_alert_days').value) : null,
     finance_entities: listValue('finance_entities'),
     finance_note: $('finance_note').value.trim() || null,
@@ -2168,14 +2619,18 @@ async function saveVehicle() {
 
   if (!payload.title) return showMsg('El título es obligatorio.', false);
   if (!Number.isFinite(payload.price)) return showMsg('El precio es obligatorio.', false);
+  if (minimumDownPayment != null && (!Number.isFinite(minimumDownPayment) || minimumDownPayment < 0)) return showMsg('La entrega mínima no puede ser negativa.', false);
 
-  const saveButton = $('save');
-  const originalText = saveButton.textContent;
-  saveButton.disabled = true;
-  saveButton.textContent = 'Guardando…';
+  const saveButton = triggerButton || $('save');
+  const originalText = saveButton?.textContent || '';
+  if (saveButton) {
+    saveButton.disabled = true;
+    saveButton.textContent = 'Guardando…';
+  }
 
   try {
     let savedId = id;
+    let minimumDownPaymentFallback = '';
     if (!id) {
       let response = await sb.from('vehicles').insert(payload).select('id').single();
       if (response.error && isPlateSchemaError(response.error)) {
@@ -2183,6 +2638,15 @@ async function saveVehicle() {
         warnPlateCompatibility();
         const { plate, ...payloadWithoutPlate } = payload;
         response = await sb.from('vehicles').insert(payloadWithoutPlate).select('id').single();
+      } else if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
+        const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
+        response = await sb.from('vehicles').insert({ ...payloadWithoutMinimumDownPayment, min_down_payment: minimum_down_payment }).select('id').single();
+        if (response.error && isSchemaMissingError(response.error, 'min_down_payment')) {
+          response = await sb.from('vehicles').insert(payloadWithoutMinimumDownPayment).select('id').single();
+          if (!response.error) minimumDownPaymentFallback = 'skipped';
+        } else if (!response.error) {
+          minimumDownPaymentFallback = 'legacy';
+        }
       }
       if (response.error) throw response.error;
       savedId = response.data.id;
@@ -2193,6 +2657,15 @@ async function saveVehicle() {
         warnPlateCompatibility();
         const { plate, ...payloadWithoutPlate } = payload;
         response = await sb.from('vehicles').update(payloadWithoutPlate).eq('id', id);
+      } else if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
+        const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
+        response = await sb.from('vehicles').update({ ...payloadWithoutMinimumDownPayment, min_down_payment: minimum_down_payment }).eq('id', id);
+        if (response.error && isSchemaMissingError(response.error, 'min_down_payment')) {
+          response = await sb.from('vehicles').update(payloadWithoutMinimumDownPayment).eq('id', id);
+          if (!response.error) minimumDownPaymentFallback = 'skipped';
+        } else if (!response.error) {
+          minimumDownPaymentFallback = 'legacy';
+        }
       }
       if (response.error) throw response.error;
     }
@@ -2206,9 +2679,17 @@ async function saveVehicle() {
       if (error) throw error;
     }
 
+    const fallbackMessage = minimumDownPaymentFallback === 'legacy'
+      ? 'Vehículo guardado. La entrega mínima se guardó en compatibilidad; ejecutá la migración minimum_down_payment para normalizar el campo.'
+      : minimumDownPaymentFallback === 'skipped'
+        ? 'Vehículo guardado sin entrega mínima. Ejecutá la migración minimum_down_payment para habilitar el campo.'
+        : '';
     lastSavedVehicle = await getVehicleById(savedId);
     renderPostSaveActions(lastSavedVehicle, true);
-    showMsg('Vehículo guardado correctamente.', true);
+    showMsg(
+      fallbackMessage || 'Vehículo guardado correctamente.',
+      true
+    );
     fillForm(lastSavedVehicle);
     await loadRows();
     await loadVehicleAlerts();
@@ -2222,9 +2703,229 @@ async function saveVehicle() {
       showMsg(error.message || 'No se pudo guardar.', false);
     }
   } finally {
-    saveButton.disabled = false;
-    saveButton.textContent = originalText;
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent = originalText;
+    }
   }
+}
+
+async function saveVehicleWithStatus(status, triggerButton = null) {
+  if ($('status')) $('status').value = status;
+  await saveVehicle(triggerButton);
+}
+
+async function saveQuickVehicleRow(id) {
+  const priceInput = document.querySelector(`[data-price-value="${id}"]`);
+  const price = parseMoneyInputValue(priceInput?.value || '', { required: true });
+  const minimumInput = document.querySelector(`[data-price-minimum="${id}"]`);
+  const minimumDownPayment = parseMoneyInputValue(minimumInput?.value || '');
+  if (!Number.isFinite(price)) {
+    setQuickPriceStatus(id, 'Precio inválido', { ok: false });
+    priceInput?.focus();
+    return;
+  }
+  if (minimumDownPayment != null && (!Number.isFinite(minimumDownPayment) || minimumDownPayment < 0)) {
+    setQuickPriceStatus(id, 'Entrega inválida', { ok: false });
+    minimumInput?.focus();
+    return;
+  }
+
+  const payload = {
+    price,
+    minimum_down_payment: minimumDownPayment,
+    currency: document.querySelector(`[data-price-currency="${id}"]`)?.value || 'ARS',
+    status: document.querySelector(`[data-price-status="${id}"]`)?.value || 'available',
+  };
+
+  setQuickPriceStatus(id, 'Guardando…', { saving: true });
+  let response = await sb.from('vehicles').update(payload).eq('id', id).select('*').single();
+  if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
+    const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
+    response = await sb.from('vehicles').update({ ...payloadWithoutMinimumDownPayment, min_down_payment: minimum_down_payment }).eq('id', id).select('*').single();
+    if (response.error && isSchemaMissingError(response.error, 'min_down_payment')) {
+      response = await sb.from('vehicles').update(payloadWithoutMinimumDownPayment).eq('id', id).select('*').single();
+    }
+    if (!response.error) setQuickPriceStatus(id, 'Guardado con compatibilidad: falta migración', { ok: false });
+  }
+  const { data, error } = response;
+  if (error) {
+    setQuickPriceStatus(id, error.message || 'Error', { ok: false });
+    return;
+  }
+
+  state.vehicles = state.vehicles.map((vehicle) => (String(vehicle.id) === String(id) ? { ...vehicle, ...data } : vehicle));
+  if (!state.quickPriceStatus[String(id)]?.message?.includes('falta migración')) setQuickPriceStatus(id, 'Guardado');
+  filterRowsLocally();
+  renderOverview();
+}
+
+function vehicleDuplicatePayload(vehicle) {
+  const keys = [
+    'brand', 'model', 'year', 'km', 'price', 'currency', 'category', 'description', 'engine',
+    'transmission', 'drivetrain', 'color', 'doors', 'fuel_type', 'vehicle_condition',
+    'featured_equipment', 'is_recent', 'outlet', 'insurance_available', 'financing_enabled',
+    'private_financing_enabled', 'finance_max_months', 'minimum_down_payment', 'min_down_payment', 'finance_entities',
+    'finance_note', 'stock_alert_days', 'images',
+  ];
+  const payload = {
+    title: `Copia de ${vehicle.title || 'vehículo'}`,
+    status: 'hidden',
+    featured: false,
+    ...(supportsPlate ? { plate: null } : {}),
+  };
+  keys.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(vehicle, key) && vehicle[key] !== undefined) payload[key] = vehicle[key];
+  });
+  payload.is_recent = false;
+  return payload;
+}
+
+async function duplicateVehicle(id) {
+  const source = state.vehicles.find((vehicle) => String(vehicle.id) === String(id)) || await getVehicleById(id);
+  if (!source) throw new Error('No encontramos la unidad para duplicar.');
+  let payload = vehicleDuplicatePayload(source);
+  let response = await sb.from('vehicles').insert(payload).select('id').single();
+  if (response.error && isPlateSchemaError(response.error)) {
+    supportsPlate = false;
+    const { plate, ...payloadWithoutPlate } = payload;
+    response = await sb.from('vehicles').insert(payloadWithoutPlate).select('id').single();
+  }
+  if (response.error) throw response.error;
+  const duplicate = await getVehicleById(response.data.id);
+  lastSavedVehicle = duplicate;
+  showMsg('Unidad duplicada como oculta. Revisá la ficha antes de publicarla.', true);
+  await loadRows();
+  fillForm(duplicate);
+  setVehiclePanel('form');
+  setVehicleFormMode('advanced');
+  resetVehicleFoldState({ advanced: true });
+}
+
+function aiAssistantMessage(text, ok = true) {
+  const el = $('aiAssistantMessage');
+  if (!el) return;
+  el.textContent = text || '';
+  el.classList.toggle('is-ok', !!ok);
+  el.classList.toggle('is-error', !ok);
+}
+
+function vehicleAiInput() {
+  return {
+    brand: $('brand')?.value?.trim() || null,
+    model: $('model')?.value?.trim() || null,
+    year: $('year')?.value ? Number($('year').value) : null,
+    title: $('title')?.value?.trim() || null,
+    km: $('km')?.value ? Number($('km').value) : null,
+    engine: $('engine')?.value?.trim() || null,
+    transmission: $('transmission')?.value?.trim() || null,
+    drivetrain: $('drivetrain')?.value?.trim() || null,
+    fuel_type: $('fuel_type')?.value?.trim() || null,
+    color: $('color')?.value?.trim() || null,
+    featured_equipment: multilineListValue('featured_equipment'),
+    status: $('status')?.value || null,
+    price: parseFormattedNumber($('price')?.value || ''),
+    minimum_down_payment: parseMoneyField('minimum_down_payment'),
+    currency: $('currency')?.value || 'ARS',
+    category: $('category')?.value || null,
+    existing_description: $('description')?.value?.trim() || null,
+    notes: $('finance_note')?.value?.trim() || null,
+  };
+}
+
+function renderAiPreview(suggestion) {
+  const wrap = $('aiAssistantPreview');
+  if (!wrap) return;
+  if (!suggestion) {
+    wrap.hidden = true;
+    wrap.innerHTML = '';
+    return;
+  }
+  const highlights = Array.isArray(suggestion.highlights) ? suggestion.highlights : [];
+  const warnings = Array.isArray(suggestion.warnings) ? suggestion.warnings : [];
+  const equipment = Array.isArray(suggestion.featured_equipment)
+    ? suggestion.featured_equipment
+    : String(suggestion.featured_equipment || '').split('\n').filter(Boolean);
+  wrap.hidden = false;
+  wrap.innerHTML = `
+    <div class="ai-preview-grid">
+      <div><strong>Título sugerido</strong><p>${escape(suggestion.title || 'Sin sugerencia')}</p></div>
+      <div><strong>WhatsApp</strong><p>${escape(suggestion.whatsapp_copy || 'Sin sugerencia')}</p></div>
+      <div class="ai-preview-wide"><strong>Descripción</strong><p>${escape(suggestion.description || 'Sin sugerencia')}</p></div>
+      <div><strong>Puntos destacados</strong><ul>${highlights.map((item) => `<li>${escape(item)}</li>`).join('') || '<li>Sin sugerencias</li>'}</ul></div>
+      <div><strong>Equipamiento ordenado</strong><ul>${equipment.map((item) => `<li>${escape(item)}</li>`).join('') || '<li>Sin sugerencias</li>'}</ul></div>
+      ${suggestion.social_copy ? `<div class="ai-preview-wide"><strong>Redes</strong><p>${escape(suggestion.social_copy)}</p></div>` : ''}
+      ${warnings.length ? `<div class="ai-preview-wide ai-preview-warning"><strong>Advertencias</strong><ul>${warnings.map((item) => `<li>${escape(item)}</li>`).join('')}</ul></div>` : ''}
+    </div>
+    <div class="lead-admin-row lead-admin-row--split ai-preview-actions">
+      <div class="lead-admin-row__main-actions">
+        <button type="button" class="btn btn-soft" data-ai-apply="title">Aplicar título</button>
+        <button type="button" class="btn btn-soft" data-ai-apply="description">Aplicar descripción</button>
+        <button type="button" class="btn btn-soft" data-ai-apply="equipment">Aplicar equipamiento</button>
+        <button type="button" class="btn btn-primary" data-ai-apply="all">Aplicar todo</button>
+      </div>
+      <button type="button" class="btn btn-ghost" data-ai-apply="discard">Descartar</button>
+    </div>
+  `;
+}
+
+async function generateVehicleFichaWithAi() {
+  const button = $('generateAiFicha');
+  const original = button?.textContent || '';
+  state.aiSuggestion = null;
+  renderAiPreview(null);
+  aiAssistantMessage('Generando propuesta…', true);
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Generando…';
+  }
+
+  try {
+    const token = state.session?.access_token || '';
+    const response = await fetch(`${String(RG.SUPABASE_URL || '').replace(/\/+$/g, '')}/functions/v1/vehicle-ai-assistant`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: RG.SUPABASE_ANON_KEY,
+        Authorization: token ? `Bearer ${token}` : `Bearer ${RG.SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ vehicle: vehicleAiInput() }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result?.error || 'No se pudo generar la ficha.');
+    if (result?.configured === false) {
+      aiAssistantMessage(result.message || 'La función está preparada, pero falta configurar el proveedor de IA en Supabase.', false);
+      return;
+    }
+    state.aiSuggestion = result.suggestion || result;
+    renderAiPreview(state.aiSuggestion);
+    aiAssistantMessage('Propuesta generada. Revisala antes de aplicar.', true);
+  } catch (error) {
+    console.error(error);
+    aiAssistantMessage(error.message || 'No se pudo generar la ficha con IA.', false);
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = original;
+    }
+  }
+}
+
+function applyAiSuggestion(part) {
+  const suggestion = state.aiSuggestion;
+  if (!suggestion || part === 'discard') {
+    state.aiSuggestion = null;
+    renderAiPreview(null);
+    aiAssistantMessage(part === 'discard' ? 'Sugerencia descartada.' : '', true);
+    return;
+  }
+  if ((part === 'title' || part === 'all') && suggestion.title && $('title')) $('title').value = suggestion.title;
+  if ((part === 'description' || part === 'all') && suggestion.description && $('description')) $('description').value = suggestion.description;
+  if ((part === 'equipment' || part === 'all') && $('featured_equipment')) {
+    const equipment = Array.isArray(suggestion.featured_equipment) ? suggestion.featured_equipment : String(suggestion.featured_equipment || '').split('\n');
+    $('featured_equipment').value = equipment.filter(Boolean).join('\n');
+  }
+  aiAssistantMessage('Sugerencia aplicada. Revisá la ficha antes de guardar/publicar.', true);
 }
 
 function setRatesMeta(text) {
@@ -2233,6 +2934,7 @@ function setRatesMeta(text) {
 
 function getRateProvider(item) {
   const raw = `${item.entity || ''} ${item.label || ''} ${item.code || ''}`.toLowerCase();
+  if (raw.includes('bna') || raw.includes('nación') || raw.includes('nacion') || raw.includes('banco nación') || raw.includes('banco nacion')) return 'BNA';
   if (raw.includes('santander')) return 'Santander';
   if (raw.includes('prendo')) return 'Prendo';
   if (raw.includes('propia') || raw.includes('propio') || raw.includes('interna')) return 'Propia';
@@ -2240,11 +2942,10 @@ function getRateProvider(item) {
 }
 
 function groupedRateProfiles() {
-  const preferredOrder = ['Prendo', 'Santander', 'Propia'];
+  const preferredOrder = ['BNA', 'Santander', 'Prendo', 'Propia', 'Otras líneas'];
   const buckets = new Map(preferredOrder.map((name) => [name, []]));
   state.rateProfiles.forEach((item) => {
-    const raw = String(item.entity || 'Otras líneas').trim();
-    const provider = raw.toLowerCase().includes('prendo') ? 'Prendo' : raw.toLowerCase().includes('santander') ? 'Santander' : raw.toLowerCase().includes('propia') ? 'Propia' : raw;
+    const provider = getRateProvider(item);
     if (!buckets.has(provider)) buckets.set(provider, []);
     buckets.get(provider).push(item);
   });
@@ -2257,26 +2958,29 @@ function rateRowHTML(item) {
   return `
     <tr>
       <td>
-        <strong>${escape(item.label || item.code)}</strong>
+        <input class="input" data-rate-label="${item.code}" value="${escape(item.label || item.code)}" />
+        <span class="finance-rate-code">${escape(item.code)}</span>
       </td>
+      <td><input class="input" data-rate-entity="${item.code}" value="${escape(item.entity || '')}" placeholder="Entidad" /></td>
       <td><input class="input" data-rate-annual="${item.code}" value="${item.annual_rate ?? ''}" /></td>
       <td><input class="input" data-rate-year-from="${item.code}" value="${item.year_from ?? ''}" /></td>
       <td><input class="input" data-rate-year-to="${item.code}" value="${item.year_to ?? ''}" /></td>
       <td><input class="input" data-rate-installments="${item.code}" value="${installments}" placeholder="12,18,24,36" /></td>
       <td><select class="select" data-rate-active="${item.code}"><option value="true" ${item.active !== false ? 'selected' : ''}>Sí</option><option value="false" ${item.active === false ? 'selected' : ''}>No</option></select></td>
+      <td><input class="input" data-rate-notes="${item.code}" value="${escape(item.notes || '')}" placeholder="Notas internas" /></td>
       <td><button class="btn btn-primary" type="button" data-rate-save="${item.code}">Guardar</button></td>
     </tr>
   `;
 }
 
 function financeEntityCardHTML([provider, items], index) {
-  const helper = provider === 'Prendo'
-    ? 'Tasas y plazos editables para las líneas comerciales de Prendo.'
-    : provider === 'Santander'
-      ? 'Tasas y plazos editables para las líneas comerciales de Santander.'
-      : provider === 'Propia'
-        ? 'Líneas internas para financiación propia, listas para actualizar.'
-        : 'Otras líneas comerciales cargadas en el simulador.';
+  const helperMap = {
+    BNA: 'Espacio preparado para líneas BNA. Cargá tasas reales antes de usarlo comercialmente.',
+    Santander: 'Tasas y plazos editables para las líneas comerciales de Santander.',
+    Prendo: 'Tasas y plazos editables para las líneas comerciales de Prendo.',
+    Propia: 'Líneas internas para financiación propia, listas para actualizar.',
+  };
+  const helper = helperMap[provider] || 'Otras líneas comerciales cargadas en el simulador.';
 
   return `
     <details class="admin-fold finance-provider-fold" ${index === 0 ? 'open' : ''}>
@@ -2294,11 +2998,13 @@ function financeEntityCardHTML([provider, items], index) {
               <thead>
                 <tr>
                   <th>Línea</th>
-                  <th>Tasa</th>
+                  <th>Entidad</th>
+                  <th>Tasa anual</th>
                   <th>Año desde</th>
                   <th>Año hasta</th>
                   <th>Cuotas</th>
                   <th>Activa</th>
+                  <th>Notas internas</th>
                   <th></th>
                 </tr>
               </thead>
@@ -2313,14 +3019,120 @@ function financeEntityCardHTML([provider, items], index) {
   `;
 }
 
+function completeRateProfiles() {
+  return state.rateProfiles.filter((profile) => {
+    const installments = Array.isArray(profile.installments) ? profile.installments : [];
+    const hasRate = Number(profile.annual_rate) > 0 || (profile.quota_factors && Object.keys(profile.quota_factors).length);
+    return profile.active !== false && profile.entity && profile.label && installments.length && hasRate;
+  });
+}
+
+function updateFinanceReadyStatus() {
+  const el = $('financeReadyStatus');
+  if (!el) return;
+  const activeComplete = completeRateProfiles().length;
+  el.textContent = activeComplete ? 'Listo para activar' : 'Perfiles incompletos';
+  el.classList.toggle('is-available', !!activeComplete);
+  el.classList.toggle('is-sold', !activeComplete);
+}
+
+function financeProfilesByProvider(provider) {
+  return state.rateProfiles.filter((profile) => getRateProvider(profile) === provider);
+}
+
+function renderFinanceSimulatorOptions() {
+  const entitySelect = $('financeTestEntity');
+  const lineSelect = $('financeTestLine');
+  const installmentsSelect = $('financeTestInstallments');
+  if (!entitySelect || !lineSelect || !installmentsSelect) return;
+
+  const groups = groupedRateProfiles();
+  const currentEntity = entitySelect.value || groups.find(([, items]) => items.length)?.[0] || groups[0]?.[0] || '';
+  entitySelect.innerHTML = groups.map(([provider, items]) => `<option value="${escape(provider)}" ${provider === currentEntity ? 'selected' : ''}>${escape(provider)} (${items.length})</option>`).join('');
+
+  const selectedEntity = entitySelect.value || currentEntity;
+  const lines = financeProfilesByProvider(selectedEntity);
+  const currentLine = lineSelect.value;
+  lineSelect.innerHTML = lines.length
+    ? lines.map((profile) => `<option value="${escape(profile.code)}" ${profile.code === currentLine ? 'selected' : ''}>${escape(profile.label || profile.code)}</option>`).join('')
+    : '<option value="">Sin líneas cargadas</option>';
+
+  const selectedProfile = state.rateProfiles.find((profile) => profile.code === lineSelect.value) || lines[0] || null;
+  const installments = Array.isArray(selectedProfile?.installments) ? selectedProfile.installments : [];
+  const currentInstallments = installmentsSelect.value;
+  installmentsSelect.innerHTML = installments.length
+    ? installments.map((num) => `<option value="${num}" ${String(num) === String(currentInstallments) ? 'selected' : ''}>${num} cuotas</option>`).join('')
+    : '<option value="">Sin cuotas</option>';
+}
+
+function estimateFinancePayment(profile, amount, installments) {
+  if (!profile || !amount || !installments) return null;
+  if (profile.calc_method === 'factor_per_10000' && profile.quota_factors) {
+    const factor = Number(profile.quota_factors[String(installments)] || 0);
+    if (factor > 0) return (amount / 10000) * factor;
+  }
+  const annualRate = Number(profile.annual_rate || 0);
+  if (!annualRate) return amount / installments;
+  const monthlyRate = annualRate / 100 / 12;
+  if (!monthlyRate) return amount / installments;
+  const pow = Math.pow(1 + monthlyRate, installments);
+  return amount * ((monthlyRate * pow) / (pow - 1));
+}
+
+function syncFinanceAmountFromPrice() {
+  const price = Number($('financeTestPrice')?.value || 0);
+  const downPayment = Number($('financeTestDownPayment')?.value || 0);
+  const amountInput = $('financeTestAmount');
+  if (!amountInput || amountInput.value) return;
+  if (price > 0) amountInput.value = Math.max(price - downPayment, 0);
+}
+
+function runFinanceSimulator() {
+  const result = $('financeTestResult');
+  if (!result) return;
+  syncFinanceAmountFromPrice();
+  const amount = Number($('financeTestAmount')?.value || 0);
+  const installments = Number($('financeTestInstallments')?.value || 0);
+  const year = Number($('financeTestYear')?.value || 0);
+  const profile = state.rateProfiles.find((item) => item.code === $('financeTestLine')?.value);
+
+  if (!profile || !amount || !installments) {
+    result.innerHTML = '<div class="empty-state compact-empty"><strong>Faltan datos.</strong><span>Completá monto a financiar, línea y cuotas para probar el escenario.</span></div>';
+    return;
+  }
+
+  const payment = estimateFinancePayment(profile, amount, installments);
+  const qualifiesByYear = !year || ((!profile.year_from || year >= Number(profile.year_from)) && (!profile.year_to || year <= Number(profile.year_to)));
+  const active = profile.active !== false;
+  const observations = [
+    active ? 'Línea activa.' : 'Línea inactiva.',
+    qualifiesByYear ? 'La unidad califica por año/rango.' : 'La unidad no califica por año/rango.',
+    profile.notes || '',
+  ].filter(Boolean);
+
+  result.innerHTML = `
+    <div class="finance-result-grid">
+      <div><strong>Monto financiado</strong><span>${window.RGShared.formatPrice(amount, 'ARS')}</span></div>
+      <div><strong>Cuota estimada</strong><span>${payment ? window.RGShared.formatPrice(Math.round(payment), 'ARS') : '-'}</span></div>
+      <div><strong>Tasa aplicada</strong><span>${profile.calc_method === 'factor_per_10000' ? 'Factor por $10.000' : `${profile.annual_rate || 0}% anual`}</span></div>
+      <div><strong>Calificación</strong><span>${active && qualifiesByYear ? 'Califica para prueba interna' : 'Revisar antes de ofrecer'}</span></div>
+    </div>
+    <p class="field-help">${escape(observations.join(' '))}</p>
+  `;
+}
+
 function renderRates() {
   const wrap = $('financeEntityCards');
   if (!wrap) return;
   if (!state.rateProfiles.length) {
     wrap.innerHTML = '<div class="empty-state compact-empty"><strong>Sin perfiles de tasas.</strong><span>Corré el SQL de esta versión para crear la tabla finance_rate_profiles.</span></div>';
+    renderFinanceSimulatorOptions();
+    updateFinanceReadyStatus();
     return;
   }
   wrap.innerHTML = groupedRateProfiles().map(financeEntityCardHTML).join('');
+  renderFinanceSimulatorOptions();
+  updateFinanceReadyStatus();
   renderOverview();
 }
 
@@ -2342,13 +3154,15 @@ async function saveRateProfile(code) {
   if (!current) return;
   const payload = {
     ...current,
+    label: document.querySelector(`[data-rate-label="${code}"]`)?.value?.trim() || current.label || code,
+    entity: document.querySelector(`[data-rate-entity="${code}"]`)?.value?.trim() || current.entity || 'Otras líneas',
     annual_rate: Number(document.querySelector(`[data-rate-annual="${code}"]`)?.value || 0) || null,
     fee_pct: 0,
     year_from: Number(document.querySelector(`[data-rate-year-from="${code}"]`)?.value || 0) || null,
     year_to: Number(document.querySelector(`[data-rate-year-to="${code}"]`)?.value || 0) || null,
     installments: (document.querySelector(`[data-rate-installments="${code}"]`)?.value || '').split(',').map((n) => Number(n.trim())).filter(Boolean),
     quota_factors: current.quota_factors || {},
-    notes: current.notes || null,
+    notes: document.querySelector(`[data-rate-notes="${code}"]`)?.value?.trim() || null,
     active: document.querySelector(`[data-rate-active="${code}"]`)?.value !== 'false',
   };
   const { error } = await sb.from('finance_rate_profiles').upsert(payload, { onConflict: 'code' });
@@ -2367,6 +3181,10 @@ async function changePassword() {
 }
 
 function bindEvents() {
+  $('adminSidebarToggle')?.addEventListener('click', () => {
+    setSidebarCollapsed(!state.sidebarCollapsed);
+  });
+
   document.querySelectorAll('[data-view]').forEach((button) => {
     button.addEventListener('click', () => setView(button.dataset.view));
   });
@@ -2380,6 +3198,16 @@ function bindEvents() {
   });
   document.querySelectorAll('[data-tab]').forEach((button) => {
     button.addEventListener('click', () => setLeadTab(button.dataset.tab));
+  });
+  document.querySelectorAll('[data-vehicle-panel]').forEach((button) => {
+    button.addEventListener('click', () => setVehiclePanel(button.dataset.vehiclePanel));
+  });
+  document.querySelectorAll('[data-form-mode]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const advanced = button.dataset.formMode === 'advanced';
+      setVehicleFormMode(button.dataset.formMode);
+      if (advanced) resetVehicleFoldState({ advanced: true });
+    });
   });
 
   $('adminSearch')?.addEventListener('input', (event) => {
@@ -2400,12 +3228,38 @@ function bindEvents() {
     clearForm();
     hideMsg();
     setView('vehicles');
+    setVehiclePanel('form');
+    setVehicleFormMode('quick');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
-  $('save')?.addEventListener('click', saveVehicle);
+  $('save')?.addEventListener('click', (event) => saveVehicle(event.currentTarget));
+  $('savePublish')?.addEventListener('click', (event) => saveVehicleWithStatus('available', event.currentTarget));
+  $('saveHidden')?.addEventListener('click', (event) => saveVehicleWithStatus('hidden', event.currentTarget));
+  $('completeAdvanced')?.addEventListener('click', () => {
+    setVehiclePanel('form');
+    setVehicleFormMode('advanced');
+    resetVehicleFoldState({ advanced: true });
+  });
+  $('generateAiFicha')?.addEventListener('click', generateVehicleFichaWithAi);
   $('clear')?.addEventListener('click', () => {
     clearForm();
     hideMsg();
+  });
+  $('financeTestRun')?.addEventListener('click', runFinanceSimulator);
+  $('financeTestEntity')?.addEventListener('change', () => {
+    renderFinanceSimulatorOptions();
+    runFinanceSimulator();
+  });
+  $('financeTestLine')?.addEventListener('change', () => {
+    renderFinanceSimulatorOptions();
+    runFinanceSimulator();
+  });
+  ['financeTestPrice', 'financeTestDownPayment'].forEach((id) => {
+    $(id)?.addEventListener('input', () => {
+      const amountInput = $('financeTestAmount');
+      if (amountInput) amountInput.value = '';
+      syncFinanceAmountFromPrice();
+    });
   });
   $('changePass')?.addEventListener('click', changePassword);
   $('saveMaintenance')?.addEventListener('click', saveVehicleMaintenanceEntry);
@@ -2441,6 +3295,12 @@ function bindEvents() {
     window.location.href = './login.html';
   });
 
+  document.addEventListener('input', (event) => {
+    const input = event.target.closest?.('[data-price-value], [data-price-minimum]');
+    if (!input) return;
+    input.value = formatNumberWithDots(input.value);
+  });
+
   document.addEventListener('click', async (event) => {
     const editButton = event.target.closest('[data-edit]');
     const statusButton = event.target.closest('[data-st]');
@@ -2453,14 +3313,61 @@ function bindEvents() {
     const leadDeleteButton = event.target.closest('[data-lead-delete]');
     const leadDownloadButton = event.target.closest('[data-lead-download]');
     const leadToggleButton = event.target.closest('[data-lead-toggle]');
+    const leadArchiveButton = event.target.closest('[data-lead-archive]');
+    const leadCopyButton = event.target.closest('[data-lead-copy]');
     const photoSelectButton = event.target.closest('[data-photo-select]');
+    const priceSaveButton = event.target.closest('[data-price-save]');
+    const duplicateButton = event.target.closest('[data-duplicate]');
+    const editPhotosButton = event.target.closest('[data-edit-photos]');
+    const completeAdvancedButton = event.target.closest('[data-complete-advanced]');
+    const vehiclePanelTarget = event.target.closest('[data-vehicle-panel-target]');
+    const aiApplyButton = event.target.closest('[data-ai-apply]');
 
     if (editButton) {
       const vehicle = await getVehicleById(editButton.getAttribute('data-edit'));
       fillForm(vehicle);
       showMsg('Editando vehículo.', true);
       setView('vehicles');
+      setVehiclePanel('form');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (vehiclePanelTarget) {
+      setView('vehicles');
+      setVehiclePanel(vehiclePanelTarget.dataset.vehiclePanelTarget);
+      return;
+    }
+
+    if (aiApplyButton) {
+      applyAiSuggestion(aiApplyButton.dataset.aiApply);
+      return;
+    }
+
+    if (priceSaveButton) {
+      await saveQuickVehicleRow(priceSaveButton.dataset.priceSave);
+      return;
+    }
+
+    if (duplicateButton) {
+      try {
+        await duplicateVehicle(duplicateButton.dataset.duplicate);
+      } catch (error) {
+        showMsg(error.message || 'No se pudo duplicar la unidad.', false);
+      }
+      return;
+    }
+
+    if (editPhotosButton || completeAdvancedButton) {
+      const id = editPhotosButton?.dataset.editPhotos || completeAdvancedButton?.dataset.completeAdvanced;
+      const vehicle = await getVehicleById(id);
+      fillForm(vehicle);
+      setView('vehicles');
+      setVehiclePanel('form');
+      setVehicleFormMode('advanced');
+      resetVehicleFoldState({ advanced: false });
+      const fold = editPhotosButton ? document.querySelector('[data-fold="photos"]') : document.querySelector('[data-fold="technical"]');
+      if (fold) fold.open = true;
       return;
     }
 
@@ -2510,6 +3417,26 @@ function bindEvents() {
         await toggleLead(leadToggleButton.dataset.leadToggle, leadToggleButton.dataset.id);
       } catch (error) {
         alert(error.message || 'No se pudo abrir el lead.');
+      }
+      return;
+    }
+
+    if (leadCopyButton) {
+      try {
+        await copyLeadData(leadCopyButton.dataset.leadCopy, leadCopyButton.dataset.id);
+        alert('Datos del lead copiados.');
+      } catch (error) {
+        alert(error.message || 'No se pudieron copiar los datos.');
+      }
+      return;
+    }
+
+    if (leadArchiveButton) {
+      try {
+        await archiveLead(leadArchiveButton.dataset.leadArchive, leadArchiveButton.dataset.id);
+        alert('Lead archivado sin eliminarlo.');
+      } catch (error) {
+        alert(error.message || 'No se pudo archivar el lead.');
       }
       return;
     }
@@ -2600,9 +3527,11 @@ async function initAdmin() {
   state.session = session;
   state.access = resolveAccessProfile(session);
   applyAccessControl();
+  initSidebarState();
   bindEvents();
   clearForm();
-  setupPriceInputFormatting();
+  setVehiclePanel('stock');
+  setLeadTab('all');
   if ($('leadSearch')) {
     $('leadSearch').value = '';
     $('leadSearch').setAttribute('autocomplete', 'off');

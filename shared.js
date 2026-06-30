@@ -27,6 +27,17 @@
     }
   }
 
+  function minimumDownPayment(vehicle = {}) {
+    const value = vehicle.minimum_down_payment ?? vehicle.min_down_payment ?? null;
+    const num = Number(value);
+    return Number.isFinite(num) && num > 0 ? num : null;
+  }
+
+  function minimumDownPaymentLabel(vehicle = {}) {
+    const value = minimumDownPayment(vehicle);
+    return value ? `Entrega mínima desde ${formatPrice(value, vehicle.currency || 'ARS')}` : '';
+  }
+
   function formatKm(value) {
     const num = Number(value);
     return Number.isFinite(num) ? `${num.toLocaleString('es-AR')} km` : '-';
@@ -103,10 +114,18 @@
     return url.toString();
   }
 
+  function vehicleFinancingAvailable() {
+    return true;
+  }
+
   function supermovilidadSectionUrl() {
     const url = new URL(`${siteRoot()}index.html`);
     url.hash = 'supermovilidad';
     return url.toString();
+  }
+
+  function vehicleInsuranceAvailable() {
+    return true;
   }
 
   function insuranceUrl(vehicle = null) {
@@ -1123,6 +1142,8 @@
 
   window.RGShared = {
     formatPrice,
+    minimumDownPayment,
+    minimumDownPaymentLabel,
     formatKm,
     formatPercent,
     statusLabel,
@@ -1132,7 +1153,9 @@
     waLink,
     vehicleUrl,
     financingUrl,
+    vehicleFinancingAvailable,
     supermovilidadSectionUrl,
+    vehicleInsuranceAvailable,
     insuranceUrl,
     peritajeUrl,
     textOrDash,

@@ -32,6 +32,7 @@
       ['Combustible', window.RGShared.textOrDash(vehicle.fuel_type)],
       ['Estado', window.RGShared.textOrDash(vehicle.vehicle_condition || window.RGShared.statusLabel(vehicle.status))],
       ['Precio', window.RGShared.formatPrice(vehicle.price, vehicle.currency)],
+      ['Entrega mínima', window.RGShared.minimumDownPayment(vehicle) ? window.RGShared.formatPrice(window.RGShared.minimumDownPayment(vehicle), vehicle.currency) : '-'],
     ].filter(([, value]) => value && value !== '-');
   }
 
@@ -131,7 +132,7 @@
     doc.setFontSize(10.5);
     doc.setTextColor(71, 85, 105);
     doc.text(`Estado publicación: ${window.RGShared.statusLabel(vehicle.status)}`, 150, 106, { align: 'center' });
-    doc.text(vehicle.financing_enabled ? 'Unidad con financiación disponible' : 'Consultar alternativas de financiación', 150, 114, { align: 'center' });
+    doc.text(window.RGShared.vehicleFinancingAvailable(vehicle) ? 'Unidad con financiación disponible' : 'Consultar alternativas de financiación', 150, 114, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);

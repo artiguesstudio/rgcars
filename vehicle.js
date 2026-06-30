@@ -69,7 +69,7 @@ function commercialPills(vehicle) {
 function commercialBlocks(vehicle) {
   const blocks = [];
 
-  if (vehicle.insurance_available) {
+  if (window.RGShared.vehicleInsuranceAvailable(vehicle)) {
     blocks.push(`
       <div class="commercial-panel">
         <h3>Seguros, peritaje pre-compra y gestoría</h3>
@@ -121,7 +121,9 @@ function equipmentMarkup(vehicle) {
 
 function detailMarkup(vehicle) {
   const images = Array.isArray(vehicle.images) ? vehicle.images : [];
-  const financingAvailable = !!(vehicle.financing_enabled || vehicle.private_financing_enabled);
+  const financingAvailable = window.RGShared.vehicleFinancingAvailable(vehicle);
+  const insuranceAvailable = window.RGShared.vehicleInsuranceAvailable(vehicle);
+  const minimumDownPayment = window.RGShared.minimumDownPaymentLabel(vehicle);
   const dotsMarkup = images.length > 1
     ? `
           <div class="detail-main-dots" aria-label="Fotos del vehiculo">
@@ -158,6 +160,7 @@ function detailMarkup(vehicle) {
 
         <h1>${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}</h1>
         <p class="detail-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
+        ${minimumDownPayment ? `<p class="detail-down-payment">${window.RGShared.escapeHTML(minimumDownPayment)}</p>` : ''}
 
         <div class="detail-specs-grid">
           ${detailSpecItems(vehicle)}
@@ -166,7 +169,7 @@ function detailMarkup(vehicle) {
         <div class="detail-actions">
           <a class="btn btn-primary" href="${window.RGShared.waLink(vehicle)}" target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
           ${financingAvailable ? `<a class="btn btn-soft vehicle-financing-link" href="${window.RGShared.supermovilidadSectionUrl()}" data-vehicle-financing-link>Financiación</a>` : ''}
-          ${vehicle.insurance_available ? `<a class="btn btn-ghost" href="${window.RGShared.insuranceUrl(vehicle)}">Seguro</a>` : ''}
+          ${insuranceAvailable ? `<a class="btn btn-ghost" href="${window.RGShared.insuranceUrl(vehicle)}">Seguro</a>` : ''}
         </div>
 
         ${equipmentMarkup(vehicle)}
@@ -184,6 +187,7 @@ function detailMarkup(vehicle) {
 
 function cardHTML(vehicle) {
   const image = window.RGShared.firstImage(vehicle);
+  const minimumDownPayment = window.RGShared.minimumDownPaymentLabel(vehicle);
   return `
     <article class="vehicle-card compact-card">
       <a class="vehicle-card-link" href="./vehicle.html?id=${vehicle.id}" aria-label="Ver detalle de ${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}">
@@ -194,6 +198,7 @@ function cardHTML(vehicle) {
         <div class="vehicle-body compact-body">
           <h3>${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}</h3>
           <p class="vehicle-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
+          ${minimumDownPayment ? `<p class="vehicle-down-payment">${window.RGShared.escapeHTML(minimumDownPayment)}</p>` : ''}
         </div>
       </a>
     </article>
@@ -298,7 +303,7 @@ function relatedScore(baseVehicle, candidate) {
     else if (diff <= 0.35) score += 1;
   }
   if (candidate.featured) score += 1;
-  if (candidate.financing_enabled && baseVehicle.financing_enabled) score += 1;
+  if (window.RGShared.vehicleFinancingAvailable(candidate) && window.RGShared.vehicleFinancingAvailable(baseVehicle)) score += 1;
   return score;
 }
 

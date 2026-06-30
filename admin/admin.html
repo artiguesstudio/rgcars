@@ -21,44 +21,55 @@
         <a class="brand" href="../index.html" aria-label="Volver al inicio">
           <img src="../imagenes/isotipo.png" alt="RG Cars TDF" data-brand-logo />
         </a>
-        <div>
+        <div class="admin-sidebar__brand-copy">
           <span class="eyebrow">Backoffice</span>
           <strong>RG Cars TDF</strong>
         </div>
+        <button
+          type="button"
+          class="admin-sidebar-toggle"
+          id="adminSidebarToggle"
+          aria-label="Contraer menú lateral"
+          aria-expanded="true"
+          aria-controls="adminSidebarNav"
+          title="Contraer menú lateral"
+        >
+          <span aria-hidden="true">‹</span>
+        </button>
       </div>
 
-      <nav class="admin-sidebar__nav" aria-label="Navegación del panel">
-        <button type="button" class="admin-nav-link is-active" data-view="overview">
+      <nav class="admin-sidebar__nav" id="adminSidebarNav" aria-label="Navegación del panel">
+        <button type="button" class="admin-nav-link is-active" data-view="overview" data-nav-short="R" title="Resumen">
           <span>Resumen</span>
         </button>
 
         <details class="admin-nav-group" open>
           <summary>Operación diaria</summary>
           <div class="admin-nav-group__items">
-            <button type="button" class="admin-nav-link" data-view="vehicles">Vehículos</button>
-            <button type="button" class="admin-nav-link" data-view="leads"><span class="admin-nav-link__inner"><span>Leads</span><span class="admin-nav-badge" id="adminLeadBadge" hidden>0</span></span></button>
-            <button type="button" class="admin-nav-link" data-view="insurance">Seguros</button>
+            <button type="button" class="admin-nav-link" data-view="vehicles" data-nav-short="V" title="Vehículos">Vehículos</button>
+            <button type="button" class="admin-nav-link" data-view="leads" data-nav-short="L" title="Leads"><span class="admin-nav-link__inner"><span>Leads</span><span class="admin-nav-badge" id="adminLeadBadge" hidden>0</span></span></button>
+            <button type="button" class="admin-nav-link" data-view="insurance" data-nav-short="S" title="Seguros">Seguros</button>
           </div>
         </details>
 
         <details class="admin-nav-group" open>
           <summary>Comercial</summary>
           <div class="admin-nav-group__items">
-            <button type="button" class="admin-nav-link" data-view="financing">Financiación</button>
+            <button type="button" class="admin-nav-link" data-view="financing" data-nav-short="$" title="Financiación">Financiación</button>
           </div>
         </details>
 
         <details class="admin-nav-group" open>
           <summary>Inteligencia</summary>
           <div class="admin-nav-group__items">
-            <button type="button" class="admin-nav-link" data-view="metrics">Métricas</button>
+            <button type="button" class="admin-nav-link" data-view="metrics" data-nav-short="M" title="Métricas">Métricas</button>
           </div>
         </details>
 
         <details class="admin-nav-group" open>
           <summary>Sistema</summary>
           <div class="admin-nav-group__items">
-            <button type="button" class="admin-nav-link" data-view="settings">Configuración</button>
+            <button type="button" class="admin-nav-link" data-view="settings" data-nav-short="C" title="Configuración">Configuración</button>
           </div>
         </details>
       </nav>
@@ -216,8 +227,16 @@
         </section>
 
         <section class="admin-view" data-view-panel="vehicles">
-          <div class="admin-split-grid admin-split-grid--vehicles">
-            <article class="admin-card admin-panel-card admin-panel-card--list">
+          <div class="admin-vehicle-modebar">
+            <div class="admin-tabs" role="tablist" aria-label="Gestión de vehículos">
+              <button type="button" class="tab-button is-active" data-vehicle-panel="stock">Stock</button>
+              <button type="button" class="tab-button" data-vehicle-panel="prices">Precios rápidos</button>
+              <button type="button" class="tab-button" data-vehicle-panel="form">Carga / edición</button>
+            </div>
+          </div>
+
+          <div class="admin-vehicle-workspace">
+            <article class="admin-card admin-panel-card admin-panel-card--list admin-vehicle-pane is-active" data-vehicle-pane="stock">
               <div class="admin-panel-head admin-panel-head--inline">
                 <div>
                   <span class="eyebrow">Vehículos</span>
@@ -247,18 +266,55 @@
               <div id="rows" class="admin-results" aria-live="polite"></div>
             </article>
 
-            <article class="admin-card admin-panel-card admin-panel-card--form">
+            <article class="admin-card admin-panel-card admin-panel-card--list admin-vehicle-pane" data-vehicle-pane="prices">
+              <div class="admin-panel-head admin-panel-head--inline">
+                <div>
+                  <span class="eyebrow">Operación</span>
+                  <h2>Precios rápidos</h2>
+                </div>
+                <button type="button" class="btn btn-ghost" data-vehicle-panel-target="form">Cargar vehículo</button>
+              </div>
+              <p class="admin-muted">Editá estado, precio, entrega mínima y moneda sin abrir la ficha completa.</p>
+              <p id="quickPricesMeta" class="section-meta search-meta">Cargando precios…</p>
+              <div class="quick-prices-wrap">
+                <table class="quick-prices-table">
+                  <thead>
+                    <tr>
+                      <th>Vehículo</th>
+                      <th>Patente</th>
+                      <th>Estado</th>
+                      <th>Precio</th>
+                      <th>Entrega mínima</th>
+                      <th>Moneda</th>
+                      <th>Actualizado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="quickPricesRows"></tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="admin-card admin-panel-card admin-panel-card--form admin-vehicle-pane" data-vehicle-pane="form">
               <div class="admin-panel-head">
                 <div>
                   <span class="eyebrow">Editor</span>
                   <h2 id="vehicleFormTitle">Publicar vehículo</h2>
                 </div>
-                <p class="admin-muted">Formulario ordenado por secciones para cargar stock sin mezclar otras tareas del sistema.</p>
+                <p class="admin-muted">Usá carga rápida para publicar en pocos campos o abrí la ficha avanzada cuando necesites más detalle.</p>
               </div>
 
               <input type="hidden" id="id" />
 
-              <details class="admin-fold" open>
+              <div class="vehicle-form-mode">
+                <div class="admin-tabs" role="tablist" aria-label="Modo de carga">
+                  <button type="button" class="tab-button is-active" data-form-mode="quick">Carga rápida</button>
+                  <button type="button" class="tab-button" data-form-mode="advanced">Ficha avanzada</button>
+                </div>
+                <p class="admin-muted">Para publicar solo se exige título y precio. Los datos técnicos quedan disponibles sin frenar la carga.</p>
+              </div>
+
+              <details class="admin-fold vehicle-fold" data-fold="primary" open>
                 <summary class="admin-fold__summary">
                   <div>
                     <span class="admin-fold__eyebrow">Datos</span>
@@ -277,78 +333,23 @@
                     <div class="field col-3"><label for="plate">Patente</label><input id="plate" class="input" placeholder="AB123CD" /></div>
                     <div class="field col-4"><label for="km">Kilómetros</label><input id="km" class="input" type="number" placeholder="Kilómetros" /></div>
                     <div class="field col-4"><label for="price">Precio</label><input id="price" class="input" type="text" inputmode="numeric" autocomplete="off" placeholder="15.900.000" /></div>
+                    <div class="field col-4"><label for="minimum_down_payment">Entrega mínima</label><input id="minimum_down_payment" class="input" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej: 4.500.000" /><p class="field-help">Monto inicial sugerido para consultar financiación.</p></div>
                     <div class="field col-4"><label for="currency">Moneda</label><select id="currency" class="select"><option value="ARS">ARS</option><option value="USD">USD</option></select></div>
                     <div class="field col-4"><label for="category">Categoría</label><select id="category" class="select"><option value="auto">Auto</option><option value="camioneta">Camioneta</option><option value="suv">SUV</option><option value="camion">Camión</option><option value="moto">Moto</option><option value="utilitario">Utilitario</option><option value="otro">Otro</option></select></div>
                     <div class="field col-4"><label for="status">Estado</label><select id="status" class="select"><option value="available">Disponible</option><option value="incoming">Próximo a ingresar</option><option value="reserved">Reservado</option><option value="sold">Vendido</option><option value="hidden">Oculto</option></select></div>
                     <div class="field col-4"><label for="featured">Destacado</label><select id="featured" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
-                  </div>
-                </div>
-              </details>
-
-              <details class="admin-fold">
-                <summary class="admin-fold__summary">
-                  <div>
-                    <span class="admin-fold__eyebrow">Contenido</span>
-                    <strong>Descripción comercial</strong>
-                  </div>
-                </summary>
-                <div class="admin-fold__body">
-                  <div class="field">
-                    <label for="description">Descripción</label>
-                    <textarea id="description" class="input textarea" rows="5" placeholder="Descripción comercial del vehículo"></textarea>
-                  </div>
-                </div>
-              </details>
-
-              <details class="admin-fold">
-                <summary class="admin-fold__summary">
-                  <div>
-                    <span class="admin-fold__eyebrow">Ficha</span>
-                    <strong>Ficha técnica y equipamiento</strong>
-                  </div>
-                </summary>
-                <div class="admin-fold__body">
-                  <div class="form-grid">
-                    <div class="field col-4"><label for="engine">Motor</label><input id="engine" class="input" placeholder="Ej: 1.8L 16V (130 CV)" /></div>
+                    <div class="field col-4"><label for="color">Color</label><input id="color" class="input" placeholder="Ej: Blanco" /></div>
                     <div class="field col-4"><label for="transmission">Transmisión</label><input id="transmission" class="input" placeholder="Ej: Automática de 6 velocidades" /></div>
-                    <div class="field col-4"><label for="drivetrain">Tracción</label><input id="drivetrain" class="input" placeholder="Ej: Delantera (FWD)" /></div>
-                    <div class="field col-3"><label for="color">Color</label><input id="color" class="input" placeholder="Ej: Blanco" /></div>
-                    <div class="field col-3"><label for="doors">Cantidad de puertas</label><input id="doors" class="input" type="number" min="1" max="8" placeholder="Ej: 5" /></div>
-                    <div class="field col-3"><label for="fuel_type">Combustible</label><input id="fuel_type" class="input" placeholder="Ej: Nafta" /></div>
-                    <div class="field col-3"><label for="vehicle_condition">Estado de la unidad</label><input id="vehicle_condition" class="input" placeholder="Ej: Excelente" /></div>
-                    <div class="field col-12"><label for="featured_equipment">Equipamiento destacado</label><textarea id="featured_equipment" class="input textarea" rows="6" placeholder="Un ítem por línea&#10;Pantalla táctil con Android Auto / Apple CarPlay&#10;Cámara de retroceso&#10;Control crucero"></textarea></div>
+                    <div class="field col-4"><label for="fuel_type">Combustible</label><input id="fuel_type" class="input" placeholder="Ej: Nafta" /></div>
                   </div>
                 </div>
               </details>
 
-              <details class="admin-fold">
+              <details class="admin-fold vehicle-fold" data-fold="photos" open>
                 <summary class="admin-fold__summary">
                   <div>
-                    <span class="admin-fold__eyebrow">Operación</span>
-                    <strong>Flags comerciales y financiación</strong>
-                  </div>
-                </summary>
-                <div class="admin-fold__body">
-                  <div class="form-grid">
-                    <div class="field col-4"><label for="is_recent">Recién ingresado</label><select id="is_recent" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
-                    <div class="field col-4"><label for="outlet">Outlet</label><select id="outlet" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
-                    <div class="field col-4"><label for="insurance_available">Seguro disponible</label><select id="insurance_available" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
-                    <div class="field col-4"><label for="financing_enabled">Financiación agencia</label><select id="financing_enabled" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
-                    <div class="field col-4"><label for="private_financing_enabled">Compra entre particulares</label><select id="private_financing_enabled" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
-                    <div class="field col-4"><label for="finance_max_months">Máximo de cuotas</label><input id="finance_max_months" class="input" type="number" min="0" placeholder="Ej: 48" /></div>
-                    <div class="field col-6"><label for="min_down_payment">Entrega mínima sugerida</label><input id="min_down_payment" class="input" type="number" min="0" placeholder="Monto estimado" /></div>
-                    <div class="field col-3"><label for="stock_alert_days">Alerta sin movimientos (días)</label><input id="stock_alert_days" class="input" type="number" min="1" placeholder="Ej: 30" /></div>
-                    <div class="field col-9"><label for="finance_entities">Entidades / convenios</label><input id="finance_entities" class="input" placeholder="Santander, Prendo, BNA" /></div>
-                    <div class="field col-12"><label for="finance_note">Aclaración comercial</label><textarea id="finance_note" class="input textarea" rows="3" placeholder="Ej: sujeto a scoring, documentación y condiciones vigentes"></textarea></div>
-                  </div>
-                </div>
-              </details>
-
-              <details class="admin-fold">
-                <summary class="admin-fold__summary">
-                  <div>
-                    <span class="admin-fold__eyebrow">Media</span>
-                    <strong>Fotos y archivos</strong>
+                    <span class="admin-fold__eyebrow">Fotos</span>
+                    <strong>Fotos</strong>
                   </div>
                 </summary>
                 <div class="admin-fold__body">
@@ -366,7 +367,111 @@
                 </div>
               </details>
 
-              <details class="admin-fold">
+              <details class="admin-fold vehicle-fold" data-fold="description">
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Contenido</span>
+                    <strong>Descripción comercial</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="field">
+                    <label for="description">Descripción</label>
+                    <textarea id="description" class="input textarea" rows="5" placeholder="Descripción comercial del vehículo"></textarea>
+                  </div>
+                </div>
+              </details>
+
+              <details class="admin-fold vehicle-fold" data-fold="ai">
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Asistencia</span>
+                    <strong>Asistente IA</strong>
+                    <p>Genera una propuesta revisable desde un endpoint seguro, sin publicar automáticamente.</p>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="ai-assistant-box">
+                    <div>
+                      <strong>Generar ficha comercial</strong>
+                      <p>Usa solo los datos cargados en el formulario. Revisá siempre antes de aplicar.</p>
+                    </div>
+                    <button type="button" class="btn btn-soft" id="generateAiFicha">Generar ficha con IA</button>
+                  </div>
+                  <p class="field-help">Revisá la información antes de publicar. La IA puede cometer errores.</p>
+                  <div id="aiAssistantMessage" class="form-message" role="status" aria-live="polite"></div>
+                  <div id="aiAssistantPreview" class="ai-preview" hidden></div>
+                </div>
+              </details>
+
+              <details class="admin-fold vehicle-fold" data-fold="technical" data-advanced-section>
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Ficha</span>
+                    <strong>Ficha técnica</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="form-grid">
+                    <div class="field col-4"><label for="engine">Motor</label><input id="engine" class="input" placeholder="Ej: 1.8L 16V (130 CV)" /></div>
+                    <div class="field col-4"><label for="drivetrain">Tracción</label><input id="drivetrain" class="input" placeholder="Ej: Delantera (FWD)" /></div>
+                    <div class="field col-4"><label for="doors">Cantidad de puertas</label><input id="doors" class="input" type="number" min="1" max="8" placeholder="Ej: 5" /></div>
+                    <div class="field col-4"><label for="vehicle_condition">Estado de la unidad</label><input id="vehicle_condition" class="input" placeholder="Ej: Excelente" /></div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="admin-fold vehicle-fold" data-fold="equipment" data-advanced-section>
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Equipamiento</span>
+                    <strong>Equipamiento</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="field">
+                    <label for="featured_equipment">Equipamiento destacado</label>
+                    <textarea id="featured_equipment" class="input textarea" rows="6" placeholder="Un ítem por línea&#10;Pantalla táctil con Android Auto / Apple CarPlay&#10;Cámara de retroceso&#10;Control crucero"></textarea>
+                  </div>
+                </div>
+              </details>
+
+              <details class="admin-fold vehicle-fold" data-fold="commercial" data-advanced-section>
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Operación</span>
+                    <strong>Operación comercial</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="form-grid">
+                    <div class="field col-4"><label for="is_recent">Recién ingresado</label><select id="is_recent" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="outlet">Outlet</label><select id="outlet" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="stock_alert_days">Alerta sin movimientos (días)</label><input id="stock_alert_days" class="input" type="number" min="1" placeholder="Ej: 30" /></div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="admin-fold vehicle-fold" data-fold="finance" data-advanced-section>
+                <summary class="admin-fold__summary">
+                  <div>
+                    <span class="admin-fold__eyebrow">Financiación</span>
+                    <strong>Financiación / seguros</strong>
+                  </div>
+                </summary>
+                <div class="admin-fold__body">
+                  <div class="form-grid">
+                    <div class="field col-4"><label for="insurance_available">Seguro disponible</label><select id="insurance_available" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="financing_enabled">Financiación agencia</label><select id="financing_enabled" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="private_financing_enabled">Compra entre particulares</label><select id="private_financing_enabled" class="select"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="field col-4"><label for="finance_max_months">Máximo de cuotas</label><input id="finance_max_months" class="input" type="number" min="0" placeholder="Ej: 48" /></div>
+                    <div class="field col-8"><label for="finance_entities">Entidades / convenios</label><input id="finance_entities" class="input" placeholder="Santander, Prendo, BNA" /></div>
+                    <div class="field col-12"><label for="finance_note">Aclaración comercial</label><textarea id="finance_note" class="input textarea" rows="3" placeholder="Ej: sujeto a scoring, documentación y condiciones vigentes"></textarea></div>
+                  </div>
+                </div>
+              </details>
+
+              <details class="admin-fold vehicle-fold" data-fold="maintenance" data-advanced-section>
                 <summary class="admin-fold__summary">
                   <div>
                     <span class="admin-fold__eyebrow">Postventa</span>
@@ -393,7 +498,10 @@
               </details>
 
               <div class="action-row action-row--admin">
-                <button id="save" class="btn btn-primary" type="button">Guardar vehículo</button>
+                <button id="savePublish" class="btn btn-primary" type="button">Guardar y publicar</button>
+                <button id="saveHidden" class="btn btn-soft" type="button">Guardar como oculto</button>
+                <button id="completeAdvanced" class="btn btn-ghost" type="button">Completar ficha avanzada</button>
+                <button id="save" class="btn btn-ghost" type="button">Guardar cambios</button>
                 <button id="clear" class="btn btn-ghost" type="button">Limpiar formulario</button>
               </div>
               <div id="msg" class="form-message" role="status" aria-live="polite"></div>
@@ -414,7 +522,8 @@
 
             <div class="admin-toolbar-grid admin-toolbar-grid--leads">
               <div class="lead-tabs lead-tabs-wrap admin-tabs">
-                <button type="button" class="tab-button is-active" data-tab="consignment">Consignación</button>
+                <button type="button" class="tab-button is-active" data-tab="all">Todos</button>
+                <button type="button" class="tab-button" data-tab="consignment">Consignación</button>
                 <button type="button" class="tab-button" data-tab="scouting">Búsquedas</button>
                 <button type="button" class="tab-button" data-tab="financing">Financiación</button>
                 <button type="button" class="tab-button" data-tab="insurance">Seguros</button>
@@ -429,7 +538,8 @@
 
             <div class="admin-kpi-grid admin-kpi-grid--compact" id="leadStats"></div>
 
-            <section id="consignmentPanel" class="lead-panel is-active"></section>
+            <section id="allPanel" class="lead-panel is-active"></section>
+            <section id="consignmentPanel" class="lead-panel"></section>
             <section id="scoutingPanel" class="lead-panel"></section>
             <section id="financingPanel" class="lead-panel"></section>
             <section id="insurancePanel" class="lead-panel"></section>
@@ -461,6 +571,35 @@
               </div>
               <p class="admin-muted" id="ratesMeta">Cargando perfiles de tasas…</p>
             </div>
+            <div class="finance-status-strip">
+              <span class="status-pill is-inline is-reserved">Simulador interno</span>
+              <span class="status-pill is-inline is-hidden">No visible en frontend</span>
+              <span class="status-pill is-inline is-available" id="financeReadyStatus">Validando perfiles</span>
+            </div>
+            <details class="admin-fold finance-test-fold" open>
+              <summary class="admin-fold__summary">
+                <div>
+                  <span class="admin-fold__eyebrow">Backoffice</span>
+                  <strong>Probar simulador</strong>
+                  <p>Preview interno para validar reglas antes de activar cualquier cálculo en el frontend.</p>
+                </div>
+              </summary>
+              <div class="admin-fold__body">
+                <div class="form-grid">
+                  <div class="field col-3"><label for="financeTestPrice">Precio del vehículo</label><input id="financeTestPrice" class="input" type="number" min="0" placeholder="Ej: 18000000" /></div>
+                  <div class="field col-3"><label for="financeTestDownPayment">Entrega inicial</label><input id="financeTestDownPayment" class="input" type="number" min="0" placeholder="Ej: 6000000" /></div>
+                  <div class="field col-3"><label for="financeTestAmount">Monto a financiar</label><input id="financeTestAmount" class="input" type="number" min="0" placeholder="Se calcula automático" /></div>
+                  <div class="field col-3"><label for="financeTestYear">Año del vehículo</label><input id="financeTestYear" class="input" type="number" min="1900" placeholder="Ej: 2022" /></div>
+                  <div class="field col-4"><label for="financeTestEntity">Entidad</label><select id="financeTestEntity" class="select"></select></div>
+                  <div class="field col-4"><label for="financeTestLine">Línea</label><select id="financeTestLine" class="select"></select></div>
+                  <div class="field col-4"><label for="financeTestInstallments">Cuotas</label><select id="financeTestInstallments" class="select"></select></div>
+                </div>
+                <div class="action-row action-row--admin action-row--compact">
+                  <button type="button" class="btn btn-primary" id="financeTestRun">Probar escenario</button>
+                </div>
+                <div id="financeTestResult" class="finance-test-result"></div>
+              </div>
+            </details>
             <div id="financeEntityCards" class="admin-fold-list finance-provider-stack"></div>
           </article>
         </section>

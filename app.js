@@ -55,6 +55,7 @@ function extraBadgesHTML(vehicle) {
 
 function cardHTML(vehicle) {
   const year = String(vehicle.year || '').trim();
+  const minimumDownPayment = window.RGShared.minimumDownPaymentLabel(vehicle);
   return `
     <article class="vehicle-card vehicle-card--catalog">
       <a class="vehicle-card-link" href="./vehicle.html?id=${encodeURIComponent(vehicle.id)}" aria-label="Ver detalle de ${escape(vehicle.title || 'Vehículo')}">
@@ -66,6 +67,7 @@ function cardHTML(vehicle) {
           ${year ? `<p class="vehicle-year">${escape(year)}</p>` : ''}
           <h3>${escape(vehicle.title || 'Vehículo')}</h3>
           <p class="vehicle-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
+          ${minimumDownPayment ? `<p class="vehicle-down-payment">${escape(minimumDownPayment)}</p>` : ''}
         </div>
       </a>
     </article>
@@ -166,7 +168,7 @@ function vehiclePriority(vehicle) {
   if (vehicle.status === 'available') score += 25;
   if (vehicle.featured || vehicle.outlet) score += 20;
   if (vehicle.is_recent) score += 14;
-  if (vehicle.financing_enabled || vehicle.private_financing_enabled) score += 6;
+  if (window.RGShared.vehicleFinancingAvailable(vehicle)) score += 6;
   return score;
 }
 
