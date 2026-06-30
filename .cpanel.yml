@@ -54,5 +54,9 @@ deployment:
     - /bin/cp peritaje.js $DEPLOYPATH/
 
     # SEO / utilitarios
+    - /bin/cp .htaccess $DEPLOYPATH/
     - /bin/cp robots.txt $DEPLOYPATH/
     - /bin/cp sitemap.xml $DEPLOYPATH/
+
+    # Limpiar cache NGINX de cPanel si la función está disponible en el hosting
+    - /usr/local/cpanel/bin/uapi NginxCaching clear_cache || true
