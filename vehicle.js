@@ -22,7 +22,7 @@ function updateSeo(vehicle) {
   const title = [vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(' ') || vehicle.title || 'Vehículo';
   const description = `${title} en RG Cars TDF. ${window.RGShared.formatKm(vehicle.km)} · ${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}. Consultá disponibilidad, financiación y formas de pago.`;
   const url = window.RGShared.vehicleUrl(vehicle.id);
-  const image = window.RGShared.firstImage(vehicle);
+  const image = firstVehicleImage(vehicle);
 
   document.title = `${title} · RG Cars TDF`;
   document.querySelector('meta[name="description"]')?.setAttribute('content', description);
@@ -79,6 +79,73 @@ function vehicleInsuranceAvailable(vehicle) {
   return sharedVehicleAvailability('vehicleInsuranceAvailable', vehicle);
 }
 
+function parseMoneyLike(value) {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value === 'number') return Number.isFinite(value) && value > 0 ? value : null;
+  const normalized = String(value)
+    .trim()
+    .replace(/[^\d,.-]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+  const num = Number(normalized);
+  return Number.isFinite(num) && num > 0 ? num : null;
+}
+
+function vehicleMinimumDownPayment(vehicle) {
+  const helper = window.RGShared?.minimumDownPayment;
+  if (typeof helper === 'function') {
+    const value = helper(vehicle);
+    if (value) return value;
+  }
+  return parseMoneyLike(
+    vehicle?.minimum_down_payment
+      ?? vehicle?.min_down_payment
+      ?? vehicle?.entrega_minima
+      ?? vehicle?.minimumDownPayment
+  );
+}
+
+function vehicleMinimumDownPaymentLabel(vehicle) {
+  const helper = window.RGShared?.minimumDownPaymentLabel;
+  if (typeof helper === 'function') {
+    const label = helper(vehicle);
+    if (label) return label;
+  }
+  const value = vehicleMinimumDownPayment(vehicle);
+  return value ? `Entrega mínima desde ${window.RGShared.formatPrice(value, vehicle?.currency || 'ARS')}` : '';
+}
+
+function imageValuesFrom(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.flatMap(imageValuesFrom);
+  if (typeof value === 'object') return Object.values(value).flatMap(imageValuesFrom);
+  const raw = String(value).trim();
+  if (!raw) return [];
+  if (/^[\[{]/.test(raw)) {
+    try {
+      return imageValuesFrom(JSON.parse(raw));
+    } catch {
+      return [raw];
+    }
+  }
+  return raw.includes('\n')
+    ? raw.split(/\r?\n/g).map((item) => item.trim()).filter(Boolean)
+    : [raw];
+}
+
+function vehicleImages(vehicle) {
+  return [
+    ...imageValuesFrom(vehicle?.images),
+    ...imageValuesFrom(vehicle?.photos),
+    ...imageValuesFrom(vehicle?.main_image),
+    ...imageValuesFrom(vehicle?.featured_image),
+  ].filter((src, index, list) => /^https?:\/\//i.test(src) && list.indexOf(src) === index);
+}
+
+function firstVehicleImage(vehicle) {
+  return vehicleImages(vehicle)[0] || window.RGShared.firstImage?.(vehicle) || '';
+}
+
 function commercialBlocks(vehicle) {
   const blocks = [];
 
@@ -133,10 +200,10 @@ function equipmentMarkup(vehicle) {
 }
 
 function detailMarkup(vehicle) {
-  const images = Array.isArray(vehicle.images) ? vehicle.images : [];
+  const images = vehicleImages(vehicle);
   const financingAvailable = vehicleFinancingAvailable(vehicle);
   const insuranceAvailable = vehicleInsuranceAvailable(vehicle);
-  const minimumDownPayment = window.RGShared.minimumDownPaymentLabel(vehicle);
+  const minimumDownPayment = vehicleMinimumDownPaymentLabel(vehicle);
   const dotsMarkup = images.length > 1
     ? `
           <div class="detail-main-dots" aria-label="Fotos del vehiculo">
@@ -145,7 +212,7 @@ function detailMarkup(vehicle) {
       `
     : '';
   const mainMedia = images.length
-    ? `<img id="mainVehicleImage" src="${images[0]}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}">`
+    ? `<img id="mainVehicleImage" src="${window.RGShared.escapeHTML(images[0])}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}">`
     : `<div class="media-placeholder large">Sin foto principal</div>`;
 
   return `
@@ -158,8 +225,8 @@ function detailMarkup(vehicle) {
         </div>
         <div class="detail-thumbs">
           ${images.length ? images.map((src, index) => `
-            <button class="thumb-button ${index === 0 ? 'is-active' : ''}" type="button" data-thumb-src="${src}" data-thumb-index="${index}" aria-label="Ver imagen ${index + 1}">
-              <img src="${src}" alt="Miniatura ${index + 1}">
+            <button class="thumb-button ${index === 0 ? 'is-active' : ''}" type="button" data-thumb-src="${window.RGShared.escapeHTML(src)}" data-thumb-index="${index}" aria-label="Ver imagen ${index + 1}">
+              <img src="${window.RGShared.escapeHTML(src)}" alt="Miniatura ${index + 1}">
             </button>
           `).join('') : '<div class="empty-inline">Todavía no hay miniaturas cargadas.</div>'}
         </div>
@@ -199,8 +266,8 @@ function detailMarkup(vehicle) {
 }
 
 function cardHTML(vehicle) {
-  const image = window.RGShared.firstImage(vehicle);
-  const minimumDownPayment = window.RGShared.minimumDownPaymentLabel(vehicle);
+  const image = firstVehicleImage(vehicle);
+  const minimumDownPayment = vehicleMinimumDownPaymentLabel(vehicle);
   return `
     <article class="vehicle-card compact-card">
       <a class="vehicle-card-link" href="./vehicle.html?id=${vehicle.id}" aria-label="Ver detalle de ${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}">
