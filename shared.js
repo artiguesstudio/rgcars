@@ -49,22 +49,36 @@
     return `${num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: digits })}%`;
   }
 
+  function normalizeStatus(status) {
+    const normalized = String(status || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+
+    if (normalized.includes('proximo') || normalized.includes('incoming')) return 'incoming';
+    if (normalized.includes('reserv')) return 'reserved';
+    if (normalized.includes('vend') || normalized.includes('sold')) return 'sold';
+    if (normalized.includes('oculto') || normalized.includes('hidden')) return 'hidden';
+    return 'available';
+  }
+
   function statusLabel(status) {
-    if (status === 'available') return 'Disponible';
-    if (status === 'incoming') return 'Próximo a ingresar';
-    if (status === 'reserved') return 'Reservado';
-    if (status === 'sold') return 'Vendido';
-    if (status === 'hidden') return 'Oculto';
-    return status || '';
+    const normalized = normalizeStatus(status);
+    if (normalized === 'incoming') return 'Próximo ingreso';
+    if (normalized === 'reserved') return 'Reservado';
+    if (normalized === 'sold') return 'Vendido';
+    if (normalized === 'hidden') return 'Oculto';
+    return 'Disponible';
   }
 
   function statusClass(status) {
-    if (status === 'available') return 'is-available';
-    if (status === 'incoming') return 'is-incoming';
-    if (status === 'reserved') return 'is-reserved';
-    if (status === 'sold') return 'is-sold';
-    if (status === 'hidden') return 'is-hidden';
-    return '';
+    const normalized = normalizeStatus(status);
+    if (normalized === 'incoming') return 'is-incoming';
+    if (normalized === 'reserved') return 'is-reserved';
+    if (normalized === 'sold') return 'is-sold';
+    if (normalized === 'hidden') return 'is-hidden';
+    return 'is-available';
   }
 
   function categoryLabel(category) {
@@ -1190,6 +1204,7 @@
     minimumDownPaymentLabel,
     formatKm,
     formatPercent,
+    normalizeStatus,
     statusLabel,
     statusClass,
     categoryLabel,

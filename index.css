@@ -1348,6 +1348,227 @@ body.public-theme .footer-bottom-links {
   scroll-margin-top: 104px;
 }
 
+/* ===== 2026-07-13 · carrusel vendidos ===== */
+body.public-theme .sold-vehicles-section {
+  margin-top: 22px;
+  padding: 18px 0 58px;
+  background: #f8fafc;
+}
+
+body.public-theme .sold-vehicles-section[hidden] {
+  display: none !important;
+}
+
+body.public-theme .sold-vehicles-container {
+  max-width: 1180px;
+}
+
+body.public-theme .sold-vehicles-header {
+  max-width: 680px;
+  margin-bottom: 18px;
+}
+
+body.public-theme .sold-vehicles-header h2 {
+  margin: 7px 0 8px;
+  color: #0f172a;
+  font-size: clamp(1.54rem, 2.7vw, 2.22rem);
+  line-height: 1.04;
+  font-weight: 900;
+}
+
+body.public-theme .sold-vehicles-header p {
+  margin: 0;
+  max-width: 58ch;
+  color: rgba(15, 23, 42, 0.66);
+  font-size: 0.96rem;
+  line-height: 1.55;
+}
+
+body.public-theme .sold-vehicles-carousel-shell {
+  position: relative;
+}
+
+body.public-theme .sold-vehicles-carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding: 3px 2px 14px;
+}
+
+body.public-theme .sold-vehicles-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+body.public-theme .sold-vehicle-card {
+  flex: 0 0 clamp(226px, 22vw, 268px);
+  scroll-snap-align: start;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+body.public-theme .sold-vehicle-card__link {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+}
+
+body.public-theme .sold-vehicle-card__media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(180deg, #e5e7eb 0%, #d8dee9 100%);
+}
+
+body.public-theme .sold-vehicle-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.04), rgba(15, 23, 42, 0.18));
+  pointer-events: none;
+}
+
+body.public-theme .sold-vehicle-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.84);
+}
+
+body.public-theme .sold-vehicle-card__media .media-placeholder {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: rgba(15, 23, 42, 0.58);
+  font-weight: 800;
+}
+
+body.public-theme .sold-vehicle-card .status-pill {
+  top: 9px;
+  left: 9px;
+}
+
+body.public-theme .sold-vehicle-card__body {
+  display: flex;
+  min-height: 150px;
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px 14px 15px;
+}
+
+body.public-theme .sold-vehicle-card h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 0.96rem;
+  line-height: 1.22;
+  font-weight: 850;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+body.public-theme .sold-vehicle-card .vehicle-price {
+  margin: auto 0 0;
+  color: rgba(15, 23, 42, 0.74);
+  font-size: 0.95rem;
+  line-height: 1.1;
+}
+
+body.public-theme .sold-vehicle-card__note {
+  margin: 0;
+  color: rgba(15, 23, 42, 0.52);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+body.public-theme .sold-vehicles-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #111827;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
+  cursor: pointer;
+  font-size: 1.45rem;
+  font-weight: 900;
+  transform: translateY(-50%);
+}
+
+body.public-theme .sold-vehicles-nav.is-prev {
+  left: -12px;
+}
+
+body.public-theme .sold-vehicles-nav.is-next {
+  right: -12px;
+}
+
+body.public-theme .sold-vehicles-nav:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.public-theme .sold-vehicles-carousel {
+    scroll-behavior: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  body.public-theme .sold-vehicles-section {
+    margin-top: 12px;
+    padding: 12px 0 42px;
+  }
+
+  body.public-theme .sold-vehicles-header {
+    margin-bottom: 14px;
+  }
+
+  body.public-theme .sold-vehicles-header p {
+    font-size: 0.9rem;
+  }
+
+  body.public-theme .sold-vehicles-carousel {
+    gap: 14px;
+    padding-bottom: 12px;
+  }
+
+  body.public-theme .sold-vehicle-card {
+    flex-basis: 78%;
+    border-radius: 16px;
+  }
+
+  body.public-theme .sold-vehicle-card__body {
+    min-height: 138px;
+    padding: 12px 13px 14px;
+  }
+
+  body.public-theme .sold-vehicles-nav {
+    display: none;
+  }
+}
+
 .supermovilidad-benefits-shell {
   margin-top: 22px;
 }
@@ -9381,5 +9602,62 @@ body.public-theme .financing-modal__primary {
 
   body.public-theme .site-header .header-mobile-toggle__label {
     display: inline-flex;
+  }
+}
+
+/* ===== 2026-07-13 · cierre cascada tags de estado ===== */
+body.public-theme .vehicle-card .status-pill,
+body.public-theme .sold-vehicle-card .status-pill {
+  display: inline-flex !important;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  min-height: 24px;
+  max-width: calc(100% - 20px);
+  padding: 4px 9px !important;
+  border-radius: 999px;
+  font-size: 0.62rem !important;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(8px);
+}
+
+body.public-theme .status-pill.is-available {
+  background: rgba(22, 163, 74, 0.92);
+  color: #fff;
+}
+
+body.public-theme .status-pill.is-incoming {
+  background: rgba(14, 165, 233, 0.92);
+  color: #fff;
+}
+
+body.public-theme .status-pill.is-reserved {
+  background: rgba(245, 158, 11, 0.94);
+  color: #111827;
+}
+
+body.public-theme .status-pill.is-sold {
+  background: rgba(15, 23, 42, 0.94);
+  color: #fff;
+}
+
+body.public-theme .status-pill.is-hidden {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  body.public-theme .vehicle-card .status-pill,
+  body.public-theme .sold-vehicle-card .status-pill {
+    top: 8px;
+    left: 8px;
+    min-height: 22px;
+    padding: 4px 8px !important;
+    font-size: 0.56rem !important;
   }
 }

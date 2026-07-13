@@ -27,7 +27,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./styles.css?v=20260625-deploy-refresh" />
-  <link rel="stylesheet" href="./index.css?v=20260626-header-servicios-fix" />
+  <link rel="stylesheet" href="./index.css?v=20260713-sold-carousel" />
 </head>
 <body class="public-theme home-page">
   <header class="site-header">
@@ -351,6 +351,22 @@
       </div>
     </section>
 
+    <section class="sold-vehicles-section" id="soldVehiclesSection" aria-labelledby="soldVehiclesTitle" hidden>
+      <div class="container sold-vehicles-container">
+        <div class="sold-vehicles-header">
+          <span class="mini-kicker">Vendidos</span>
+          <h2 id="soldVehiclesTitle">Ya tienen dueño</h2>
+          <p>Estas unidades ya fueron elegidas. Mirá el stock disponible y encontrá la próxima oportunidad.</p>
+        </div>
+
+        <div class="sold-vehicles-carousel-shell">
+          <button type="button" class="sold-vehicles-nav is-prev" id="soldVehiclesPrev" aria-label="Anterior">‹</button>
+          <div id="soldVehiclesCarousel" class="sold-vehicles-carousel" role="list" aria-label="Unidades vendidas"></div>
+          <button type="button" class="sold-vehicles-nav is-next" id="soldVehiclesNext" aria-label="Siguiente">›</button>
+        </div>
+      </div>
+    </section>
+
     <section class="container contact-strip-shell contact-strip-shell--final" id="contacto">
       <article class="contact-strip-card contact-strip-card--enhanced">
         <div class="contact-strip-copy">
@@ -419,8 +435,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="./config.js?v=20260625-deploy-refresh"></script>
   <script src="./catalog-data.js?v=20260625-deploy-refresh"></script>
-  <script src="./shared.js?v=20260630-availability-hotfix"></script>
-  <script src="./app.js?v=20260630-availability-hotfix" defer></script>
+  <script src="./shared.js?v=20260713-status-helper"></script>
+  <script src="./app.js?v=20260713-sold-carousel" defer></script>
   <script src="./home-ui.js?v=20260626-supermovilidad-benefits" defer></script>
 </body>
 </html>

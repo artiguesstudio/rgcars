@@ -22,9 +22,18 @@ const $filterYearMin = document.getElementById('filterYearMin');
 const $filterYearMax = document.getElementById('filterYearMax');
 const $filterPriceMin = document.getElementById('filterPriceMin');
 const $filterPriceMax = document.getElementById('filterPriceMax');
+const $soldSection = document.getElementById('soldVehiclesSection');
+const $soldCarousel = document.getElementById('soldVehiclesCarousel');
+const $soldPrev = document.getElementById('soldVehiclesPrev');
+const $soldNext = document.getElementById('soldVehiclesNext');
 
 let vehiclesCache = [];
+let soldVehiclesCache = [];
 let stockExpanded = false;
+let soldAutoplayTimer = null;
+let soldAutoplayResumeTimer = null;
+let soldCarouselBound = false;
+const soldReducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
 function escape(value) {
   return window.RGShared.escapeHTML(value || '');
@@ -36,6 +45,28 @@ function formatText(value) {
     .replace(/[\u0300-\u036f]/g, '')
     .trim()
     .toLowerCase();
+}
+
+function normalizeVehicleStatus(vehicleOrStatus) {
+  const value = typeof vehicleOrStatus === 'object' ? vehicleOrStatus?.status : vehicleOrStatus;
+  const helper = window.RGShared?.normalizeStatus;
+  if (typeof helper === 'function') return helper(value);
+
+  const normalized = formatText(value);
+  if (normalized.includes('proximo') || normalized.includes('incoming')) return 'incoming';
+  if (normalized.includes('reserv')) return 'reserved';
+  if (normalized.includes('vend') || normalized.includes('sold')) return 'sold';
+  if (normalized.includes('oculto') || normalized.includes('hidden')) return 'hidden';
+  return 'available';
+}
+
+function isSoldVehicle(vehicle) {
+  return normalizeVehicleStatus(vehicle) === 'sold';
+}
+
+function isPublicStockVehicle(vehicle) {
+  const status = normalizeVehicleStatus(vehicle);
+  return status !== 'hidden' && status !== 'sold';
 }
 
 function imagesHTML(vehicle) {
@@ -53,6 +84,12 @@ function extraBadgesHTML(vehicle) {
   return tags.join('');
 }
 
+function statusPillHTML(vehicle) {
+  const status = normalizeVehicleStatus(vehicle);
+  if (status === 'hidden') return '';
+  return `<span class="status-pill ${escape(window.RGShared.statusClass(status))}">${escape(window.RGShared.statusLabel(status))}</span>`;
+}
+
 function cardHTML(vehicle) {
   const year = String(vehicle.year || '').trim();
   const minimumDownPayment = window.RGShared.minimumDownPaymentLabel(vehicle);
@@ -61,6 +98,7 @@ function cardHTML(vehicle) {
       <a class="vehicle-card-link" href="./vehicle.html?id=${encodeURIComponent(vehicle.id)}" aria-label="Ver detalle de ${escape(vehicle.title || 'Vehículo')}">
         <div class="vehicle-media">
           ${imagesHTML(vehicle)}
+          ${statusPillHTML(vehicle)}
           <div class="card-overlay-pills">${extraBadgesHTML(vehicle)}</div>
         </div>
         <div class="vehicle-body">
@@ -68,6 +106,26 @@ function cardHTML(vehicle) {
           <h3>${escape(vehicle.title || 'Vehículo')}</h3>
           <p class="vehicle-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
           ${minimumDownPayment ? `<p class="vehicle-down-payment">${escape(minimumDownPayment)}</p>` : ''}
+        </div>
+      </a>
+    </article>
+  `;
+}
+
+function soldCardHTML(vehicle) {
+  const year = String(vehicle.year || '').trim();
+  return `
+    <article class="sold-vehicle-card" role="listitem">
+      <a class="sold-vehicle-card__link" href="./vehicle.html?id=${encodeURIComponent(vehicle.id)}" aria-label="Ver detalle vendido de ${escape(vehicle.title || 'Vehículo')}">
+        <div class="sold-vehicle-card__media">
+          ${imagesHTML({ ...vehicle, status: 'sold' })}
+          ${statusPillHTML({ ...vehicle, status: 'sold' })}
+        </div>
+        <div class="sold-vehicle-card__body">
+          ${year ? `<p class="vehicle-year">${escape(year)}</p>` : ''}
+          <h3>${escape(vehicle.title || 'Vehículo')}</h3>
+          <p class="vehicle-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
+          <p class="sold-vehicle-card__note">Unidad vendida</p>
         </div>
       </a>
     </article>
@@ -170,7 +228,10 @@ function vehicleFinancingAvailable(vehicle) {
 
 function vehiclePriority(vehicle) {
   let score = 0;
-  if (vehicle.status === 'available') score += 25;
+  const status = normalizeVehicleStatus(vehicle);
+  if (status === 'available') score += 25;
+  if (status === 'incoming') score += 16;
+  if (status === 'reserved') score += 8;
   if (vehicle.featured || vehicle.outlet) score += 20;
   if (vehicle.is_recent) score += 14;
   if (vehicleFinancingAvailable(vehicle)) score += 6;
@@ -241,6 +302,138 @@ function filteredVehicles(rows) {
   });
 }
 
+function shouldReduceSoldMotion() {
+  return !!soldReducedMotionQuery?.matches;
+}
+
+function canScrollSoldCarousel() {
+  return !!$soldCarousel && $soldCarousel.scrollWidth > $soldCarousel.clientWidth + 8;
+}
+
+function soldCarouselStep() {
+  const firstCard = $soldCarousel?.querySelector('.sold-vehicle-card');
+  if (!firstCard || !$soldCarousel) return 280;
+  const styles = window.getComputedStyle($soldCarousel);
+  const gap = parseFloat(styles.columnGap || styles.gap) || 16;
+  return firstCard.getBoundingClientRect().width + gap;
+}
+
+function updateSoldCarouselControls() {
+  const canScroll = canScrollSoldCarousel();
+  [$soldPrev, $soldNext].forEach((button) => {
+    if (!button) return;
+    button.disabled = !canScroll;
+    button.hidden = !canScroll;
+  });
+}
+
+function scrollSoldCarousel(direction = 1) {
+  if (!canScrollSoldCarousel()) return;
+  const maxScroll = $soldCarousel.scrollWidth - $soldCarousel.clientWidth;
+  const current = $soldCarousel.scrollLeft;
+  const next = current + soldCarouselStep() * direction;
+  let target = next;
+
+  if (direction > 0 && next >= maxScroll - 4) target = 0;
+  if (direction < 0 && next <= 0) target = maxScroll;
+
+  $soldCarousel.scrollTo({
+    left: target,
+    behavior: shouldReduceSoldMotion() ? 'auto' : 'smooth',
+  });
+}
+
+function stopSoldCarouselAutoplay() {
+  if (soldAutoplayTimer) window.clearInterval(soldAutoplayTimer);
+  soldAutoplayTimer = null;
+}
+
+function startSoldCarouselAutoplay() {
+  stopSoldCarouselAutoplay();
+  if (shouldReduceSoldMotion() || document.hidden || !canScrollSoldCarousel()) return;
+
+  soldAutoplayTimer = window.setInterval(() => {
+    if (document.hidden || $soldSection?.matches(':hover')) return;
+    scrollSoldCarousel(1);
+  }, 3600);
+}
+
+function scheduleSoldCarouselAutoplay() {
+  if (soldAutoplayResumeTimer) window.clearTimeout(soldAutoplayResumeTimer);
+  if (shouldReduceSoldMotion()) return;
+  soldAutoplayResumeTimer = window.setTimeout(() => {
+    startSoldCarouselAutoplay();
+  }, 7000);
+}
+
+function pauseSoldCarouselTemporarily() {
+  stopSoldCarouselAutoplay();
+  scheduleSoldCarouselAutoplay();
+}
+
+function bindSoldCarouselEvents() {
+  if (soldCarouselBound || !$soldCarousel) return;
+  soldCarouselBound = true;
+
+  $soldPrev?.addEventListener('click', () => {
+    pauseSoldCarouselTemporarily();
+    scrollSoldCarousel(-1);
+  });
+  $soldNext?.addEventListener('click', () => {
+    pauseSoldCarouselTemporarily();
+    scrollSoldCarousel(1);
+  });
+  $soldCarousel.addEventListener('pointerdown', pauseSoldCarouselTemporarily);
+  $soldCarousel.addEventListener('wheel', pauseSoldCarouselTemporarily, { passive: true });
+  $soldCarousel.addEventListener('focusin', stopSoldCarouselAutoplay);
+  $soldCarousel.addEventListener('focusout', scheduleSoldCarouselAutoplay);
+  $soldCarousel.addEventListener('scroll', () => window.requestAnimationFrame(updateSoldCarouselControls), { passive: true });
+  $soldSection?.addEventListener('mouseenter', stopSoldCarouselAutoplay);
+  $soldSection?.addEventListener('mouseleave', startSoldCarouselAutoplay);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopSoldCarouselAutoplay();
+    } else {
+      startSoldCarouselAutoplay();
+    }
+  });
+  window.addEventListener('resize', () => window.requestAnimationFrame(() => {
+    updateSoldCarouselControls();
+    startSoldCarouselAutoplay();
+  }));
+  soldReducedMotionQuery?.addEventListener?.('change', () => {
+    if (shouldReduceSoldMotion()) {
+      stopSoldCarouselAutoplay();
+    } else {
+      startSoldCarouselAutoplay();
+    }
+  });
+}
+
+function renderSoldVehicles(rows) {
+  if (!$soldSection || !$soldCarousel) return;
+  const soldRows = (rows || [])
+    .filter(isSoldVehicle)
+    .sort((a, b) => new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime());
+
+  stopSoldCarouselAutoplay();
+
+  if (!soldRows.length) {
+    $soldSection.hidden = true;
+    $soldCarousel.innerHTML = '';
+    updateSoldCarouselControls();
+    return;
+  }
+
+  $soldCarousel.innerHTML = soldRows.map(soldCardHTML).join('');
+  $soldSection.hidden = false;
+  bindSoldCarouselEvents();
+  window.requestAnimationFrame(() => {
+    updateSoldCarouselControls();
+    startSoldCarouselAutoplay();
+  });
+}
+
 function renderRows(rows, emptyTitle, emptyCopy) {
   if (!$grid) return;
   if (!rows.length) {
@@ -294,11 +487,15 @@ async function fetchVehicles() {
 
     if (error) throw error;
 
-    vehiclesCache = Array.isArray(data) ? data : [];
+    const rows = Array.isArray(data) ? data : [];
+    vehiclesCache = rows.filter(isPublicStockVehicle);
+    soldVehiclesCache = rows.filter(isSoldVehicle);
     updateBrandOptions(vehiclesCache);
     renderSearchResults();
+    renderSoldVehicles(soldVehiclesCache);
   } catch (error) {
     console.error(error);
+    renderSoldVehicles([]);
     $grid.innerHTML = `<div class="empty-state"><strong>No se pudo cargar el catálogo.</strong><span>${escape(error.message || 'Error inesperado.')}</span></div>`;
   }
 }
