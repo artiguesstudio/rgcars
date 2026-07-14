@@ -118,7 +118,10 @@ function vehicleMinimumDownPaymentLabel(vehicle) {
 function imageValuesFrom(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value.flatMap(imageValuesFrom);
-  if (typeof value === 'object') return Object.values(value).flatMap(imageValuesFrom);
+  if (typeof value === 'object') {
+    const preferred = value.url ?? value.src ?? value.image_url ?? value.public_url ?? value.path;
+    return preferred ? imageValuesFrom(preferred) : Object.values(value).flatMap(imageValuesFrom);
+  }
   const raw = String(value).trim();
   if (!raw) return [];
   if (/^[\[{]/.test(raw)) {
@@ -128,8 +131,8 @@ function imageValuesFrom(value) {
       return [raw];
     }
   }
-  return raw.includes('\n')
-    ? raw.split(/\r?\n/g).map((item) => item.trim()).filter(Boolean)
+  return /[\n,]/.test(raw)
+    ? raw.split(/\r?\n|,/g).map((item) => item.trim()).filter(Boolean)
     : [raw];
 }
 
@@ -139,6 +142,7 @@ function vehicleImages(vehicle) {
     ...imageValuesFrom(vehicle?.photos),
     ...imageValuesFrom(vehicle?.main_image),
     ...imageValuesFrom(vehicle?.featured_image),
+    ...imageValuesFrom(vehicle?.image_url),
   ].filter((src, index, list) => /^https?:\/\//i.test(src) && list.indexOf(src) === index);
 }
 
@@ -212,14 +216,19 @@ function detailMarkup(vehicle) {
       `
     : '';
   const mainMedia = images.length
-    ? `<img id="mainVehicleImage" src="${window.RGShared.escapeHTML(images[0])}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}">`
-    : `<div class="media-placeholder large">Sin foto principal</div>`;
+    ? `<img id="mainVehicleImage" src="${window.RGShared.escapeHTML(images[0])}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}, foto 1 de ${images.length}" tabindex="0">`
+    : `<div class="media-placeholder large vehicle-gallery-placeholder"><img src="./imagenes/isotipo.png" alt=""><span>Imagen próximamente</span></div>`;
 
   return `
     <article class="detail-grid">
       <section class="detail-gallery-card">
         <div class="detail-main-media">
           ${mainMedia}
+          ${images.length > 1 ? `
+            <button class="detail-gallery-nav is-prev" type="button" data-gallery-prev aria-label="Foto anterior">‹</button>
+            <button class="detail-gallery-nav is-next" type="button" data-gallery-next aria-label="Foto siguiente">›</button>
+          ` : ''}
+          ${images.length ? '<button class="detail-gallery-expand" type="button" data-gallery-expand aria-label="Ampliar foto">↗</button>' : ''}
           ${dotsMarkup}
           <div class="detail-top-pills">${commercialPills(vehicle)}</div>
         </div>
@@ -301,12 +310,16 @@ function bindDetailEvents() {
   let currentIndex = Math.max(0, imageSources.indexOf(mainImage.getAttribute('src') || imageSources[0]));
   let touchStartX = 0;
   let touchStartY = 0;
+  let lightbox = null;
+  let focusBeforeLightbox = null;
+  const failedImages = new Set();
 
   function syncGallery(index) {
     const total = imageSources.length;
     if (!total) return;
     currentIndex = (index + total) % total;
     mainImage.src = imageSources[currentIndex];
+    mainImage.alt = `${mainImage.alt.split(', foto')[0]}, foto ${currentIndex + 1} de ${total}`;
     thumbButtons.forEach((item) => {
       const itemIndex = Number(item.getAttribute('data-thumb-index') || '0');
       item.classList.toggle('is-active', itemIndex === currentIndex);
@@ -322,6 +335,77 @@ function bindDetailEvents() {
       const nextIndex = Number(button.getAttribute('data-thumb-index') || '0');
       syncGallery(nextIndex);
     });
+  });
+
+  document.querySelector('[data-gallery-prev]')?.addEventListener('click', () => syncGallery(currentIndex - 1));
+  document.querySelector('[data-gallery-next]')?.addEventListener('click', () => syncGallery(currentIndex + 1));
+
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.remove();
+    lightbox = null;
+    document.body.classList.remove('vehicle-lightbox-open');
+    focusBeforeLightbox?.focus?.();
+  }
+
+  function renderLightboxImage() {
+    if (!lightbox) return;
+    const image = lightbox.querySelector('[data-lightbox-image]');
+    image.src = imageSources[currentIndex];
+    image.alt = `${mainImage.alt.split(', foto')[0]}, ampliada, foto ${currentIndex + 1} de ${imageSources.length}`;
+    lightbox.querySelector('[data-lightbox-counter]').textContent = `${currentIndex + 1} / ${imageSources.length}`;
+  }
+
+  function openLightbox() {
+    focusBeforeLightbox = document.activeElement;
+    lightbox = document.createElement('div');
+    lightbox.className = 'vehicle-lightbox';
+    lightbox.setAttribute('role', 'dialog');
+    lightbox.setAttribute('aria-modal', 'true');
+    lightbox.setAttribute('aria-label', 'Galería ampliada del vehículo');
+    lightbox.innerHTML = `
+      <button class="vehicle-lightbox__backdrop" type="button" data-lightbox-close tabindex="-1" aria-label="Cerrar galería"></button>
+      <div class="vehicle-lightbox__stage">
+        <img data-lightbox-image src="" alt="">
+        <span class="vehicle-lightbox__counter" data-lightbox-counter></span>
+        <button class="vehicle-lightbox__close" type="button" data-lightbox-close aria-label="Cerrar galería">×</button>
+        ${imageSources.length > 1 ? '<button class="vehicle-lightbox__nav is-prev" type="button" data-lightbox-prev aria-label="Foto anterior">‹</button><button class="vehicle-lightbox__nav is-next" type="button" data-lightbox-next aria-label="Foto siguiente">›</button>' : ''}
+      </div>`;
+    document.body.appendChild(lightbox);
+    document.body.classList.add('vehicle-lightbox-open');
+    renderLightboxImage();
+    lightbox.querySelectorAll('[data-lightbox-close]').forEach((button) => button.addEventListener('click', closeLightbox));
+    lightbox.querySelector('[data-lightbox-prev]')?.addEventListener('click', () => { syncGallery(currentIndex - 1); renderLightboxImage(); });
+    lightbox.querySelector('[data-lightbox-next]')?.addEventListener('click', () => { syncGallery(currentIndex + 1); renderLightboxImage(); });
+    lightbox.querySelector('.vehicle-lightbox__close')?.focus();
+  }
+
+  document.querySelector('[data-gallery-expand]')?.addEventListener('click', openLightbox);
+  mainImage.addEventListener('click', openLightbox);
+  mainImage.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openLightbox(); }
+  });
+  mainImage.addEventListener('error', () => {
+    const failed = imageSources[currentIndex];
+    failedImages.add(failed);
+    const next = imageSources.findIndex((src) => !failedImages.has(src));
+    if (next >= 0) syncGallery(next);
+    else mainMedia.innerHTML = '<div class="media-placeholder large vehicle-gallery-placeholder"><img src="./imagenes/isotipo.png" alt=""><span>Imagen no disponible</span></div>';
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && lightbox) return closeLightbox();
+    if (event.key === 'Tab' && lightbox) {
+      const controls = [...lightbox.querySelectorAll('button:not([tabindex="-1"])')];
+      if (!controls.length) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      return;
+    }
+    if (event.key === 'ArrowLeft') { syncGallery(currentIndex - 1); renderLightboxImage(); }
+    if (event.key === 'ArrowRight') { syncGallery(currentIndex + 1); renderLightboxImage(); }
   });
 
   dotButtons.forEach((button) => {
