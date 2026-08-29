@@ -14,8 +14,13 @@
   const LEAD_SUCCESS_MESSAGE = LEAD_SUCCESS_EMAIL_MESSAGE;
   const LEAD_ERROR_MESSAGE = 'No pudimos enviar la consulta. Intentá nuevamente o escribinos por WhatsApp.';
 
+  function hasVehiclePrice(value) {
+    const number = Number(value);
+    return value != null && value !== '' && Number.isFinite(number) && number > 0;
+  }
+
   function formatPrice(value, currency = 'ARS') {
-    if (value == null || value === '') return '-';
+    if (!hasVehiclePrice(value)) return 'Consultar';
     try {
       return new Intl.NumberFormat('es-AR', {
         style: 'currency',
@@ -121,7 +126,7 @@
     url.searchParams.set('mode', mode);
     if (vehicle?.id) url.searchParams.set('vehicle_id', vehicle.id);
     if (vehicle?.title) url.searchParams.set('vehicle_title', vehicle.title);
-    if (vehicle?.price != null && vehicle?.price !== '') url.searchParams.set('vehicle_price', String(vehicle.price));
+    if (hasVehiclePrice(vehicle?.price)) url.searchParams.set('vehicle_price', String(vehicle.price));
     if (vehicle?.brand) url.searchParams.set('brand', vehicle.brand);
     if (vehicle?.model) url.searchParams.set('model', vehicle.model);
     if (vehicle?.year) url.searchParams.set('year', String(vehicle.year));
@@ -586,9 +591,6 @@
     const salesExperienceYearsValue = String(formData.get('sales_experience_years') ?? '').trim();
     const salesExperienceYears = Number(salesExperienceYearsValue);
     const automotiveExperience = String(formData.get('automotive_sales_experience') || '');
-    const targetExperience = String(formData.get('target_based_sales_experience') || '');
-    const crmExperience = String(formData.get('crm_experience') || '');
-    const fullTimeAvailability = String(formData.get('full_time_availability') || '');
     const experience = String(formData.get('experience') || '').trim();
     const license = String(formData.get('has_driving_license') || '');
     const cv = formData.get('cv');
@@ -601,9 +603,6 @@
     if (childrenCountValue === '' || !Number.isInteger(childrenCount) || childrenCount < 0 || childrenCount > 20) return { field: 'children_count', message: 'Ingresá una cantidad de hijos válida.' };
     if (salesExperienceYearsValue === '' || !Number.isInteger(salesExperienceYears) || salesExperienceYears < 0 || salesExperienceYears > 40) return { field: 'sales_experience_years', message: 'Ingresá tus años de experiencia en ventas.' };
     if (!['yes', 'no'].includes(automotiveExperience)) return { field: 'automotive_sales_experience', message: 'Indicá si tenés experiencia en venta de vehículos.' };
-    if (!['yes', 'no'].includes(targetExperience)) return { field: 'target_based_sales_experience', message: 'Indicá si trabajaste con objetivos o comisiones.' };
-    if (!['yes', 'no'].includes(crmExperience)) return { field: 'crm_experience', message: 'Indicá si utilizaste CRM o seguimiento digital.' };
-    if (!['yes', 'no'].includes(fullTimeAvailability)) return { field: 'full_time_availability', message: 'Indicá tu disponibilidad horaria.' };
     if (license !== 'yes') return { field: 'has_driving_license', message: 'Para esta búsqueda es obligatorio contar con carnet de conducir vigente.' };
     if (experience.length < 30) return { field: 'experience', message: 'Contanos un poco más sobre tu experiencia en ventas.' };
     if (!(cv instanceof File) || !cv.name || cv.size < 1) return { field: 'cv', message: 'Adjuntá tu CV para completar la postulación.' };
@@ -741,30 +740,6 @@
                   <option value="no">No</option>
                 </select>
               </label>
-              <label class="field">
-                <span>Trabajo con objetivos o comisiones</span>
-                <select class="select" name="target_based_sales_experience" required>
-                  <option value="">Seleccioná una opción</option>
-                  <option value="yes">Sí</option>
-                  <option value="no">No</option>
-                </select>
-              </label>
-              <label class="field">
-                <span>Uso de CRM o seguimiento digital</span>
-                <select class="select" name="crm_experience" required>
-                  <option value="">Seleccioná una opción</option>
-                  <option value="yes">Sí</option>
-                  <option value="no">No</option>
-                </select>
-              </label>
-              <label class="field">
-                <span>Disponibilidad full time</span>
-                <select class="select" name="full_time_availability" required>
-                  <option value="">Seleccioná una opción</option>
-                  <option value="yes">Sí</option>
-                  <option value="no">No</option>
-                </select>
-              </label>
               <fieldset class="job-application-form__license">
                 <legend>Carnet de conducir vigente <span>Obligatorio / excluyente</span></legend>
                 <div class="job-application-form__radio-group">
@@ -774,7 +749,7 @@
               </fieldset>
               <label class="field job-application-form__wide">
                 <span>Contanos tu experiencia</span>
-                <textarea class="textarea" name="experience" rows="5" minlength="30" maxlength="3000" placeholder="Experiencia en ventas, atención al cliente, objetivos alcanzados y por qué te gustaría sumarte a RG Cars…" required></textarea>
+                <textarea class="textarea" name="experience" rows="5" minlength="30" maxlength="3000" placeholder="Experiencia en ventas, atención al cliente, logros y por qué te gustaría sumarte a RG Cars…" required></textarea>
               </label>
               <label class="field job-application-form__wide job-application-form__file">
                 <span>Adjuntá tu CV <strong>Obligatorio</strong></span>
@@ -1527,6 +1502,7 @@
 
   window.RGShared = {
     formatPrice,
+    hasVehiclePrice,
     minimumDownPayment,
     minimumDownPaymentLabel,
     formatKm,

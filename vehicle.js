@@ -41,7 +41,7 @@ function updateSeo(vehicle) {
     document.head.appendChild(ldJson);
   }
 
-  ldJson.textContent = JSON.stringify({
+  const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: title,
@@ -49,14 +49,17 @@ function updateSeo(vehicle) {
     description,
     brand: vehicle.brand || undefined,
     model: vehicle.model || undefined,
-    offers: {
+  };
+  if (window.RGShared.hasVehiclePrice(vehicle.price)) {
+    structuredData.offers = {
       '@type': 'Offer',
       priceCurrency: vehicle.currency || 'ARS',
-      price: Number(vehicle.price || 0),
+      price: Number(vehicle.price),
       availability: vehicle.status === 'sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
       url,
-    },
-  });
+    };
+  }
+  ldJson.textContent = JSON.stringify(structuredData);
 }
 
 function commercialPills(vehicle) {

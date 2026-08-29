@@ -15,9 +15,6 @@ test('the public recruitment form includes the requested applicant fields', asyn
     'has_driving_license',
     'sales_experience_years',
     'automotive_sales_experience',
-    'target_based_sales_experience',
-    'crm_experience',
-    'full_time_availability',
     'experience',
     'cv',
   ]) {
@@ -25,6 +22,7 @@ test('the public recruitment form includes the requested applicant fields', asyn
   }
   assert.match(shared, /license !== 'yes'/);
   assert.match(shared, /JOB_APPLICATION_MAX_FILE_BYTES = 5 \* 1024 \* 1024/);
+  assert.doesNotMatch(shared, /name=["'](?:target_based_sales_experience|crm_experience|full_time_availability)["']/);
 });
 
 test('CVs are stored outside the public site and require a private token to download', async () => {
@@ -46,9 +44,7 @@ test('the fit score uses job-relevant criteria and excludes sensitive personal d
   const scoreFunction = endpoint.match(/function calculateApplicantFit\([\s\S]*?\n}\n\nfunction readJsonPayload/)?.[0] || '';
   assert.match(scoreFunction, /Experiencia en ventas/);
   assert.match(scoreFunction, /Experiencia automotriz/);
-  assert.match(scoreFunction, /Trabajo por objetivos/);
-  assert.match(scoreFunction, /Uso de CRM/);
-  assert.match(scoreFunction, /Disponibilidad full time/);
+  assert.doesNotMatch(scoreFunction, /Trabajo por objetivos|Uso de CRM|Disponibilidad full time/);
   assert.doesNotMatch(scoreFunction, /age|edad|marital|estado civil|children|hijos/i);
 });
 

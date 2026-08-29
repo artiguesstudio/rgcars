@@ -337,7 +337,7 @@
                   <button type="button" class="tab-button is-active" data-form-mode="quick">Carga rápida</button>
                   <button type="button" class="tab-button" data-form-mode="advanced">Ficha avanzada</button>
                 </div>
-                <p class="admin-muted">Para publicar solo se exige título y precio. Los datos técnicos quedan disponibles sin frenar la carga.</p>
+                <p class="admin-muted">Para publicar solo se exige el título. El precio puede cargarse como importe o dejarse en “Consultar”.</p>
               </div>
 
               <details class="admin-fold vehicle-fold" data-fold="primary" open>
@@ -358,7 +358,7 @@
                     <div class="field col-3"><label for="year">Año</label><input id="year" class="input" type="number" placeholder="Año" /></div>
                     <div class="field col-3"><label for="plate">Patente</label><input id="plate" class="input" placeholder="AB123CD" /></div>
                     <div class="field col-4"><label for="km">Kilómetros</label><input id="km" class="input" type="number" placeholder="Kilómetros" /></div>
-                    <div class="field col-4"><label for="price">Precio</label><input id="price" class="input" type="text" inputmode="numeric" autocomplete="off" placeholder="15.900.000" /></div>
+                    <div class="field col-4"><label for="price">Precio</label><input id="price" class="input" type="text" autocomplete="off" placeholder="15.900.000 o Consultar" /><p class="field-help">Dejalo vacío o escribí “Consultar” si no querés publicar un importe.</p></div>
                     <div class="field col-4"><label for="minimum_down_payment">Entrega mínima</label><input id="minimum_down_payment" class="input" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej: 4.500.000" /><p class="field-help">Monto inicial sugerido para consultar financiación.</p></div>
                     <div class="field col-4"><label for="currency">Moneda</label><select id="currency" class="select"><option value="ARS">ARS</option><option value="USD">USD</option></select></div>
                     <div class="field col-4"><label for="category">Categoría</label><select id="category" class="select"><option value="auto">Auto</option><option value="camioneta">Camioneta</option><option value="suv">SUV</option><option value="camion">Camión</option><option value="moto">Moto</option><option value="utilitario">Utilitario</option><option value="otro">Otro</option></select></div>
@@ -694,9 +694,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="../config.js"></script>
   <script src="../finance-rate-defaults.js"></script>
-  <script src="../shared.js?v=20260829-automotive-premium-v2"></script>
+  <script src="../shared.js?v=20260829-price-consultar-v1"></script>
   <script src="./admin-access.js"></script>
-  <script src="../ficha.js"></script>
-  <script src="./admin.js?v=20260829-photo-order-v1" defer></script>
+  <script src="../ficha.js?v=20260829-price-consultar-v1"></script>
+  <script src="./admin.js?v=20260829-price-consultar-v1" defer></script>
 </body>
 </html>

@@ -70,9 +70,6 @@ $maritalStatus = normalizeText($_POST['marital_status'] ?? '', 40);
 $childrenCount = parseInteger($_POST['children_count'] ?? null);
 $salesExperienceYears = parseInteger($_POST['sales_experience_years'] ?? null);
 $automotiveSalesExperience = normalizeText($_POST['automotive_sales_experience'] ?? '', 10);
-$targetBasedSalesExperience = normalizeText($_POST['target_based_sales_experience'] ?? '', 10);
-$crmExperience = normalizeText($_POST['crm_experience'] ?? '', 10);
-$fullTimeAvailability = normalizeText($_POST['full_time_availability'] ?? '', 10);
 $hasDrivingLicense = normalizeText($_POST['has_driving_license'] ?? '', 10) === 'yes';
 $experience = normalizeText($_POST['experience'] ?? '', 3000, true);
 $position = normalizeText($_POST['position'] ?? '', 120) ?: 'Vendedor/a con experiencia';
@@ -113,15 +110,6 @@ if ($salesExperienceYears === null || $salesExperienceYears < 0 || $salesExperie
 }
 if (!in_array($automotiveSalesExperience, ['yes', 'no'], true)) {
     respond(422, ['ok' => false, 'error' => 'Indicá si tenés experiencia en venta de vehículos.']);
-}
-if (!in_array($targetBasedSalesExperience, ['yes', 'no'], true)) {
-    respond(422, ['ok' => false, 'error' => 'Indicá si trabajaste con objetivos o comisiones.']);
-}
-if (!in_array($crmExperience, ['yes', 'no'], true)) {
-    respond(422, ['ok' => false, 'error' => 'Indicá si utilizaste CRM o seguimiento digital.']);
-}
-if (!in_array($fullTimeAvailability, ['yes', 'no'], true)) {
-    respond(422, ['ok' => false, 'error' => 'Indicá tu disponibilidad horaria.']);
 }
 if (!$hasDrivingLicense) {
     respond(422, ['ok' => false, 'error' => 'Para esta búsqueda es obligatorio contar con carnet de conducir vigente.']);
@@ -181,10 +169,7 @@ if (!move_uploaded_file($temporaryPath, $destination)) {
 $createdAt = new DateTimeImmutable('now', new DateTimeZone('America/Argentina/Buenos_Aires'));
 $fit = calculateApplicantFit(
     $salesExperienceYears,
-    $automotiveSalesExperience === 'yes',
-    $targetBasedSalesExperience === 'yes',
-    $crmExperience === 'yes',
-    $fullTimeAvailability === 'yes'
+    $automotiveSalesExperience === 'yes'
 );
 $metadata = [
     'id' => $applicationId,
@@ -200,13 +185,10 @@ $metadata = [
     'has_driving_license' => true,
     'sales_experience_years' => $salesExperienceYears,
     'automotive_sales_experience' => $automotiveSalesExperience === 'yes',
-    'target_based_sales_experience' => $targetBasedSalesExperience === 'yes',
-    'crm_experience' => $crmExperience === 'yes',
-    'full_time_availability' => $fullTimeAvailability === 'yes',
     'fit_score' => $fit['score'],
     'fit_label' => $fit['label'],
     'fit_breakdown' => $fit['breakdown'],
-    'fit_model_version' => 'sales-profile-v1',
+    'fit_model_version' => 'sales-profile-v2',
     'experience' => $experience,
     'source_page' => $sourcePage,
     'source_url' => $sourceUrl,
@@ -244,9 +226,6 @@ $teamBody = buildTeamEmail([
     'children_count' => $childrenCount,
     'sales_experience_years' => $salesExperienceYears,
     'automotive_sales_experience' => $automotiveSalesExperience === 'yes',
-    'target_based_sales_experience' => $targetBasedSalesExperience === 'yes',
-    'crm_experience' => $crmExperience === 'yes',
-    'full_time_availability' => $fullTimeAvailability === 'yes',
     'fit_score' => $fit['score'],
     'fit_label' => $fit['label'],
     'fit_breakdown' => $fit['breakdown'],
@@ -278,29 +257,23 @@ respond(201, [
 
 function calculateApplicantFit(
     int $salesExperienceYears,
-    bool $automotiveSalesExperience,
-    bool $targetBasedSalesExperience,
-    bool $crmExperience,
-    bool $fullTimeAvailability
+    bool $automotiveSalesExperience
 ): array {
     if ($salesExperienceYears >= 6) {
-        $yearsPoints = 35;
+        $yearsPoints = 60;
     } elseif ($salesExperienceYears >= 4) {
-        $yearsPoints = 30;
+        $yearsPoints = 50;
     } elseif ($salesExperienceYears >= 2) {
-        $yearsPoints = 22;
+        $yearsPoints = 35;
     } elseif ($salesExperienceYears >= 1) {
-        $yearsPoints = 12;
+        $yearsPoints = 20;
     } else {
         $yearsPoints = 0;
     }
 
     $breakdown = [
-        ['key' => 'sales_years', 'label' => 'Experiencia en ventas', 'points' => $yearsPoints, 'max' => 35],
-        ['key' => 'automotive', 'label' => 'Experiencia automotriz', 'points' => $automotiveSalesExperience ? 25 : 0, 'max' => 25],
-        ['key' => 'targets', 'label' => 'Trabajo por objetivos', 'points' => $targetBasedSalesExperience ? 15 : 0, 'max' => 15],
-        ['key' => 'crm', 'label' => 'Uso de CRM', 'points' => $crmExperience ? 10 : 0, 'max' => 10],
-        ['key' => 'availability', 'label' => 'Disponibilidad full time', 'points' => $fullTimeAvailability ? 15 : 0, 'max' => 15],
+        ['key' => 'sales_years', 'label' => 'Experiencia en ventas', 'points' => $yearsPoints, 'max' => 60],
+        ['key' => 'automotive', 'label' => 'Experiencia automotriz', 'points' => $automotiveSalesExperience ? 40 : 0, 'max' => 40],
     ];
     $score = array_reduce($breakdown, static function (int $total, array $item): int {
         return $total + (int) ($item['points'] ?? 0);
@@ -476,25 +449,27 @@ function jobApplicationMetadata(string $id): ?array
 function adminApplicationPayload(array $metadata): array
 {
     $cvFile = basename((string) ($metadata['cv_file'] ?? ''));
-    unset($metadata['download_token_hash'], $metadata['cv_file']);
+    unset(
+        $metadata['download_token_hash'],
+        $metadata['cv_file'],
+        $metadata['target_based_sales_experience'],
+        $metadata['crm_experience'],
+        $metadata['full_time_availability']
+    );
     $id = strtolower((string) ($metadata['id'] ?? ''));
     $metadata['cv_available'] = preg_match('/^[a-f0-9]{32}$/', $id)
         && preg_match('/^cv\.(pdf|doc|docx)$/', $cvFile)
         && is_file(jobApplicationStorageRoot() . DIRECTORY_SEPARATOR . $id . DIRECTORY_SEPARATOR . $cvFile);
     $metadata['status'] = normalizeText($metadata['status'] ?? '', 30) ?: 'new';
     $metadata['admin_notes'] = normalizeText($metadata['admin_notes'] ?? '', 3000, true);
-    if (!isset($metadata['fit_score'])) {
-        $fit = calculateApplicantFit(
-            (int) ($metadata['sales_experience_years'] ?? 0),
-            ($metadata['automotive_sales_experience'] ?? false) === true,
-            ($metadata['target_based_sales_experience'] ?? false) === true,
-            ($metadata['crm_experience'] ?? false) === true,
-            ($metadata['full_time_availability'] ?? false) === true
-        );
-        $metadata['fit_score'] = $fit['score'];
-        $metadata['fit_label'] = $fit['label'];
-        $metadata['fit_breakdown'] = $fit['breakdown'];
-    }
+    $fit = calculateApplicantFit(
+        (int) ($metadata['sales_experience_years'] ?? 0),
+        ($metadata['automotive_sales_experience'] ?? false) === true
+    );
+    $metadata['fit_score'] = $fit['score'];
+    $metadata['fit_label'] = $fit['label'];
+    $metadata['fit_breakdown'] = $fit['breakdown'];
+    $metadata['fit_model_version'] = 'sales-profile-v2';
     return $metadata;
 }
 
@@ -781,7 +756,7 @@ function buildTeamEmail(array $application): string
         . '<strong style="font-size:23px">Vendedor/a con experiencia</strong></div>'
         . '<div style="border:1px solid #e2e6ec;border-top:0;padding:26px;border-radius:0 0 18px 18px">'
         . '<div style="display:flex;align-items:center;gap:14px;margin:0 0 20px;padding:16px;border-radius:14px;background:#fff1f2">'
-        . '<strong style="font-size:28px;color:#b40f16">' . $fitScore . '/100</strong><span><strong>Afinidad ' . $fitLabel . '</strong><br><small>Orden preliminar basado sólo en experiencia comercial y disponibilidad.</small></span></div>'
+        . '<strong style="font-size:28px;color:#b40f16">' . $fitScore . '/100</strong><span><strong>Afinidad ' . $fitLabel . '</strong><br><small>Orden preliminar basado sólo en experiencia comercial y automotriz.</small></span></div>'
         . '<div style="margin-bottom:16px">' . $fitRows . '</div>'
         . '<p><strong>Nombre:</strong> ' . escapeHtml($application['full_name'] ?? '') . '<br>'
         . '<strong>Email:</strong> ' . escapeHtml($application['email'] ?? '') . '<br>'
@@ -792,9 +767,6 @@ function buildTeamEmail(array $application): string
         . '<strong>Carnet de conducir vigente:</strong> Sí<br><br>'
         . '<strong>Años en ventas:</strong> ' . (int) ($application['sales_experience_years'] ?? 0) . '<br>'
         . '<strong>Experiencia automotriz:</strong> ' . $yesNo($application['automotive_sales_experience'] ?? false) . '<br>'
-        . '<strong>Trabajo por objetivos:</strong> ' . $yesNo($application['target_based_sales_experience'] ?? false) . '<br>'
-        . '<strong>Uso de CRM:</strong> ' . $yesNo($application['crm_experience'] ?? false) . '<br>'
-        . '<strong>Disponibilidad full time:</strong> ' . $yesNo($application['full_time_availability'] ?? false) . '<br>'
         . '<strong>Fecha:</strong> ' . escapeHtml($application['created_at'] ?? '') . '</p>'
         . '<h2 style="font-size:18px;margin:20px 0 8px">Experiencia</h2>'
         . '<p style="background:#f5f6f8;padding:15px;border-radius:12px">' . $experience . '</p>'

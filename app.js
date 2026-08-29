@@ -244,8 +244,15 @@ function vehiclePriority(vehicle) {
 function sortRows(rows) {
   const sort = $sort?.value || 'newest';
   const sorted = [...rows];
-  if (sort === 'price_asc') return sorted.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
-  if (sort === 'price_desc') return sorted.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+  if (sort === 'price_asc' || sort === 'price_desc') {
+    return sorted.sort((a, b) => {
+      const aHasPrice = window.RGShared.hasVehiclePrice(a.price);
+      const bHasPrice = window.RGShared.hasVehiclePrice(b.price);
+      if (aHasPrice !== bHasPrice) return aHasPrice ? -1 : 1;
+      if (!aHasPrice) return 0;
+      return sort === 'price_asc' ? Number(a.price) - Number(b.price) : Number(b.price) - Number(a.price);
+    });
+  }
   if (sort === 'featured') {
     return sorted.sort((a, b) => {
       const aScore = Number(!!a.featured || !!a.outlet);
@@ -297,9 +304,12 @@ function filteredVehicles(rows) {
     if ($filterYearMin?.value && year && year < Number($filterYearMin.value)) return false;
     if ($filterYearMax?.value && year && year > Number($filterYearMax.value)) return false;
 
+    const hasPriceFilter = !!($filterPriceMin?.value || $filterPriceMax?.value);
+    const hasPrice = window.RGShared.hasVehiclePrice(vehicle.price);
+    if (hasPriceFilter && !hasPrice) return false;
     const price = Number(vehicle.price || 0);
-    if ($filterPriceMin?.value && price && price < Number($filterPriceMin.value)) return false;
-    if ($filterPriceMax?.value && price && price > Number($filterPriceMax.value)) return false;
+    if ($filterPriceMin?.value && price < Number($filterPriceMin.value)) return false;
+    if ($filterPriceMax?.value && price > Number($filterPriceMax.value)) return false;
 
     return true;
   });

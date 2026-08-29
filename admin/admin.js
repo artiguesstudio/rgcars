@@ -1257,9 +1257,7 @@ function applicantCardHTML(item) {
 
         <div class="lead-meta applicant-card__summary">
           <span><strong>${Number(item.sales_experience_years || 0)}</strong> años en ventas</span>
-          <span>Objetivos: <strong>${applicantYesNo(item.target_based_sales_experience)}</strong></span>
-          <span>CRM: <strong>${applicantYesNo(item.crm_experience)}</strong></span>
-          <span>Full time: <strong>${applicantYesNo(item.full_time_availability)}</strong></span>
+          <span>Experiencia automotriz: <strong>${applicantYesNo(item.automotive_sales_experience)}</strong></span>
           <span>Carnet: <strong>Sí</strong></span>
         </div>
 
@@ -1350,7 +1348,7 @@ function renderApplicationsPanel() {
   const pending = state.leads.applications.filter((item) => ['new', 'review'].includes(item.status || 'new')).length;
   const header = `
     <section class="applicant-ranking-intro">
-      <div><span class="eyebrow">Priorización automática</span><strong>Perfiles ordenados de mayor a menor afinidad</strong><p>El cálculo usa sólo años en ventas, experiencia automotriz, objetivos, CRM y disponibilidad. Sirve para ordenar la revisión, no para tomar la decisión final.</p></div>
+      <div><span class="eyebrow">Priorización automática</span><strong>Perfiles ordenados de mayor a menor afinidad</strong><p>El cálculo usa sólo años en ventas y experiencia automotriz. Sirve para ordenar la revisión, no para tomar la decisión final.</p></div>
       <div class="applicant-ranking-stats"><span><strong>${total}</strong> postulantes</span><span><strong>${highFit}</strong> afinidad alta</span><span><strong>${pending}</strong> pendientes</span></div>
     </section>`;
   if (state.applicationsError) {
@@ -1799,9 +1797,6 @@ function leadCopyText(type, item = {}) {
       `Afinidad: ${item.fit_score || 0}/100 · ${item.fit_label || 'Sin evaluar'}`,
       `Años en ventas: ${item.sales_experience_years ?? '-'}`,
       `Experiencia automotriz: ${applicantYesNo(item.automotive_sales_experience)}`,
-      `Trabajo por objetivos: ${applicantYesNo(item.target_based_sales_experience)}`,
-      `Uso de CRM: ${applicantYesNo(item.crm_experience)}`,
-      `Disponibilidad full time: ${applicantYesNo(item.full_time_availability)}`,
       `Estado: ${applicationStatusMeta(item.status).label}`,
       `Experiencia declarada: ${item.experience || '-'}`,
       `Notas internas: ${item.admin_notes || '-'}`,
@@ -2882,23 +2877,35 @@ function parseFormattedNumber(value) {
   return digits ? Number(digits) : null;
 }
 
-function parseMoneyInputValue(value, { required = false } = {}) {
+function parseMoneyInputValue(value, { allowConsult = false } = {}) {
   const raw = String(value ?? '').trim();
-  if (!raw || raw.toLowerCase() === 'opcional') return required ? NaN : null;
+  const normalizedWord = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  if (!raw || normalizedWord === 'opcional') return null;
+  if (normalizedWord === 'consultar') return allowConsult ? null : NaN;
   if (raw.includes('-')) return NaN;
+  if (/[a-záéíóúñ]/i.test(raw)) return NaN;
 
   const normalized = raw
     .replace(/\./g, '')
     .replace(/,/g, '.')
     .replace(/[^\d.]/g, '');
 
-  if (!normalized) return required ? NaN : null;
+  if (!normalized) return NaN;
   const parsed = Number(normalized);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : NaN;
 }
 
 function parseMoneyField(id) {
-  return parseMoneyInputValue($(id)?.value || '');
+  return parseMoneyInputValue($(id)?.value || '', { allowConsult: id === 'price' });
+}
+
+function formatVehiclePriceInput(value, { emptyAsConsult = false } = {}) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return emptyAsConsult ? 'Consultar' : '';
+  const normalizedWord = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  if (normalizedWord === 'consultar') return 'Consultar';
+  if (/[a-záéíóúñ]/i.test(raw)) return raw;
+  return formatNumberWithDots(raw);
 }
 
 function vehicleMinimumDownPayment(vehicle = {}) {
@@ -2913,12 +2920,18 @@ function setupPriceInputFormatting() {
     if (!input || input.dataset.priceFormattingReady === 'true') return;
     input.dataset.priceFormattingReady = 'true';
 
+    const allowConsult = id === 'price';
     const applyFormat = () => {
-      input.value = formatNumberWithDots(input.value);
+      input.value = allowConsult ? formatVehiclePriceInput(input.value) : formatNumberWithDots(input.value);
+    };
+    const applyBlurFormat = () => {
+      input.value = allowConsult
+        ? formatVehiclePriceInput(input.value, { emptyAsConsult: true })
+        : formatNumberWithDots(input.value);
     };
 
     input.addEventListener('input', applyFormat);
-    input.addEventListener('blur', applyFormat);
+    input.addEventListener('blur', applyBlurFormat);
     input.addEventListener('paste', () => requestAnimationFrame(applyFormat));
     applyFormat();
   });
@@ -2932,6 +2945,12 @@ function isPlateSchemaError(error) {
 function isMinimumDownPaymentSchemaError(error) {
   const message = String(error?.message || '').toLowerCase();
   return message.includes('column') && message.includes('minimum_down_payment');
+}
+
+function isOptionalPriceSchemaError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  return message.includes('price')
+    && (message.includes('not-null') || message.includes('not null') || message.includes('null value'));
 }
 
 function warnPlateCompatibility() {
@@ -2950,7 +2969,7 @@ function fillForm(vehicle) {
   if ($('year')) $('year').value = vehicle.year ?? '';
   if ($('plate')) $('plate').value = vehicle.plate || '';
   if ($('km')) $('km').value = vehicle.km ?? '';
-  if ($('price')) $('price').value = formatNumberWithDots(vehicle.price ?? '');
+  if ($('price')) $('price').value = formatVehiclePriceInput(vehicle.price, { emptyAsConsult: true });
   if ($('minimum_down_payment')) $('minimum_down_payment').value = formatNumberWithDots(vehicleMinimumDownPayment(vehicle) ?? '');
   if ($('currency')) $('currency').value = vehicle.currency || 'ARS';
   if ($('category')) $('category').value = vehicle.category || 'auto';
@@ -3428,7 +3447,7 @@ function quickPriceRowHTML(vehicle) {
       </td>
       <td>${escape(window.RGShared.normalizePlate(vehicle.plate || '') || '-')}</td>
       <td><select class="select quick-status-select" data-price-status="${vehicle.id}">${vehicleStatusOptionsHTML(vehicle.status || 'available')}</select></td>
-      <td><input class="input quick-price-input quick-money-input" data-price-value="${vehicle.id}" value="${formatNumberWithDots(vehicle.price ?? '')}" inputmode="numeric" autocomplete="off" /></td>
+      <td><input class="input quick-price-input quick-money-input" data-price-value="${vehicle.id}" value="${formatVehiclePriceInput(vehicle.price, { emptyAsConsult: true })}" autocomplete="off" /></td>
       <td><input class="input quick-minimum-input quick-money-input" data-price-minimum="${vehicle.id}" value="${formatNumberWithDots(vehicleMinimumDownPayment(vehicle) ?? '')}" inputmode="numeric" autocomplete="off" placeholder="Opcional" /></td>
       <td><select class="select quick-currency-select" data-price-currency="${vehicle.id}"><option value="ARS" ${vehicle.currency !== 'USD' ? 'selected' : ''}>ARS</option><option value="USD" ${vehicle.currency === 'USD' ? 'selected' : ''}>USD</option></select></td>
       <td><span>${escape(updated ? formatDateTime(updated) : '-')}</span>${quickStatusHTML(vehicle.id)}</td>
@@ -3545,7 +3564,7 @@ async function saveVehicle(triggerButton = $('save')) {
   if (payload.status === 'sold') payload.sold_at = existingVehicle?.sold_at || vehicleTimestamp;
 
   if (!payload.title) return showMsg('El título es obligatorio.', false);
-  if (!Number.isFinite(payload.price)) return showMsg('El precio es obligatorio.', false);
+  if (payload.price != null && !Number.isFinite(payload.price)) return showMsg('Ingresá un precio válido o escribí “Consultar”.', false);
   if (minimumDownPayment != null && (!Number.isFinite(minimumDownPayment) || minimumDownPayment < 0)) return showMsg('La entrega mínima no puede ser negativa.', false);
 
   const saveButton = triggerButton || $('save');
@@ -3570,8 +3589,13 @@ async function saveVehicle(triggerButton = $('save')) {
       }
       if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
         const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = insertPayload;
-        response = await sb.from('vehicles').insert(payloadWithoutMinimumDownPayment).select('id').single();
+        insertPayload = payloadWithoutMinimumDownPayment;
+        response = await sb.from('vehicles').insert(insertPayload).select('id').single();
         if (!response.error) minimumDownPaymentFallback = 'skipped';
+      }
+      if (response.error && payload.price == null && isOptionalPriceSchemaError(response.error)) {
+        insertPayload = { ...insertPayload, price: 0 };
+        response = await sb.from('vehicles').insert(insertPayload).select('id').single();
       }
       if (response.error) throw response.error;
       savedId = response.data.id;
@@ -3587,8 +3611,13 @@ async function saveVehicle(triggerButton = $('save')) {
       }
       if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
         const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = updatePayload;
-        response = await sb.from('vehicles').update(payloadWithoutMinimumDownPayment).eq('id', id);
+        updatePayload = payloadWithoutMinimumDownPayment;
+        response = await sb.from('vehicles').update(updatePayload).eq('id', id);
         if (!response.error) minimumDownPaymentFallback = 'skipped';
+      }
+      if (response.error && payload.price == null && isOptionalPriceSchemaError(response.error)) {
+        updatePayload = { ...updatePayload, price: 0 };
+        response = await sb.from('vehicles').update(updatePayload).eq('id', id);
       }
       if (response.error) throw response.error;
     }
@@ -3638,11 +3667,11 @@ async function saveVehicleWithStatus(status, triggerButton = null) {
 
 async function saveQuickVehicleRow(id) {
   const priceInput = document.querySelector(`[data-price-value="${id}"]`);
-  const price = parseMoneyInputValue(priceInput?.value || '', { required: true });
+  const price = parseMoneyInputValue(priceInput?.value || '', { allowConsult: true });
   const minimumInput = document.querySelector(`[data-price-minimum="${id}"]`);
   const minimumDownPayment = parseMoneyInputValue(minimumInput?.value || '');
-  if (!Number.isFinite(price)) {
-    setQuickPriceStatus(id, 'Precio inválido', { ok: false });
+  if (price != null && !Number.isFinite(price)) {
+    setQuickPriceStatus(id, 'Usá un importe o “Consultar”', { ok: false });
     priceInput?.focus();
     return;
   }
@@ -3665,11 +3694,17 @@ async function saveQuickVehicleRow(id) {
 
   setQuickPriceStatus(id, 'Guardando…', { saving: true });
   let warningMessage = '';
-  let response = await sb.from('vehicles').update(payload).eq('id', id).select('*').single();
+  let quickPayload = payload;
+  let response = await sb.from('vehicles').update(quickPayload).eq('id', id).select('*').single();
   if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
-    const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
-    response = await sb.from('vehicles').update(payloadWithoutMinimumDownPayment).eq('id', id).select('*').single();
+    const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = quickPayload;
+    quickPayload = payloadWithoutMinimumDownPayment;
+    response = await sb.from('vehicles').update(quickPayload).eq('id', id).select('*').single();
     if (!response.error) warningMessage = 'Precio guardado. Falta migración para entrega mínima.';
+  }
+  if (response.error && price == null && isOptionalPriceSchemaError(response.error)) {
+    quickPayload = { ...quickPayload, price: 0 };
+    response = await sb.from('vehicles').update(quickPayload).eq('id', id).select('*').single();
   }
   const { data, error } = response;
   if (error) {
@@ -3719,7 +3754,12 @@ async function duplicateVehicle(id) {
   }
   if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
     const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
-    response = await sb.from('vehicles').insert(payloadWithoutMinimumDownPayment).select('id').single();
+    payload = payloadWithoutMinimumDownPayment;
+    response = await sb.from('vehicles').insert(payload).select('id').single();
+  }
+  if (response.error && payload.price == null && isOptionalPriceSchemaError(response.error)) {
+    payload = { ...payload, price: 0 };
+    response = await sb.from('vehicles').insert(payload).select('id').single();
   }
   if (response.error) throw response.error;
   const duplicate = await getVehicleById(response.data.id);
@@ -4349,7 +4389,9 @@ function bindEvents() {
   document.addEventListener('input', (event) => {
     const input = event.target.closest?.('[data-price-value], [data-price-minimum]');
     if (!input) return;
-    input.value = formatNumberWithDots(input.value);
+    input.value = input.matches('[data-price-value]')
+      ? formatVehiclePriceInput(input.value)
+      : formatNumberWithDots(input.value);
   });
 
   document.addEventListener('click', async (event) => {
