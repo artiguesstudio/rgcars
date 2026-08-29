@@ -9785,14 +9785,22 @@ body.public-theme .status-pill.is-hidden {
   display: none !important;
 }
 
-/* Consentimiento compacto: mientras se decide, ningún acceso flotante lo tapa. */
-body.rg-consent-open .whatsapp-fab,
+/* Consentimiento compacto: los accesos flotantes siguen visibles y se ubican sobre el aviso. */
 body.rg-consent-open .feedback-floating-button,
 body.rg-consent-open .recruitment-floating-button {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transform: translateY(12px) !important;
+  bottom: var(--rg-consent-offset, 160px) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: none !important;
+}
+
+body.rg-consent-open .whatsapp-fab {
+  bottom: calc(var(--rg-consent-offset, 160px) + 58px) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: none !important;
 }
 
 body.public-theme .rg-consent-banner {
@@ -9868,6 +9876,15 @@ body.public-theme .rg-consent-banner__actions .btn {
 
   body.public-theme .rg-consent-banner__actions [data-rg-consent-accept] {
     grid-column: 1 / -1;
+  }
+
+  body.rg-consent-open .recruitment-floating-button,
+  body.rg-consent-open .whatsapp-fab {
+    bottom: calc(var(--rg-consent-offset, 210px) + 58px) !important;
+  }
+
+  body.rg-consent-open .feedback-floating-button {
+    bottom: var(--rg-consent-offset, 210px) !important;
   }
 }
 
@@ -10752,6 +10769,28 @@ body.public-theme .kavak-footer {
   background:
     radial-gradient(circle at 50% 0%, rgba(200, 22, 30, 0.1), transparent 30%),
     linear-gradient(180deg, #252a31 0%, #1b1f25 100%);
+}
+
+body.public-theme .footer-column .footer-text-button {
+  appearance: none;
+  display: block;
+  width: auto;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: rgba(255, 255, 255, 0.78);
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  line-height: 1.7;
+  text-align: left;
+}
+
+body.public-theme .footer-column .footer-text-button:hover,
+body.public-theme .footer-column .footer-text-button:focus-visible {
+  color: #fff;
+  text-decoration: underline;
 }
 
 @media (max-width: 760px) {

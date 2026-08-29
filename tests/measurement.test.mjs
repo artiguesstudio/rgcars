@@ -139,13 +139,22 @@ test('consent creates a sanitized external page view and event ids deduplicate',
   assert.equal(ctx.dataLayer.length, before + 1);
 });
 
-test('consent temporarily removes competing floating actions', () => {
+test('consent keeps floating actions visible and offsets them above the banner', () => {
   assert.match(source, /classList\.add\('rg-consent-open'\)/);
   assert.match(source, /classList\?\.remove\?\.\('rg-consent-open'\)/);
+  assert.match(source, /--rg-consent-offset/);
   assert.match(indexCssSource, /body\.rg-consent-open \.whatsapp-fab/);
   assert.match(indexCssSource, /body\.rg-consent-open \.feedback-floating-button/);
   assert.match(indexCssSource, /body\.rg-consent-open \.recruitment-floating-button/);
-  assert.match(indexCssSource, /pointer-events:\s*none\s*!important/);
+  assert.match(indexCssSource, /bottom:\s*var\(--rg-consent-offset/);
+  assert.match(indexCssSource, /pointer-events:\s*auto\s*!important/);
+  assert.doesNotMatch(indexCssSource, /body\.rg-consent-open[\s\S]{0,260}visibility:\s*hidden\s*!important/);
+});
+
+test('the footer preferences control uses the same visual treatment as footer links', () => {
+  assert.match(indexCssSource, /body\.public-theme \.footer-column \.footer-text-button/);
+  assert.match(indexCssSource, /appearance:\s*none/);
+  assert.match(indexCssSource, /background:\s*transparent/);
 });
 
 test('WhatsApp tracking keeps technical references out of the customer message', () => {

@@ -192,6 +192,30 @@
     }
   }
 
+  let consentBannerObserver = null;
+
+  function clearConsentBannerLayout() {
+    consentBannerObserver?.disconnect?.();
+    consentBannerObserver = null;
+    document.body?.style?.removeProperty?.('--rg-consent-offset');
+  }
+
+  function syncConsentBannerLayout(banner) {
+    const updateOffset = () => {
+      if (!banner?.isConnected || !document.body) return;
+      const styles = window.getComputedStyle?.(banner);
+      const bottom = Number.parseFloat(styles?.bottom || '0') || 0;
+      const offset = Math.ceil(banner.getBoundingClientRect().height + bottom + 12);
+      document.body.style.setProperty('--rg-consent-offset', `${offset}px`);
+    };
+    const schedule = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
+    schedule(updateOffset);
+    if (typeof window.ResizeObserver === 'function') {
+      consentBannerObserver = new window.ResizeObserver(updateOffset);
+      consentBannerObserver.observe(banner);
+    }
+  }
+
   function setConsent(next) {
     const previousConsent = consentState();
     state.consent = {
@@ -217,6 +241,7 @@
     }
     document.querySelector('[data-rg-consent-banner]')?.remove();
     document.body?.classList?.remove?.('rg-consent-open');
+    clearConsentBannerLayout();
     window.dispatchEvent(new CustomEvent('rg:consent-updated', { detail: consentState() }));
   }
 
@@ -242,6 +267,7 @@
     banner.querySelector('[data-rg-consent-accept]')?.addEventListener('click', () => setConsent({ analytics: true, marketing: true }));
     document.body.classList.add('rg-consent-open');
     document.body.appendChild(banner);
+    syncConsentBannerLayout(banner);
   }
 
   function currentPageKey() {
