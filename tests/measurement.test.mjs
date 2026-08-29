@@ -168,6 +168,22 @@ test('all public pages that use shared.js load the central measurement layer fir
   }
 });
 
+test('all public pages expose the square RG Cars social thumbnail statically', () => {
+  const pages = [
+    'index.html', 'vehicle.html', 'consignacion.html', 'financiacion.html',
+    'peritaje.html', 'scouting.html', 'seguros.html', 'faq.html',
+    'politica-de-privacidad.html', 'postulacion-vendedor.html', 'sitemap.html',
+    'terminos-y-condiciones.html',
+  ];
+  for (const page of pages) {
+    const html = readFileSync(new URL(`../${page}`, import.meta.url), 'utf8');
+    assert.match(html, /<meta property="og:image" content="https:\/\/rgcars\.com\.ar\/imagenes\/pestana\.png" \/>/, `${page}: missing static brand thumbnail`);
+    assert.match(html, /<meta property="og:image:width" content="276" \/>/, `${page}: missing thumbnail width`);
+    assert.match(html, /<meta property="og:image:height" content="276" \/>/, `${page}: missing thumbnail height`);
+    assert.match(html, /<meta name="twitter:image" content="https:\/\/rgcars\.com\.ar\/imagenes\/pestana\.png" \/>/, `${page}: missing X thumbnail`);
+  }
+});
+
 test('a stored lead emits the conversion once and carries idempotency context', async () => {
   const { context, requests, savedEvents } = sharedRuntime({ ok: true, body: { ok: true, saved: true, leadId: 'lead-1', eventId: 'lead_test_123456' } });
   await context.RGShared.submitServiceLead({ serviceType: 'financiacion', name: 'Test User' });

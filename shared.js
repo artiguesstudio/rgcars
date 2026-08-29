@@ -1368,9 +1368,15 @@
     upsertMetaAttribute('property', 'og:title', title);
     upsertMetaAttribute('property', 'og:description', description);
     upsertMetaAttribute('property', 'og:url', canonicalHref);
-    upsertMetaAttribute('name', 'twitter:card', 'summary_large_image');
+    upsertMetaAttribute('property', 'og:image', `${configuredSiteUrl()}/imagenes/pestana.png`);
+    upsertMetaAttribute('property', 'og:image:width', '276');
+    upsertMetaAttribute('property', 'og:image:height', '276');
+    upsertMetaAttribute('property', 'og:image:type', 'image/png');
+    upsertMetaAttribute('property', 'og:image:alt', 'Isologotipo de RG Cars TDF');
+    upsertMetaAttribute('name', 'twitter:card', 'summary');
     upsertMetaAttribute('name', 'twitter:title', title);
     upsertMetaAttribute('name', 'twitter:description', description);
+    upsertMetaAttribute('name', 'twitter:image', `${configuredSiteUrl()}/imagenes/pestana.png`);
     upsertMetaAttribute('name', 'theme-color', '#0f1720');
   }
 
