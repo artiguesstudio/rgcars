@@ -41,9 +41,13 @@ test('the recruitment campaign image is referenced from the modal', async () => 
 
 test('the recruitment form has a shareable direct URL', async () => {
   const shared = await readFile(join(root, 'shared.js'), 'utf8');
+  const page = await readFile(join(root, 'postulacion-vendedor.html'), 'utf8');
   assert.match(shared, /RECRUITMENT_DIRECT_HASH = '#postulacion-vendedor'/);
+  assert.match(shared, /page === 'postulacion-vendedor\.html'/);
   assert.match(shared, /syncRecruitmentModalWithUrl\(\)/);
   assert.match(shared, /window\.addEventListener\('hashchange', syncRecruitmentModalWithUrl\)/);
+  assert.match(page, /<body class="public-theme legal-page recruitment-direct-page">/);
+  assert.match(page, /shared\.js\?v=20260829-recruitment-page-v2/);
 });
 
 test('the fit score uses job-relevant criteria and excludes sensitive personal data', async () => {

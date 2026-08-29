@@ -555,7 +555,9 @@
   }
 
   function isRecruitmentDirectLink() {
-    return String(window.location.hash || '').toLowerCase() === RECRUITMENT_DIRECT_HASH;
+    const page = String(window.location.pathname || '').split('/').pop()?.toLowerCase() || '';
+    return page === 'postulacion-vendedor.html'
+      || String(window.location.hash || '').toLowerCase() === RECRUITMENT_DIRECT_HASH;
   }
 
   function updateRecruitmentUrl(open) {

@@ -31,6 +31,7 @@ deployment:
     - /bin/cp scouting.html $DEPLOYPATH/
     - /bin/cp seguros.html $DEPLOYPATH/
     - /bin/cp peritaje.html $DEPLOYPATH/
+    - /bin/cp postulacion-vendedor.html $DEPLOYPATH/
     - /bin/cp faq.html $DEPLOYPATH/
     - /bin/cp politica-de-privacidad.html $DEPLOYPATH/
     - /bin/cp terminos-y-condiciones.html $DEPLOYPATH/

@@ -158,7 +158,8 @@ test('all public pages that use shared.js load the central measurement layer fir
   const pages = [
     'index.html', 'vehicle.html', 'consignacion.html', 'financiacion.html',
     'peritaje.html', 'scouting.html', 'seguros.html', 'faq.html',
-    'politica-de-privacidad.html', 'sitemap.html', 'terminos-y-condiciones.html',
+    'politica-de-privacidad.html', 'postulacion-vendedor.html', 'sitemap.html',
+    'terminos-y-condiciones.html',
   ];
   for (const page of pages) {
     const html = readFileSync(new URL(`../${page}`, import.meta.url), 'utf8');
