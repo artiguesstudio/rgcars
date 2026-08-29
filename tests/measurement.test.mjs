@@ -148,6 +148,12 @@ test('consent temporarily removes competing floating actions', () => {
   assert.match(indexCssSource, /pointer-events:\s*none\s*!important/);
 });
 
+test('WhatsApp tracking keeps technical references out of the customer message', () => {
+  assert.doesNotMatch(source, /anchor\.href\s*=\s*whatsappUrlWithReference/);
+  assert.doesNotMatch(source, /Ref:\s*\$\{reference\}/);
+  assert.match(source, /campaign_reference:\s*reference/);
+});
+
 test('all public pages that use shared.js load the central measurement layer first', () => {
   const pages = [
     'index.html', 'vehicle.html', 'consignacion.html', 'financiacion.html',

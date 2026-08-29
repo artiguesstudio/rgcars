@@ -39,6 +39,13 @@ test('the recruitment campaign image is referenced from the modal', async () => 
   assert.match(shared, /\.\/imagenes\/busqueda-vendedor-rg-cars\.png/);
 });
 
+test('the recruitment form has a shareable direct URL', async () => {
+  const shared = await readFile(join(root, 'shared.js'), 'utf8');
+  assert.match(shared, /RECRUITMENT_DIRECT_HASH = '#postulacion-vendedor'/);
+  assert.match(shared, /syncRecruitmentModalWithUrl\(\)/);
+  assert.match(shared, /window\.addEventListener\('hashchange', syncRecruitmentModalWithUrl\)/);
+});
+
 test('the fit score uses job-relevant criteria and excludes sensitive personal data', async () => {
   const endpoint = await readFile(join(root, 'api', 'job-applications.php'), 'utf8');
   const scoreFunction = endpoint.match(/function calculateApplicantFit\([\s\S]*?\n}\n\nfunction readJsonPayload/)?.[0] || '';

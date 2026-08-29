@@ -546,30 +546,56 @@
 
   const JOB_APPLICATION_MAX_FILE_BYTES = 5 * 1024 * 1024;
   const JOB_APPLICATION_FILE_EXTENSIONS = ['pdf', 'doc', 'docx'];
+  const RECRUITMENT_DIRECT_HASH = '#postulacion-vendedor';
   let recruitmentTrigger = null;
+  let recruitmentPreviousHash = null;
 
   function recruitmentEndpoint() {
     return String(window.RG?.JOB_APPLICATION_ENDPOINT || './api/job-applications.php').trim();
   }
 
-  function closeRecruitmentModal(restoreFocus = true) {
+  function isRecruitmentDirectLink() {
+    return String(window.location.hash || '').toLowerCase() === RECRUITMENT_DIRECT_HASH;
+  }
+
+  function updateRecruitmentUrl(open) {
+    if (!window.history?.replaceState) return;
+    const url = new URL(window.location.href);
+    if (open) {
+      if (url.hash !== RECRUITMENT_DIRECT_HASH) recruitmentPreviousHash = url.hash || '';
+      url.hash = RECRUITMENT_DIRECT_HASH;
+    } else if (url.hash.toLowerCase() === RECRUITMENT_DIRECT_HASH) {
+      url.hash = recruitmentPreviousHash || '';
+      recruitmentPreviousHash = null;
+    }
+    window.history.replaceState(window.history.state, '', url.toString());
+  }
+
+  function closeRecruitmentModal(restoreFocus = true, updateUrl = true) {
     const modal = document.querySelector('[data-recruitment-modal]');
     if (!modal || modal.hidden) return;
     modal.hidden = true;
     document.body.classList.remove('recruitment-modal-open');
     recruitmentTrigger?.setAttribute('aria-expanded', 'false');
+    if (updateUrl) updateRecruitmentUrl(false);
     if (restoreFocus) recruitmentTrigger?.focus({ preventScroll: true });
   }
 
-  function openRecruitmentModal() {
+  function openRecruitmentModal(options = {}) {
     const modal = document.querySelector('[data-recruitment-modal]');
     if (!modal) return;
     closeFeedbackModal();
     modal.hidden = false;
     document.body.classList.add('recruitment-modal-open');
     recruitmentTrigger?.setAttribute('aria-expanded', 'true');
+    if (options.updateUrl !== false) updateRecruitmentUrl(true);
     const firstField = modal.querySelector('input[name="full_name"]');
     if (firstField) window.setTimeout(() => firstField.focus(), 30);
+  }
+
+  function syncRecruitmentModalWithUrl() {
+    if (isRecruitmentDirectLink()) openRecruitmentModal({ updateUrl: false });
+    else closeRecruitmentModal(false, false);
   }
 
   function setRecruitmentMessage(form, message, state = '') {
@@ -819,6 +845,7 @@
     button.addEventListener('click', openRecruitmentModal);
     document.body.appendChild(button);
     recruitmentTrigger = button;
+    syncRecruitmentModalWithUrl();
   }
 
 
@@ -1481,6 +1508,7 @@
       closeRecruitmentModal();
     }
   });
+  window.addEventListener('hashchange', syncRecruitmentModalWithUrl);
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {

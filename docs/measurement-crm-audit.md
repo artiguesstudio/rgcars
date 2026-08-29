@@ -105,7 +105,7 @@ Se capturan `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term
 - Sólo se conservan parámetros permitidos; parámetros arbitrarios como `email`, `phone` o `plate` se eliminan de las URLs analíticas.
 - `lead_attribution` separa la atribución de las tablas con PII y se relaciona por tipo/ID de lead.
 
-Todo enlace público de WhatsApp queda cubierto mediante delegación. Antes de la navegación se genera `RGC-XXXXXXXXXX`, se registra su relación con página/sesión/campaña/vehículo y se agrega sólo esa referencia al mensaje. Para QR físicos usar, por ejemplo:
+Todo enlace público de WhatsApp queda cubierto mediante delegación. Antes de la navegación se genera internamente `RGC-XXXXXXXXXX` y se registra su relación con página/sesión/campaña/vehículo, sin alterar el texto visible que recibe el cliente. Para QR físicos usar, por ejemplo:
 
 ```text
 https://rgcars.com.ar/vehicle.html?id=<VEHICLE_ID>&utm_source=qr&utm_medium=offline&utm_campaign=stock_salon&qr_code=<CODIGO_NO_SENSIBLE>

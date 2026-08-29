@@ -568,17 +568,6 @@
     return `RGC-${randomId('').replace(/[^a-z0-9]/gi, '').slice(0, 10).toUpperCase()}`;
   }
 
-  function whatsappUrlWithReference(href, reference) {
-    try {
-      const url = new URL(href, window.location.href);
-      const text = String(url.searchParams.get('text') || '').trim();
-      if (!new RegExp(`\\b${reference}\\b`, 'i').test(text)) {
-        url.searchParams.set('text', `${text || 'Hola, quiero hacer una consulta a RG Cars TDF.'}\nRef: ${reference}`);
-      }
-      return url.toString();
-    } catch { return href; }
-  }
-
   function clickLocation(anchor) {
     if (anchor.classList.contains('whatsapp-fab')) return 'floating_button';
     if (anchor.closest('.site-header, .header-actions, .header-social-links')) return 'header';
@@ -593,7 +582,6 @@
       const anchor = event.target.closest?.('a[href*="wa.me/"], a[href*="api.whatsapp.com/"]');
       if (!anchor || !document.body?.classList.contains('public-theme')) return;
       const reference = whatsappReference();
-      anchor.href = whatsappUrlWithReference(anchor.href, reference);
       const params = new URLSearchParams(window.location.search || '');
       track('click_whatsapp', {
         page_key: currentPageKey(),
