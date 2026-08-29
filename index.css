@@ -9785,6 +9785,92 @@ body.public-theme .status-pill.is-hidden {
   display: none !important;
 }
 
+/* Consentimiento compacto: mientras se decide, ningún acceso flotante lo tapa. */
+body.rg-consent-open .whatsapp-fab,
+body.rg-consent-open .feedback-floating-button,
+body.rg-consent-open .recruitment-floating-button {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(12px) !important;
+}
+
+body.public-theme .rg-consent-banner {
+  right: 16px;
+  bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  left: 16px;
+  width: min(calc(100% - 32px), 920px);
+  padding: 12px 14px;
+  gap: 14px;
+  border-radius: 15px;
+}
+
+body.public-theme .rg-consent-banner__copy {
+  max-width: 540px;
+}
+
+body.public-theme .rg-consent-banner__copy strong {
+  margin-bottom: 2px;
+  font-size: .92rem;
+}
+
+body.public-theme .rg-consent-banner__copy p {
+  font-size: .82rem;
+  line-height: 1.42;
+}
+
+body.public-theme .rg-consent-banner__copy a {
+  display: inline;
+  margin: 0;
+}
+
+body.public-theme .rg-consent-banner__actions {
+  flex-wrap: nowrap;
+  gap: 7px;
+}
+
+body.public-theme .rg-consent-banner__actions .btn {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 11px;
+  font-size: .76rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  body.public-theme .rg-consent-banner {
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    left: 8px;
+    width: calc(100% - 16px);
+    max-height: none;
+    padding: 11px;
+    gap: 10px;
+    overflow: visible;
+  }
+
+  body.public-theme .rg-consent-banner__copy p {
+    font-size: .78rem;
+  }
+
+  body.public-theme .rg-consent-banner__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  body.public-theme .rg-consent-banner__actions .btn {
+    width: 100%;
+    min-height: 36px;
+    padding-inline: 8px;
+    white-space: normal;
+  }
+
+  body.public-theme .rg-consent-banner__actions [data-rg-consent-accept] {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 760px) {
   body.public-theme .vehicle-card .status-pill,
   body.public-theme .sold-vehicle-card .status-pill {

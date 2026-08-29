@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 const source = readFileSync(new URL('../measurement.js', import.meta.url), 'utf8');
 const sharedSource = readFileSync(new URL('../shared.js', import.meta.url), 'utf8');
+const indexCssSource = readFileSync(new URL('../index.css', import.meta.url), 'utf8');
 
 function storage() {
   const values = new Map();
@@ -136,6 +137,15 @@ test('consent creates a sanitized external page view and event ids deduplicate',
   ctx.RGMeasurement.track('search', { search_term_group: 'suv' }, { internal: false, eventId: 'evt_test_123456' });
   ctx.RGMeasurement.track('search', { search_term_group: 'suv' }, { internal: false, eventId: 'evt_test_123456' });
   assert.equal(ctx.dataLayer.length, before + 1);
+});
+
+test('consent temporarily removes competing floating actions', () => {
+  assert.match(source, /classList\.add\('rg-consent-open'\)/);
+  assert.match(source, /classList\?\.remove\?\.\('rg-consent-open'\)/);
+  assert.match(indexCssSource, /body\.rg-consent-open \.whatsapp-fab/);
+  assert.match(indexCssSource, /body\.rg-consent-open \.feedback-floating-button/);
+  assert.match(indexCssSource, /body\.rg-consent-open \.recruitment-floating-button/);
+  assert.match(indexCssSource, /pointer-events:\s*none\s*!important/);
 });
 
 test('all public pages that use shared.js load the central measurement layer first', () => {

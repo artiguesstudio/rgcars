@@ -216,6 +216,7 @@
       }, { internal: false });
     }
     document.querySelector('[data-rg-consent-banner]')?.remove();
+    document.body?.classList?.remove?.('rg-consent-open');
     window.dispatchEvent(new CustomEvent('rg:consent-updated', { detail: consentState() }));
   }
 
@@ -229,17 +230,17 @@
     banner.innerHTML = `
       <div class="rg-consent-banner__copy">
         <strong>Privacidad y medición</strong>
-        <p>Usamos medición propia y, sólo si aceptás, analítica y publicidad de terceros. No enviamos tus datos de contacto a esas herramientas.</p>
-        <a href="./politica-de-privacidad.html">Ver política de privacidad</a>
+        <p>La web funciona sin medición opcional. Si aceptás, nos ayudás a entender qué contenidos funcionan mejor. <a href="./politica-de-privacidad.html">Más información</a>.</p>
       </div>
       <div class="rg-consent-banner__actions">
-        <button type="button" class="btn btn-ghost" data-rg-consent-reject>Rechazar opcionales</button>
+        <button type="button" class="btn btn-ghost" data-rg-consent-reject>Continuar sin extras</button>
         <button type="button" class="btn btn-soft" data-rg-consent-analytics>Sólo analítica</button>
-        <button type="button" class="btn btn-primary" data-rg-consent-accept>Aceptar todo</button>
+        <button type="button" class="btn btn-primary" data-rg-consent-accept>Aceptar</button>
       </div>`;
     banner.querySelector('[data-rg-consent-reject]')?.addEventListener('click', () => setConsent({ analytics: false, marketing: false }));
     banner.querySelector('[data-rg-consent-analytics]')?.addEventListener('click', () => setConsent({ analytics: true, marketing: false }));
     banner.querySelector('[data-rg-consent-accept]')?.addEventListener('click', () => setConsent({ analytics: true, marketing: true }));
+    document.body.classList.add('rg-consent-open');
     document.body.appendChild(banner);
   }
 
