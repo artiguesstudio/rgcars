@@ -276,8 +276,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('[data-supermovilidad-cta]').forEach((link) => {
     link.addEventListener('click', () => {
-      window.RGShared.trackEvent?.('supermovilidad_cta_click', {
+      window.RGShared.trackEvent?.('click_financing', {
         source: 'home_banner',
+        financing_entity: 'santander_supermovilidad',
+        financing_type: 'third_party_financing',
         destination: 'santander_supermovilidad',
       });
     });

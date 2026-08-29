@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Resend } from "npm:resend";
+import { deliverConversion } from "../_shared/conversion-delivery.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,6 +56,9 @@ type LeadInput = {
   vehicleId: string | null;
   vehicleTitle: string | null;
   metadata: UnknownRecord;
+  eventId: string;
+  submissionKey: string;
+  attribution: UnknownRecord;
 };
 
 function json(body: UnknownRecord, status = 200) {
@@ -92,6 +96,86 @@ function parseInteger(value: unknown) {
 
 function isPlainObject(value: unknown): value is UnknownRecord {
   return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function privacySafeText(value: unknown, max = 500) {
+  const normalized = normalizeText(value).slice(0, max);
+  if (/\b[^\s@]+@[^\s@]+\.[^\s@]{2,}\b/i.test(normalized)) return "[redacted]";
+  if (/(?:\+?\d[\s().-]*){7,}/.test(normalized.replace(/\b\d{4}-\d{2}-\d{2}\b/g, ""))) return "[redacted]";
+  return normalized;
+}
+
+function technicalCode(value: unknown, fallback = "unexpected") {
+  if (isPlainObject(value)) return normalizeText(value.code || value.status || fallback).slice(0, 80) || fallback;
+  return fallback;
+}
+
+const ATTRIBUTION_TOUCH_KEYS = new Set([
+  "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+  "fbclid", "gclid", "qr_code", "campaign_code", "ad_code", "vehicle_id",
+  "page_key", "url", "referrer", "touched_at",
+]);
+const ATTRIBUTION_QUERY_KEYS = [
+  "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+  "fbclid", "gclid", "qr_code", "campaign_code", "ad_code", "vehicle_id", "id", "mode",
+];
+
+function sanitizeAttributionUrl(value: unknown) {
+  try {
+    const url = new URL(normalizeText(value));
+    if (!/^https?:$/i.test(url.protocol)) return null;
+    const safe = new URLSearchParams();
+    ATTRIBUTION_QUERY_KEYS.forEach((key) => {
+      const item = privacySafeText(url.searchParams.get(key), 300);
+      if (item) safe.set(key, item);
+    });
+    url.search = safe.toString();
+    url.hash = "";
+    return url.toString().slice(0, 1200);
+  } catch {
+    return null;
+  }
+}
+
+function sanitizeAttributionTouch(value: unknown) {
+  if (!isPlainObject(value)) return {};
+  const output: UnknownRecord = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (!ATTRIBUTION_TOUCH_KEYS.has(key)) continue;
+    if (key === "url" || key === "referrer") {
+      const url = sanitizeAttributionUrl(item);
+      if (url) output[key] = url;
+      continue;
+    }
+    const normalized = key === "touched_at" ? normalizeText(item).slice(0, 50) : privacySafeText(item, 300);
+    if (normalized) output[key] = normalized;
+  }
+  return output;
+}
+
+function sanitizeAttribution(value: unknown) {
+  if (!isPlainObject(value)) return {};
+  const consent = isPlainObject(value.consent) ? value.consent : {};
+  return {
+    first_touch: sanitizeAttributionTouch(value.first_touch),
+    last_touch: sanitizeAttributionTouch(value.last_touch),
+    visitor_key: normalizeNullableText(value.visitor_key)?.slice(0, 120) || null,
+    session_key: normalizeNullableText(value.session_key)?.slice(0, 120) || null,
+    landing_url: sanitizeAttributionUrl(value.landing_url),
+    conversion_url: sanitizeAttributionUrl(value.conversion_url),
+    referrer: sanitizeAttributionUrl(value.referrer),
+    first_visit_at: normalizeNullableText(value.first_visit_at)?.slice(0, 50) || null,
+    conversion_at: normalizeNullableText(value.conversion_at)?.slice(0, 50) || new Date().toISOString(),
+    vehicle_id: normalizeNullableText(value.vehicle_id)?.slice(0, 120) || null,
+    fbp: normalizeNullableText(value.fbp)?.slice(0, 500) || null,
+    fbc: normalizeNullableText(value.fbc)?.slice(0, 500) || null,
+    ga_client_id: normalizeNullableText(value.ga_client_id)?.slice(0, 120) || null,
+    ga_session_id: normalizeNullableText(value.ga_session_id)?.slice(0, 120) || null,
+    consent: {
+      analytics: consent.analytics === true,
+      marketing: consent.marketing === true,
+    },
+  };
 }
 
 function isValidEmail(value: string) {
@@ -171,10 +255,32 @@ function metadataSummaryHtml(serviceType: ServiceType, lead: LeadInput) {
   return `<ul>${rows.map(([label, value]) => `<li><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</li>`).join("")}</ul>`;
 }
 
+function buildCommonInsert(lead: LeadInput) {
+  const firstTouch = isPlainObject(lead.attribution.first_touch) ? lead.attribution.first_touch : {};
+  const lastTouch = isPlainObject(lead.attribution.last_touch) ? lead.attribution.last_touch : {};
+  return {
+    submission_key: lead.submissionKey,
+    lead_event_id: lead.eventId,
+    service_type: lead.serviceType,
+    crm_stage: "lead",
+    lead_validity: "pending",
+    first_touch: firstTouch,
+    last_touch: lastTouch,
+    visitor_key: normalizeNullableText(lead.attribution.visitor_key),
+    session_key: normalizeNullableText(lead.attribution.session_key),
+    landing_url: normalizeNullableText(lead.attribution.landing_url),
+    conversion_url: normalizeNullableText(lead.attribution.conversion_url),
+    initial_referrer: normalizeNullableText(lead.attribution.referrer),
+    first_visit_at: normalizeNullableText(lead.attribution.first_visit_at),
+    conversion_at: normalizeNullableText(lead.attribution.conversion_at) || new Date().toISOString(),
+  };
+}
+
 function buildConsignmentInsert(lead: LeadInput) {
   const vehicleSummary = normalizeText(lead.metadata.vehicle_to_sell || lead.vehicleTitle || "");
   const note = normalizeText(lead.message || "");
   return {
+    ...buildCommonInsert(lead),
     id: crypto.randomUUID(),
     brand: null,
     model: null,
@@ -211,6 +317,7 @@ function buildScoutingInsert(lead: LeadInput) {
   const budgetText = normalizeText(lead.metadata.budget_display || "");
   const budgetValue = parseInteger(lead.metadata.budget ?? lead.metadata.budget_display);
   return {
+    ...buildCommonInsert(lead),
     id: crypto.randomUUID(),
     customer_name: lead.name,
     email: lead.email,
@@ -245,6 +352,7 @@ function buildFinancingInsert(lead: LeadInput) {
   const vehiclePrice = parseInteger(lead.metadata.vehicle_price);
   const requestedAmount = parseInteger(lead.metadata.requested_amount) ?? vehiclePrice;
   return {
+    ...buildCommonInsert(lead),
     status: "new",
     origin: "financiacion",
     entity: null,
@@ -277,6 +385,7 @@ function buildFinancingInsert(lead: LeadInput) {
 function buildInsuranceInsert(lead: LeadInput) {
   const vehicleTitle = normalizeText(lead.metadata.insurance_vehicle || lead.vehicleTitle || "");
   return {
+    ...buildCommonInsert(lead),
     status: "new",
     customer_name: lead.name,
     cuil: null,
@@ -303,6 +412,7 @@ function buildInsuranceInsert(lead: LeadInput) {
 function buildPeritajeInsert(lead: LeadInput) {
   const vehicleReference = normalizeText(lead.metadata.inspection_vehicle || lead.vehicleTitle || "");
   return {
+    ...buildCommonInsert(lead),
     status: "new",
     vehicle_id: lead.vehicleId,
     customer_name: lead.name,
@@ -346,18 +456,25 @@ function normalizeLeadInput(body: unknown): LeadInput {
   const serviceType = normalizeText(body.serviceType || body.service_type) as ServiceType;
   if (!(serviceType in SERVICE_CONFIG)) throw new Error("Servicio inválido.");
 
-  const source = normalizeText(body.source) || SERVICE_CONFIG[serviceType].defaultSource;
+  const requestedSource = normalizeText(body.source);
+  const source = /^[A-Za-z0-9_-]{1,80}$/.test(requestedSource) ? requestedSource : SERVICE_CONFIG[serviceType].defaultSource;
   const name = normalizeText(body.name);
   const phone = normalizePhone(body.phone);
   const email = normalizeEmail(body.email);
   const message = normalizeNullableText(body.message);
-  const vehicleId = normalizeNullableText(body.vehicleId || body.vehicle_id);
+  const requestedVehicleId = normalizeText(body.vehicleId || body.vehicle_id);
+  const vehicleId = /^[A-Za-z0-9_-]{1,120}$/.test(requestedVehicleId) ? requestedVehicleId : null;
   const vehicleTitle = normalizeNullableText(body.vehicleTitle || body.vehicle_title);
   const metadata = isPlainObject(body.metadata) ? body.metadata : {};
+  const eventId = (normalizeText(body.eventId || body.event_id) || `lead_${crypto.randomUUID()}`).slice(0, 120);
+  const submissionKey = (normalizeText(body.submissionKey || body.submission_key) || `sub_${crypto.randomUUID()}`).slice(0, 120);
+  const attribution = sanitizeAttribution(body.attribution);
 
   if (!isValidName(name)) throw new Error("Ingresá un nombre completo válido.");
   if (!isValidPhone(phone)) throw new Error("Ingresá un WhatsApp válido.");
   if (!isValidEmail(email)) throw new Error("Ingresá un email válido.");
+  if (!/^[A-Za-z0-9_-]{12,120}$/.test(eventId)) throw new Error("Identificador de evento inválido.");
+  if (!/^[A-Za-z0-9_-]{12,120}$/.test(submissionKey)) throw new Error("Identificador de envío inválido.");
 
   return {
     serviceType,
@@ -369,6 +486,9 @@ function normalizeLeadInput(body: unknown): LeadInput {
     vehicleId,
     vehicleTitle,
     metadata,
+    eventId,
+    submissionKey,
+    attribution,
   };
 }
 
@@ -478,7 +598,7 @@ async function resolveBackofficeRecipients(supabase: any) {
 
     return fromTable.length ? fromTable : directEnv;
   } catch (error) {
-    console.warn("No se pudieron obtener destinatarios internos desde admin_access_profiles:", error);
+    console.warn("create-lead recipient lookup failure", { technicalCode: technicalCode(error, "lookup") });
     return directEnv;
   }
 }
@@ -507,7 +627,7 @@ async function persistNotificationState(
 
     if (error) throw error;
   } catch (error) {
-    console.warn(`No se pudo persistir el estado de notificación en ${table}:`, error);
+    console.warn("create-lead notification state failure", { table, technicalCode: technicalCode(error, "db") });
   }
 }
 
@@ -537,16 +657,118 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
+    const { data: existingLead } = await supabase
+      .from(service.table)
+      .select("id, lead_event_id")
+      .eq("submission_key", lead.submissionKey)
+      .maybeSingle();
+    if (existingLead?.id) {
+      return json({
+        ok: true,
+        saved: true,
+        deduplicated: true,
+        leadId: existingLead.id,
+        eventId: normalizeText(existingLead.lead_event_id) || lead.eventId,
+        serviceType: lead.serviceType,
+        emailSentToUser: false,
+        emailSentToTeam: false,
+        emailError: null,
+      });
+    }
+
     const insertPayload = buildInsertPayload(lead);
-    const { data: savedLead, error: insertError } = await supabase
+    let wasDeduplicated = false;
+    let { data: savedLead, error: insertError } = await supabase
       .from(service.table)
       .insert(insertPayload)
       .select("*")
       .single();
 
+    if (insertError?.code === "23505") {
+      const duplicate = await supabase
+        .from(service.table)
+        .select("*, lead_event_id")
+        .eq("submission_key", lead.submissionKey)
+        .maybeSingle();
+      if (duplicate.data?.id) {
+        savedLead = duplicate.data;
+        insertError = null;
+        wasDeduplicated = true;
+      }
+    }
+
     if (insertError || !savedLead) {
-      console.error("No se pudo guardar el lead:", insertError);
+      console.error("create-lead persistence failure", { technicalCode: insertError?.code || "missing_row" });
       return json({ ok: false, error: "No pudimos enviar tu consulta. Intentá nuevamente o escribinos por WhatsApp." }, 500);
+    }
+
+    const firstTouch = isPlainObject(lead.attribution.first_touch) ? lead.attribution.first_touch : {};
+    const lastTouch = isPlainObject(lead.attribution.last_touch) ? lead.attribution.last_touch : {};
+    const attributionConsent = isPlainObject(lead.attribution.consent) ? lead.attribution.consent : {};
+    const canonicalEventId = normalizeText(savedLead.lead_event_id) || lead.eventId;
+    const { error: attributionError } = await supabase.from("lead_attribution").upsert({
+      lead_type: lead.serviceType,
+      lead_id: savedLead.id,
+      submission_key: lead.submissionKey,
+      event_id: canonicalEventId,
+      first_touch: firstTouch,
+      last_touch: lastTouch,
+      visitor_key: normalizeNullableText(lead.attribution.visitor_key),
+      session_key: normalizeNullableText(lead.attribution.session_key),
+      landing_url: normalizeNullableText(lead.attribution.landing_url),
+      conversion_url: normalizeNullableText(lead.attribution.conversion_url),
+      initial_referrer: normalizeNullableText(lead.attribution.referrer),
+      vehicle_id: lead.vehicleId || normalizeNullableText(lead.attribution.vehicle_id),
+      fbp: normalizeNullableText(lead.attribution.fbp),
+      fbc: normalizeNullableText(lead.attribution.fbc),
+      ga_client_id: normalizeNullableText(lead.attribution.ga_client_id),
+      ga_session_id: normalizeNullableText(lead.attribution.ga_session_id),
+      analytics_consent: attributionConsent.analytics === true,
+      marketing_consent: attributionConsent.marketing === true,
+      first_visit_at: normalizeNullableText(lead.attribution.first_visit_at),
+      converted_at: normalizeNullableText(lead.attribution.conversion_at) || new Date().toISOString(),
+    }, { onConflict: "lead_type,lead_id" });
+    if (attributionError) {
+      console.error("create-lead attribution failure", { technicalCode: attributionError.code || "db" });
+    }
+
+    const consent = isPlainObject(lead.attribution.consent) ? lead.attribution.consent : {};
+    await deliverConversion({
+      supabase,
+      providerEventName: "Lead",
+      eventId: canonicalEventId,
+      occurredAt: normalizeNullableText(lead.attribution.conversion_at) || savedLead.created_at,
+      eventSourceUrl: normalizeNullableText(lead.attribution.conversion_url),
+      leadType: lead.serviceType,
+      leadId: String(savedLead.id),
+      email: lead.email,
+      phone: lead.phone,
+      attribution: lead.attribution,
+      parameters: {
+        lead_id: String(savedLead.id),
+        service_type: lead.serviceType,
+        vehicle_id: lead.vehicleId,
+        source: lead.source,
+      },
+      actionSource: "website",
+      allowMeta: consent.marketing === true,
+      allowGa4: false,
+    }).catch(() => {
+      console.error("create-lead conversion delivery failure", { technicalCode: "unexpected" });
+    });
+
+    if (wasDeduplicated) {
+      return json({
+        ok: true,
+        saved: true,
+        deduplicated: true,
+        leadId: savedLead.id,
+        eventId: canonicalEventId,
+        serviceType: lead.serviceType,
+        emailSentToUser: false,
+        emailSentToTeam: false,
+        emailError: null,
+      });
     }
 
     if (lead.serviceType === "busqueda_personalizada") {
@@ -554,7 +776,7 @@ Deno.serve(async (req) => {
         p_request_id: savedLead.id,
       });
       if (matchError) {
-        console.warn("No se pudo actualizar la búsqueda automática:", matchError);
+        console.warn("create-lead matching failure", { technicalCode: technicalCode(matchError, "rpc") });
       }
     }
 
@@ -587,7 +809,7 @@ Deno.serve(async (req) => {
         });
         emailSentToUser = true;
       } catch (error) {
-        console.error("No se pudo enviar el email al usuario:", error);
+        console.error("create-lead user email failure", { technicalCode: technicalCode(error, "email") });
         emailErrors.push("No se pudo enviar el email de confirmación al usuario.");
       }
 
@@ -606,7 +828,7 @@ Deno.serve(async (req) => {
           });
           emailSentToTeam = true;
         } catch (error) {
-          console.error("No se pudo enviar el email interno:", error);
+          console.error("create-lead team email failure", { technicalCode: technicalCode(error, "email") });
           emailErrors.push("No se pudo enviar el email interno al backoffice.");
         }
       }
@@ -626,6 +848,7 @@ Deno.serve(async (req) => {
       ok: true,
       saved: true,
       leadId: savedLead.id,
+      eventId: canonicalEventId,
       serviceType: lead.serviceType,
       emailSentToUser,
       emailSentToTeam,
@@ -634,7 +857,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "No pudimos procesar la consulta.";
     const status = /válido|inválido|Servicio inválido|Payload inválido/i.test(message) ? 400 : 500;
-    console.error("create-lead error:", error);
+    console.error("create-lead failure", { technicalCode: technicalCode(error) });
     return json({ ok: false, error: message }, status);
   }
 });

@@ -1,0 +1,16 @@
+Options -Indexes
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>
+
+<FilesMatch "\.(php[0-9]?|phtml|phar|cgi|pl|py|sh|shtml)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order Allow,Deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

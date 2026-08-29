@@ -1,18 +1,31 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const allowedOrigins = new Set([
+  "https://www.rgcars.com.ar",
+  "https://rgcars.com.ar",
+]);
+
+function corsHeadersFor(req?: Request) {
+  const origin = req?.headers.get("Origin") || "";
+  const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  const allowOrigin = allowedOrigins.has(origin) || isLocalhost ? origin : "*";
+
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
+  };
+}
 
 type UnknownRecord = Record<string, unknown>;
 
-function json(body: UnknownRecord, status = 200) {
+function json(body: UnknownRecord, status = 200, req?: Request) {
   return new Response(JSON.stringify(body), {
     status,
     headers: {
-      ...corsHeaders,
+      ...corsHeadersFor(req),
       "Content-Type": "application/json; charset=utf-8",
     },
   });
@@ -114,8 +127,8 @@ function parseJsonObject(value: string) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "Método no permitido." }, 405);
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeadersFor(req) });
+  if (req.method !== "POST") return json({ error: "Método no permitido." }, 405, req);
 
   try {
     await requireAuthenticatedUser(req);
@@ -126,7 +139,7 @@ Deno.serve(async (req) => {
       return json({
         configured: false,
         message: "La función de IA está creada, pero falta configurar OPENAI_API_KEY en Supabase.",
-      });
+      }, 200, req);
     }
 
     const body = await req.json().catch(() => ({}));
@@ -153,15 +166,15 @@ Deno.serve(async (req) => {
 
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-      return json({ error: result?.error?.message || "No se pudo generar la ficha con IA." }, response.status);
+      return json({ error: result?.error?.message || "No se pudo generar la ficha con IA." }, response.status, req);
     }
 
     const content = result?.choices?.[0]?.message?.content || "";
     const suggestion = parseJsonObject(content);
-    return json({ configured: true, suggestion });
+    return json({ configured: true, suggestion }, 200, req);
   } catch (error) {
     const message = error instanceof Error ? error.message : "No se pudo procesar la solicitud.";
     const status = message === "No autorizado." ? 401 : 400;
-    return json({ error: message }, status);
+    return json({ error: message }, status, req);
   }
 });

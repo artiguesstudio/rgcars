@@ -6,7 +6,9 @@ deployment:
     # Crear destinos necesarios
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/mkdir -p $DEPLOYPATH/admin
+    - /bin/mkdir -p $DEPLOYPATH/api
     - /bin/mkdir -p $DEPLOYPATH/imagenes
+    - /bin/mkdir -p $DEPLOYPATH/uploads/vehicles
     - /bin/mkdir -p $DEPLOYPATH/videos
 
     # Limpiar artefactos temporales que no deben quedar publicados
@@ -16,7 +18,9 @@ deployment:
 
     # Carpetas públicas
     - /bin/cp -R admin/. $DEPLOYPATH/admin/
+    - /bin/cp -R api/. $DEPLOYPATH/api/
     - /bin/cp -R imagenes/. $DEPLOYPATH/imagenes/
+    - /bin/cp uploads/.htaccess $DEPLOYPATH/uploads/.htaccess
     - /bin/cp -R videos/. $DEPLOYPATH/videos/
 
     # HTML públicos
@@ -38,6 +42,7 @@ deployment:
 
     # JS base
     - /bin/cp config.js $DEPLOYPATH/
+    - /bin/cp measurement.js $DEPLOYPATH/
     - /bin/cp shared.js $DEPLOYPATH/
     - /bin/cp app.js $DEPLOYPATH/
     - /bin/cp catalog-data.js $DEPLOYPATH/

@@ -28,7 +28,7 @@
   }
 
   function minimumDownPayment(vehicle = {}) {
-    const value = vehicle.minimum_down_payment ?? vehicle.min_down_payment ?? null;
+    const value = vehicle.minimum_down_payment ?? vehicle.entrega_minima ?? vehicle.min_down_payment ?? null;
     const num = Number(value);
     return Number.isFinite(num) && num > 0 ? num : null;
   }
@@ -244,6 +244,16 @@
       throw new Error(LEAD_ERROR_MESSAGE);
     }
 
+    const measurementContext = window.RGMeasurement?.leadSubmissionContext?.(payload || {}) || null;
+    const requestPayload = measurementContext
+      ? {
+          ...(payload || {}),
+          eventId: measurementContext.eventId,
+          submissionKey: measurementContext.submissionKey,
+          attribution: measurementContext.attribution,
+        }
+      : (payload || {});
+
     const response = await fetch(`${supabaseUrl}/functions/v1/create-lead`, {
       method: 'POST',
       headers: {
@@ -251,7 +261,7 @@
         apikey: anonKey,
         Authorization: `Bearer ${anonKey}`,
       },
-      body: JSON.stringify(payload || {}),
+      body: JSON.stringify(requestPayload),
     });
 
     let result = null;
@@ -265,6 +275,9 @@
       throw new Error(normalizeLeadText(result?.error) || LEAD_ERROR_MESSAGE);
     }
 
+    if (result?.saved) {
+      window.RGMeasurement?.trackLeadSaved?.(result, payload || {}, measurementContext || {});
+    }
     return result;
   }
 
@@ -295,8 +308,22 @@
     return String(value || '').toUpperCase().replace(/\s+/g, '').trim();
   }
 
+  function publicSupabaseClient() {
+    if (!window.supabase?.createClient || !window.RG?.SUPABASE_URL || !window.RG?.SUPABASE_ANON_KEY) {
+      throw new Error('Supabase no está configurado.');
+    }
+    if (!window.__rgPublicSupabaseClient) {
+      window.__rgPublicSupabaseClient = window.supabase.createClient(
+        window.RG.SUPABASE_URL,
+        window.RG.SUPABASE_ANON_KEY,
+        { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
+      );
+    }
+    return window.__rgPublicSupabaseClient;
+  }
+
   async function fetchVehicleById(id) {
-    const sb = window.supabase.createClient(window.RG.SUPABASE_URL, window.RG.SUPABASE_ANON_KEY);
+    const sb = publicSupabaseClient();
     const { data, error } = await sb
       .from('vehicles')
       .select('*')
@@ -384,10 +411,7 @@
     if (!window.supabase?.createClient || !window.RG?.SUPABASE_URL || !window.RG?.SUPABASE_ANON_KEY) {
       throw new Error('Supabase no está configurado para guardar sugerencias.');
     }
-    if (!window.__rgFeedbackClient) {
-      window.__rgFeedbackClient = window.supabase.createClient(window.RG.SUPABASE_URL, window.RG.SUPABASE_ANON_KEY);
-    }
-    return window.__rgFeedbackClient;
+    return publicSupabaseClient();
   }
 
   function closeFeedbackModal() {
@@ -513,6 +537,313 @@
     modal.addEventListener('click', (event) => {
       if (event.target.closest('[data-feedback-close]')) closeFeedbackModal();
     });
+  }
+
+  const JOB_APPLICATION_MAX_FILE_BYTES = 5 * 1024 * 1024;
+  const JOB_APPLICATION_FILE_EXTENSIONS = ['pdf', 'doc', 'docx'];
+  let recruitmentTrigger = null;
+
+  function recruitmentEndpoint() {
+    return String(window.RG?.JOB_APPLICATION_ENDPOINT || './api/job-applications.php').trim();
+  }
+
+  function closeRecruitmentModal(restoreFocus = true) {
+    const modal = document.querySelector('[data-recruitment-modal]');
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    document.body.classList.remove('recruitment-modal-open');
+    recruitmentTrigger?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) recruitmentTrigger?.focus({ preventScroll: true });
+  }
+
+  function openRecruitmentModal() {
+    const modal = document.querySelector('[data-recruitment-modal]');
+    if (!modal) return;
+    closeFeedbackModal();
+    modal.hidden = false;
+    document.body.classList.add('recruitment-modal-open');
+    recruitmentTrigger?.setAttribute('aria-expanded', 'true');
+    const firstField = modal.querySelector('input[name="full_name"]');
+    if (firstField) window.setTimeout(() => firstField.focus(), 30);
+  }
+
+  function setRecruitmentMessage(form, message, state = '') {
+    const messageEl = form.querySelector('[data-job-application-message]');
+    if (!messageEl) return;
+    messageEl.textContent = message;
+    messageEl.classList.remove('is-error', 'is-success');
+    if (state) messageEl.classList.add(`is-${state}`);
+  }
+
+  function validateJobApplication(form, formData) {
+    const fullName = String(formData.get('full_name') || '').trim();
+    const email = String(formData.get('email') || '').trim();
+    const phoneDigits = String(formData.get('phone') || '').replace(/\D+/g, '');
+    const age = Number(formData.get('age'));
+    const maritalStatus = String(formData.get('marital_status') || '');
+    const childrenCountValue = String(formData.get('children_count') ?? '').trim();
+    const childrenCount = Number(childrenCountValue);
+    const salesExperienceYearsValue = String(formData.get('sales_experience_years') ?? '').trim();
+    const salesExperienceYears = Number(salesExperienceYearsValue);
+    const automotiveExperience = String(formData.get('automotive_sales_experience') || '');
+    const targetExperience = String(formData.get('target_based_sales_experience') || '');
+    const crmExperience = String(formData.get('crm_experience') || '');
+    const fullTimeAvailability = String(formData.get('full_time_availability') || '');
+    const experience = String(formData.get('experience') || '').trim();
+    const license = String(formData.get('has_driving_license') || '');
+    const cv = formData.get('cv');
+
+    if (fullName.length < 3) return { field: 'full_name', message: 'Ingresá tu nombre y apellido.' };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)) return { field: 'email', message: 'Ingresá un email válido.' };
+    if (phoneDigits.length < 8) return { field: 'phone', message: 'Ingresá un teléfono o WhatsApp válido.' };
+    if (!Number.isInteger(age) || age < 18 || age > 80) return { field: 'age', message: 'Ingresá una edad válida.' };
+    if (!maritalStatus) return { field: 'marital_status', message: 'Seleccioná tu estado civil.' };
+    if (childrenCountValue === '' || !Number.isInteger(childrenCount) || childrenCount < 0 || childrenCount > 20) return { field: 'children_count', message: 'Ingresá una cantidad de hijos válida.' };
+    if (salesExperienceYearsValue === '' || !Number.isInteger(salesExperienceYears) || salesExperienceYears < 0 || salesExperienceYears > 40) return { field: 'sales_experience_years', message: 'Ingresá tus años de experiencia en ventas.' };
+    if (!['yes', 'no'].includes(automotiveExperience)) return { field: 'automotive_sales_experience', message: 'Indicá si tenés experiencia en venta de vehículos.' };
+    if (!['yes', 'no'].includes(targetExperience)) return { field: 'target_based_sales_experience', message: 'Indicá si trabajaste con objetivos o comisiones.' };
+    if (!['yes', 'no'].includes(crmExperience)) return { field: 'crm_experience', message: 'Indicá si utilizaste CRM o seguimiento digital.' };
+    if (!['yes', 'no'].includes(fullTimeAvailability)) return { field: 'full_time_availability', message: 'Indicá tu disponibilidad horaria.' };
+    if (license !== 'yes') return { field: 'has_driving_license', message: 'Para esta búsqueda es obligatorio contar con carnet de conducir vigente.' };
+    if (experience.length < 30) return { field: 'experience', message: 'Contanos un poco más sobre tu experiencia en ventas.' };
+    if (!(cv instanceof File) || !cv.name || cv.size < 1) return { field: 'cv', message: 'Adjuntá tu CV para completar la postulación.' };
+    if (cv.size > JOB_APPLICATION_MAX_FILE_BYTES) return { field: 'cv', message: 'El CV no puede superar los 5 MB.' };
+    const extension = cv.name.split('.').pop()?.toLowerCase() || '';
+    if (!JOB_APPLICATION_FILE_EXTENSIONS.includes(extension)) return { field: 'cv', message: 'Adjuntá el CV en formato PDF, DOC o DOCX.' };
+    if (formData.get('privacy_consent') !== 'accepted') return { field: 'privacy_consent', message: 'Necesitamos tu autorización para tratar los datos de la postulación.' };
+    return null;
+  }
+
+  async function submitJobApplication(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const submitButton = form.querySelector('[type="submit"]');
+    const formData = new FormData(form);
+    const validation = validateJobApplication(form, formData);
+
+    if (validation) {
+      setRecruitmentMessage(form, validation.message, 'error');
+      form.querySelector(`[name="${validation.field}"]`)?.focus();
+      return;
+    }
+
+    const endpoint = recruitmentEndpoint();
+    if (!endpoint) {
+      setRecruitmentMessage(form, 'El formulario no está disponible en este momento. Escribinos por WhatsApp para postularte.', 'error');
+      return;
+    }
+
+    formData.set('position', 'Vendedor/a con experiencia');
+    formData.set('source_page', feedbackSourcePage());
+    formData.set('source_url', window.location.href);
+
+    try {
+      submitButton?.setAttribute('disabled', 'disabled');
+      if (submitButton) submitButton.textContent = 'Enviando postulación…';
+      setRecruitmentMessage(form, 'Estamos cargando tu CV de forma segura…');
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result?.ok !== true) {
+        throw new Error(result?.error || 'No pudimos enviar la postulación. Intentá nuevamente.');
+      }
+
+      form.reset();
+      const fileName = form.querySelector('[data-job-cv-name]');
+      if (fileName) fileName.textContent = 'PDF, DOC o DOCX · máximo 5 MB';
+      setRecruitmentMessage(form, '¡Postulación enviada! Recibimos tus datos y tu CV correctamente.', 'success');
+      window.RGMeasurement?.track?.('generate_lead', {
+        service_type: 'recruitment',
+        position: 'sales',
+        source_page: feedbackSourcePage(),
+      });
+    } catch (error) {
+      console.error('job application submission failure', error);
+      setRecruitmentMessage(form, error?.message || 'No pudimos enviar la postulación. Intentá nuevamente.', 'error');
+    } finally {
+      submitButton?.removeAttribute('disabled');
+      if (submitButton) submitButton.textContent = 'Enviar postulación';
+    }
+  }
+
+  function buildRecruitmentModal() {
+    if (document.querySelector('[data-recruitment-modal]')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'recruitmentModal';
+    modal.className = 'recruitment-modal';
+    modal.setAttribute('data-recruitment-modal', 'true');
+    modal.hidden = true;
+    modal.innerHTML = `
+      <div class="recruitment-modal__backdrop" data-recruitment-close="true"></div>
+      <div class="recruitment-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="recruitmentModalTitle" aria-describedby="recruitmentModalDescription">
+        <button type="button" class="recruitment-modal__close" aria-label="Cerrar formulario de postulación" data-recruitment-close="true">×</button>
+        <aside class="recruitment-modal__media" aria-hidden="true">
+          <img src="./imagenes/busqueda-vendedor-rg-cars.png" alt="" loading="lazy" decoding="async" fetchpriority="low" />
+          <div class="recruitment-modal__media-overlay">
+            <span>Sumate a RG Cars TDF</span>
+            <strong>Buscamos vendedor/a</strong>
+          </div>
+        </aside>
+        <section class="recruitment-modal__content">
+          <div class="recruitment-modal__eyebrow">Búsqueda laboral abierta</div>
+          <h2 id="recruitmentModalTitle">Queremos conocerte</h2>
+          <p id="recruitmentModalDescription" class="recruitment-modal__copy">Si tenés experiencia en ventas y carnet de conducir vigente, completá el formulario y adjuntá tu CV.</p>
+
+          <form class="job-application-form" data-job-application-form novalidate>
+            <input class="job-application-form__website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+            <div class="job-application-form__grid">
+              <label class="field job-application-form__wide">
+                <span>Nombre y apellido</span>
+                <input class="input" type="text" name="full_name" maxlength="120" autocomplete="name" placeholder="Tu nombre completo" required />
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input class="input" type="email" name="email" maxlength="160" autocomplete="email" inputmode="email" placeholder="tuemail@dominio.com" required />
+              </label>
+              <label class="field">
+                <span>Teléfono / WhatsApp</span>
+                <input class="input" type="tel" name="phone" maxlength="40" autocomplete="tel" inputmode="tel" placeholder="2964 000000" required />
+              </label>
+              <label class="field">
+                <span>Edad</span>
+                <input class="input" type="number" name="age" min="18" max="80" inputmode="numeric" placeholder="Ej. 28" required />
+              </label>
+              <label class="field">
+                <span>Estado civil</span>
+                <select class="select" name="marital_status" required>
+                  <option value="">Seleccioná una opción</option>
+                  <option value="single">Soltero/a</option>
+                  <option value="married">Casado/a</option>
+                  <option value="domestic_partnership">Unión convivencial</option>
+                  <option value="divorced">Divorciado/a</option>
+                  <option value="widowed">Viudo/a</option>
+                  <option value="prefer_not_to_say">Prefiero no informarlo</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Hijos (¿cuántos?)</span>
+                <input class="input" type="number" name="children_count" min="0" max="20" inputmode="numeric" placeholder="0" required />
+              </label>
+              <label class="field">
+                <span>Años de experiencia en ventas</span>
+                <input class="input" type="number" name="sales_experience_years" min="0" max="40" inputmode="numeric" placeholder="Ej. 4" required />
+              </label>
+              <label class="field">
+                <span>Experiencia vendiendo vehículos</span>
+                <select class="select" name="automotive_sales_experience" required>
+                  <option value="">Seleccioná una opción</option>
+                  <option value="yes">Sí</option>
+                  <option value="no">No</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Trabajo con objetivos o comisiones</span>
+                <select class="select" name="target_based_sales_experience" required>
+                  <option value="">Seleccioná una opción</option>
+                  <option value="yes">Sí</option>
+                  <option value="no">No</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Uso de CRM o seguimiento digital</span>
+                <select class="select" name="crm_experience" required>
+                  <option value="">Seleccioná una opción</option>
+                  <option value="yes">Sí</option>
+                  <option value="no">No</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Disponibilidad full time</span>
+                <select class="select" name="full_time_availability" required>
+                  <option value="">Seleccioná una opción</option>
+                  <option value="yes">Sí</option>
+                  <option value="no">No</option>
+                </select>
+              </label>
+              <fieldset class="job-application-form__license">
+                <legend>Carnet de conducir vigente <span>Obligatorio / excluyente</span></legend>
+                <div class="job-application-form__radio-group">
+                  <label><input type="radio" name="has_driving_license" value="yes" required /> Sí, tengo carnet vigente</label>
+                  <label><input type="radio" name="has_driving_license" value="no" required /> No tengo</label>
+                </div>
+              </fieldset>
+              <label class="field job-application-form__wide">
+                <span>Contanos tu experiencia</span>
+                <textarea class="textarea" name="experience" rows="5" minlength="30" maxlength="3000" placeholder="Experiencia en ventas, atención al cliente, objetivos alcanzados y por qué te gustaría sumarte a RG Cars…" required></textarea>
+              </label>
+              <label class="field job-application-form__wide job-application-form__file">
+                <span>Adjuntá tu CV <strong>Obligatorio</strong></span>
+                <input class="input" type="file" name="cv" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+                <small data-job-cv-name>PDF, DOC o DOCX · máximo 5 MB</small>
+              </label>
+            </div>
+
+            <label class="job-application-form__consent">
+              <input type="checkbox" name="privacy_consent" value="accepted" required />
+              <span>Acepto que RG Cars TDF utilice estos datos exclusivamente para evaluar mi postulación. <a href="./politica-de-privacidad.html" target="_blank" rel="noreferrer">Ver política de privacidad</a>.</span>
+            </label>
+
+            <p class="form-message job-application-form__message" data-job-application-message aria-live="polite"></p>
+            <div class="job-application-form__actions">
+              <button type="button" class="btn btn-ghost" data-recruitment-close="true">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Enviar postulación</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const form = modal.querySelector('[data-job-application-form]');
+    form?.addEventListener('submit', submitJobApplication);
+    form?.querySelector('input[name="cv"]')?.addEventListener('change', (event) => {
+      const file = event.currentTarget.files?.[0];
+      const fileName = form.querySelector('[data-job-cv-name]');
+      if (!fileName) return;
+      fileName.textContent = file
+        ? `${file.name} · ${(file.size / (1024 * 1024)).toFixed(1)} MB`
+        : 'PDF, DOC o DOCX · máximo 5 MB';
+    });
+    modal.addEventListener('click', (event) => {
+      if (event.target.closest('[data-recruitment-close]')) closeRecruitmentModal();
+    });
+    modal.addEventListener('keydown', (event) => {
+      if (event.key !== 'Tab') return;
+      const focusable = [...modal.querySelectorAll('button:not([disabled]), input:not([disabled]):not([tabindex="-1"]), select:not([disabled]), textarea:not([disabled]), a[href]')]
+        .filter((element) => element.offsetParent !== null);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  function injectRecruitmentButton() {
+    if (!document.body?.classList.contains('public-theme')) return;
+    if (document.querySelector('.recruitment-floating-button')) return;
+
+    buildRecruitmentModal();
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'recruitment-floating-button';
+    button.setAttribute('aria-haspopup', 'dialog');
+    button.setAttribute('aria-controls', 'recruitmentModal');
+    button.setAttribute('aria-expanded', 'false');
+    button.innerHTML = '<span class="recruitment-floating-button__badge">¡Sumate!</span><span>Buscamos vendedor/a</span>';
+    button.addEventListener('click', openRecruitmentModal);
+    document.body.appendChild(button);
+    recruitmentTrigger = button;
   }
 
 
@@ -1066,52 +1397,42 @@
   }
 
   async function trackPageView() {
-    const pageKey = currentPageKey();
-    if (!pageKey || !window.supabase || !window.RG?.SUPABASE_URL || !window.RG?.SUPABASE_ANON_KEY) return;
-
-    try {
-      const dedupeKey = `rgcars:pageview:${window.location.pathname}${window.location.search}`;
-      const lastHit = Number(sessionStorage.getItem(dedupeKey) || 0);
-      const now = Date.now();
-      if (lastHit && now - lastHit < 15000) return;
-      sessionStorage.setItem(dedupeKey, String(now));
-
-      const visitorKey = getStoredKey(window.localStorage, 'rgcars:visitor-key');
-      const sessionKey = getStoredKey(window.sessionStorage, 'rgcars:session-key');
-      const params = new URLSearchParams(window.location.search || '');
-      const vehicleId = params.get('id') || params.get('vehicle_id') || null;
-      const client = window.supabase.createClient(window.RG.SUPABASE_URL, window.RG.SUPABASE_ANON_KEY);
-      const payload = {
-        page_key: pageKey,
-        page_path: `${window.location.pathname || '/'}${window.location.search || ''}`,
-        page_title: document.title || null,
-        referrer: document.referrer || null,
-        visitor_key: visitorKey || null,
-        session_key: sessionKey || null,
-        vehicle_id: vehicleId || null,
-        user_agent: navigator.userAgent || null,
-      };
-      await client.from('web_page_views').insert(payload);
-    } catch (error) {
-      console.warn('No se pudo registrar la visita web:', error?.message || error);
+    if (window.RGMeasurement?.trackPageView) {
+      return window.RGMeasurement.trackPageView();
     }
+    return trackEvent('page_view', { page_key: currentPageKey(), page_path: window.location.pathname || '/' });
+  }
+
+  function safeAnalyticsPayload(value, depth = 0) {
+    if (depth > 4 || value == null) return value == null ? null : undefined;
+    if (typeof value === 'string') {
+      const normalized = value.slice(0, 500);
+      if (/\b[^\s@]+@[^\s@]+\.[^\s@]{2,}\b/i.test(normalized) || /(?:\+?\d[\s().-]*){7,}/.test(normalized.replace(/\b\d{4}-\d{2}-\d{2}\b/g, ''))) return '[redacted]';
+      return normalized;
+    }
+    if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+    if (typeof value === 'boolean') return value;
+    if (Array.isArray(value)) return value.slice(0, 50).map((item) => safeAnalyticsPayload(item, depth + 1)).filter((item) => item !== undefined);
+    if (typeof value === 'object') {
+      const result = {};
+      Object.entries(value).forEach(([key, item]) => {
+        const normalizedKey = String(key || '').toLowerCase();
+        const personName = ['name', 'full_name', 'first_name', 'last_name', 'customer_name', 'owner_name', 'visitor_name', 'contact_name'].includes(normalizedKey);
+        if (personName || /(?:^|_)(?:email|phone|telephone|whatsapp|message|comment|notes?|cuil|dni|document|plate|address)(?:$|_)/i.test(normalizedKey)) return;
+        const safe = safeAnalyticsPayload(item, depth + 1);
+        if (safe !== undefined) result[key] = safe;
+      });
+      return result;
+    }
+    return undefined;
   }
 
   function trackEvent(eventName, payload = {}) {
+    if (window.RGMeasurement?.track) {
+      return window.RGMeasurement.track(eventName, payload);
+    }
     if (!eventName) return;
-    const eventPayload = payload && typeof payload === 'object' ? payload : {};
-
-    try {
-      if (typeof window.gtag === 'function') {
-        window.gtag('event', eventName, eventPayload);
-      }
-    } catch {}
-
-    try {
-      if (Array.isArray(window.dataLayer)) {
-        window.dataLayer.push({ event: eventName, ...eventPayload });
-      }
-    } catch {}
+    const eventPayload = safeAnalyticsPayload(payload && typeof payload === 'object' ? payload : {}) || {};
 
     try {
       window.dispatchEvent(new CustomEvent('rg:track', {
@@ -1155,6 +1476,7 @@
               <h3>Legal y ayuda</h3>
               <a href="./terminos-y-condiciones.html">Términos y condiciones</a>
               <a href="./politica-de-privacidad.html">Política de privacidad</a>
+              <button type="button" class="footer-text-button" data-rg-open-consent>Preferencias de medición</button>
               <a href="./faq.html">FAQ</a>
               <a href="./sitemap.html">Sitemap</a>
               <a href="https://www.argentina.gob.ar/economia/industria-y-comercio/defensadelconsumidor" target="_blank" rel="noreferrer">Defensa del Consumidor</a>
@@ -1179,7 +1501,10 @@
   }
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closeFeedbackModal();
+    if (event.key === 'Escape') {
+      closeFeedbackModal();
+      closeRecruitmentModal();
+    }
   });
 
   if (document.readyState === 'loading') {
@@ -1188,6 +1513,7 @@
       initUnifiedPublicHeader();
       injectFooterBackofficeLink();
       injectFeedbackButton();
+      injectRecruitmentButton();
       trackPageView();
     });
   } else {
@@ -1195,6 +1521,7 @@
     initUnifiedPublicHeader();
     injectFooterBackofficeLink();
     injectFeedbackButton();
+    injectRecruitmentButton();
     trackPageView();
   }
 
@@ -1234,6 +1561,7 @@
     submitServiceLead,
     leadSubmissionSuccessMessage,
     fetchVehicleById,
+    publicSupabaseClient,
     arrayFromUnknown,
     populateSelect,
     populateYearRange,

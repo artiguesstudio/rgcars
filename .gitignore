@@ -1,0 +1,10 @@
+# Local secrets. Commit only the matching *.example files.
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/.env.*
+supabase/functions/.env
+supabase/functions/.env.*
+!supabase/functions/.env.example
+storage-secrets.php

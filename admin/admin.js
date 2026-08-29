@@ -10,6 +10,19 @@ const state = {
   vehicleStatusFilter: 'all',
   quickPriceStatus: {},
   leadSearch: '',
+  leadFilters: {
+    dateFrom: '',
+    dateTo: '',
+    assignee: '',
+    stage: '',
+    campaign: '',
+    vehicle: '',
+  },
+  applicantFilters: {
+    fit: '',
+    status: '',
+    automotive: '',
+  },
   vehicles: [],
   leads: {
     consignments: [],
@@ -18,8 +31,10 @@ const state = {
     insurance: [],
     peritaje: [],
     feedback: [],
+    applications: [],
     matches: [],
   },
+  applicationsError: '',
   rateProfiles: [],
   access: null,
   session: null,
@@ -30,12 +45,17 @@ const state = {
   assignees: [],
   vehicleMaintenance: {},
   selectedVehiclePhoto: '',
+  draggedVehiclePhoto: '',
+  photoReorderSaving: false,
   vehicleAlerts: [],
   vehicleAlertsMissing: false,
   analyticsViews: [],
+  analyticsEvents: [],
+  adSpend: [],
   analyticsMissing: false,
   analyticsError: '',
   analyticsStatus: 'idle',
+  metricsPeriodDays: 30,
   aiSuggestion: null,
   sidebarCollapsed: false,
 };
@@ -191,7 +211,7 @@ function setView(view) {
   const titles = {
     overview: ['Resumen', 'Visual general de stock, leads y pendientes del día.'],
     vehicles: ['Vehículos', 'Publicá, editá y administrá el stock en una única vista operativa.'],
-    leads: ['Leads', 'Gestioná consignación, búsquedas, financiación, seguros, peritajes y sugerencias.'],
+    leads: ['Leads', 'Gestioná consultas comerciales y postulantes desde un único lugar.'],
     insurance: ['Seguros', 'Seguimiento dedicado de pre-cotizaciones y contacto comercial.'],
     financing: ['Financiación', 'Configurá líneas y tasas del simulador sin mezclarlo con el stock.'],
     metrics: ['Métricas', 'Dashboard con tráfico web, mix comercial, embudo CRM y alertas operativas.'],
@@ -211,11 +231,14 @@ function setView(view) {
 }
 
 function setLeadTab(tab) {
-  const tabs = ['all', 'consignment', 'scouting', 'financing', 'insurance', 'peritaje', 'feedback'];
+  const tabs = ['all', 'consignment', 'scouting', 'financing', 'insurance', 'peritaje', 'feedback', 'applications'];
   state.currentLeadTab = tabs.includes(tab) ? tab : 'all';
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('is-active', button.dataset.tab === state.currentLeadTab));
   tabs.forEach((key) => {
     $(`${key}Panel`)?.classList.toggle('is-active', key === state.currentLeadTab);
+  });
+  document.querySelectorAll('.applicant-only-filter').forEach((field) => {
+    field.hidden = state.currentLeadTab !== 'applications';
   });
 }
 
@@ -303,6 +326,46 @@ async function requireSession() {
   return data.session;
 }
 
+function jobApplicationsEndpoint(params = {}) {
+  const configured = String(window.RG?.JOB_APPLICATION_ENDPOINT || '../api/job-applications.php').trim();
+  const url = new URL(configured, window.location.href);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value != null && value !== '') url.searchParams.set(key, String(value));
+  });
+  return url.toString();
+}
+
+async function jobApplicationsRequest({ method = 'GET', params = {}, payload = null } = {}) {
+  const token = state.session?.access_token || '';
+  if (!token) throw new Error('La sesión de administrador no está disponible.');
+  const response = await fetch(jobApplicationsEndpoint(params), {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(payload ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: payload ? JSON.stringify(payload) : undefined,
+    cache: 'no-store',
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result?.ok !== true) {
+    throw new Error(result?.error || 'No se pudo conectar con las postulaciones.');
+  }
+  return result;
+}
+
+async function loadJobApplications() {
+  try {
+    const result = await jobApplicationsRequest({ params: { action: 'list' } });
+    state.applicationsError = '';
+    return Array.isArray(result.items) ? result.items : [];
+  } catch (error) {
+    state.applicationsError = error.message || 'No se pudieron cargar los postulantes.';
+    console.warn('No se pudieron cargar los postulantes:', error.message || error);
+    return [];
+  }
+}
+
 function leadMatchesCount(requestId) {
   return state.leads.matches.filter((item) => item.scouting_request_id === requestId).length;
 }
@@ -328,6 +391,7 @@ function defaultLeadStatus(type) {
     insurance: 'new',
     peritaje: 'new',
     feedback: 'new',
+    application: 'new',
   };
   return defaults[type] || 'new';
 }
@@ -362,6 +426,7 @@ function leadCollectionKey(type) {
     insurance: 'insurance',
     peritaje: 'peritaje',
     feedback: 'feedback',
+    application: 'applications',
   };
   return map[type] || '';
 }
@@ -469,6 +534,7 @@ function leadTypeLabel(type) {
     insurance: 'Seguros',
     peritaje: 'Peritaje',
     feedback: 'Sugerencia',
+    application: 'Postulante',
   };
   return map[type] || 'Lead';
 }
@@ -476,11 +542,13 @@ function leadTypeLabel(type) {
 function leadContactName(type, item = {}) {
   if (type === 'consignment') return item.owner_name || '';
   if (type === 'feedback') return item.visitor_name || '';
+  if (type === 'application') return item.full_name || '';
   return item.customer_name || '';
 }
 
 function leadPhone(type, item = {}) {
   if (type === 'consignment') return item.owner_phone || '';
+  if (type === 'application') return item.phone || '';
   if (type === 'feedback') {
     const contact = String(item.visitor_contact || '');
     return contact.includes('@') ? '' : contact;
@@ -490,6 +558,7 @@ function leadPhone(type, item = {}) {
 
 function leadEmail(type, item = {}) {
   if (type === 'consignment') return item.owner_email || '';
+  if (type === 'application') return item.email || '';
   if (type === 'feedback') {
     const contact = String(item.visitor_contact || '');
     return contact.includes('@') ? contact : '';
@@ -504,6 +573,7 @@ function leadVehicleText(type, item = {}) {
   if (type === 'insurance') return item.vehicle_title || [item.vehicle_brand, item.vehicle_model].filter(Boolean).join(' ') || 'Seguro automotor';
   if (type === 'peritaje') return [item.vehicle_brand, item.vehicle_model, item.vehicle_year].filter(Boolean).join(' ') || item.vehicle_reference || 'Peritaje';
   if (type === 'feedback') return item.source_title || item.message || 'Sugerencia web';
+  if (type === 'application') return item.position || 'Vendedor/a con experiencia';
   return '';
 }
 
@@ -530,6 +600,17 @@ function leadWhatsAppHref(type, item = {}) {
 }
 
 function leadCommercialStatus(type, item = {}) {
+  if (type === 'application') {
+    const status = String(item.status || 'new').toLowerCase();
+    const map = {
+      new: { label: 'Nuevo', className: 'is-hidden', rank: 0 },
+      review: { label: 'En revisión', className: 'is-reserved', rank: 1 },
+      interview: { label: 'Entrevista', className: 'is-reserved', rank: 1 },
+      rejected: { label: 'Descartado', className: 'is-sold', rank: 2 },
+      hired: { label: 'Contratado', className: 'is-available', rank: 2 },
+    };
+    return map[status] || map.new;
+  }
   const stage = String(item.crm_stage || 'lead').toLowerCase();
   const status = String(item.status || defaultLeadStatus(type)).toLowerCase();
   if (status === 'archived') return { label: 'Archivado', className: 'is-hidden', rank: 3 };
@@ -547,8 +628,8 @@ function leadQuickActionsHTML(type, item = {}) {
   const waHref = leadWhatsAppHref(type, item);
   return `
     <div class="lead-quick-actions">
-      ${waHref ? `<a class="btn btn-ghost" href="${escape(waHref)}" target="_blank" rel="noreferrer">WhatsApp</a>` : ''}
-      ${email ? `<a class="btn btn-ghost" href="mailto:${escape(email)}">Email</a>` : ''}
+      ${waHref ? `<a class="btn btn-ghost" href="${escape(waHref)}" data-lead-contact="${type}" data-id="${id}" target="_blank" rel="noreferrer">WhatsApp</a>` : ''}
+      ${email ? `<a class="btn btn-ghost" href="mailto:${escape(email)}" data-lead-contact="${type}" data-id="${id}">Email</a>` : ''}
       <button type="button" class="btn btn-ghost" data-lead-copy="${type}" data-id="${id}">Copiar datos</button>
       <button type="button" class="btn btn-ghost" data-lead-toggle="${type}" data-id="${id}">Detalle</button>
       <button type="button" class="btn btn-soft" data-lead-archive="${type}" data-id="${id}">Archivar</button>
@@ -566,6 +647,10 @@ function noteActionsHTML(type, item) {
   const priority = item.lead_priority || 'normal';
   const nextAction = item.next_action || '';
   const followUpAt = item.follow_up_at || '';
+  const validity = item.lead_validity || 'pending';
+  const lossReason = item.loss_reason || '';
+  const visitScheduledAt = item.visit_scheduled_at || '';
+  const visitCompletedAt = item.visit_completed_at || '';
   return `
     <div class="lead-admin-box">
       <div class="lead-admin-grid lead-admin-grid--triple">
@@ -601,7 +686,29 @@ function noteActionsHTML(type, item) {
           <span>Fecha de seguimiento</span>
           <input class="input lead-inline-input" type="datetime-local" data-lead-follow-up="${type}" data-id="${id}" value="${escape(toDateTimeLocalValue(followUpAt))}" />
         </label>
+        <label class="field">
+          <span>Calidad del lead</span>
+          <select class="select lead-inline-select" data-lead-validity="${type}" data-id="${id}">
+            <option value="pending" ${validity === 'pending' ? 'selected' : ''}>Pendiente de validar</option>
+            <option value="valid" ${validity === 'valid' ? 'selected' : ''}>Válido</option>
+            <option value="qualified" ${validity === 'qualified' ? 'selected' : ''}>Calificado</option>
+            <option value="disqualified" ${validity === 'disqualified' ? 'selected' : ''}>Descalificado</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Visita / prueba agendada</span>
+          <input class="input lead-inline-input" type="datetime-local" data-lead-visit-scheduled="${type}" data-id="${id}" value="${escape(toDateTimeLocalValue(visitScheduledAt))}" />
+        </label>
+        <label class="field">
+          <span>Visita / prueba realizada</span>
+          <input class="input lead-inline-input" type="datetime-local" data-lead-visit-completed="${type}" data-id="${id}" value="${escape(toDateTimeLocalValue(visitCompletedAt))}" />
+        </label>
+        <label class="field">
+          <span>Motivo de pérdida o descalificación</span>
+          <input class="input lead-inline-input" data-lead-loss-reason="${type}" data-id="${id}" value="${escape(lossReason)}" placeholder="Obligatorio al perder o descalificar" />
+        </label>
       </div>
+      <p class="field-help">Primera respuesta: ${escape(item.first_response_at ? formatAdminDateTime(item.first_response_at) : 'Todavía no registrada. Se marca al abrir WhatsApp o email desde el panel.')}</p>
       <textarea class="textarea lead-inline-notes" rows="4" data-lead-notes="${type}" data-id="${id}" placeholder="Notas internas y próximos pasos">${escape(notes)}</textarea>
       <div class="lead-admin-row lead-admin-row--split">
         <div class="lead-admin-row__main-actions">
@@ -808,6 +915,19 @@ function leadCardShell({ type, item, title, subtitle, statusLabel, statusClass, 
   const stage = item.crm_stage || 'lead';
   const commercialStatus = leadCommercialStatus(type, item);
   const assigneeEmail = normalizeEmail(item.assigned_to_email || '');
+  const firstTouch = item.first_touch || {};
+  const lastTouch = item.last_touch || {};
+  const attributionHtml = `
+    <section class="lead-admin-box">
+      <strong>Recorrido y atribución</strong>
+      <div class="lead-history-deltas">
+        <div><strong>Primera interacción</strong><span>${escape([firstTouch.utm_source || 'direct', firstTouch.utm_medium, firstTouch.utm_campaign].filter(Boolean).join(' · '))}</span></div>
+        <div><strong>Última interacción</strong><span>${escape([lastTouch.utm_source || firstTouch.utm_source || 'direct', lastTouch.utm_medium, lastTouch.utm_campaign].filter(Boolean).join(' · '))}</span></div>
+        <div><strong>Landing</strong><span>${escape(item.landing_url || firstTouch.url || '-')}</span></div>
+        <div><strong>Conversión</strong><span>${escape(item.conversion_url || lastTouch.url || '-')}</span></div>
+        <div><strong>Sesión / vehículo</strong><span>${escape([item.session_key, item.vehicle_id || lastTouch.vehicle_id].filter(Boolean).join(' · ') || '-')}</span></div>
+      </div>
+    </section>`;
   const crmMetaHtml = `
     <div class="lead-meta lead-meta--crm">
       <span>Tipo: ${escape(leadTypeLabel(type))}</span>
@@ -842,6 +962,7 @@ function leadCardShell({ type, item, title, subtitle, statusLabel, statusClass, 
             <div class="lead-detail-main">
               ${previewHtml}
               ${mainHtml}
+              ${attributionHtml}
             </div>
             <aside class="lead-history-card">
               <div class="lead-history-head">
@@ -1061,9 +1182,211 @@ function feedbackCardHTML(item) {
   });
 }
 
-function filterItems(items, fields) {
-  if (!state.leadSearch) return items;
-  return items.filter((item) => fields.some((field) => String(item[field] || '').toLowerCase().includes(state.leadSearch)));
+function applicationStatusMeta(value = 'new') {
+  const map = {
+    new: { label: 'Nuevo', className: 'is-hidden' },
+    review: { label: 'En revisión', className: 'is-reserved' },
+    interview: { label: 'Entrevista', className: 'is-reserved' },
+    rejected: { label: 'Descartado', className: 'is-sold' },
+    hired: { label: 'Contratado', className: 'is-available' },
+  };
+  return map[String(value || 'new')] || map.new;
+}
+
+function applicationStatusOptions(current = 'new') {
+  return [
+    ['new', 'Nuevo'],
+    ['review', 'En revisión'],
+    ['interview', 'Entrevista'],
+    ['rejected', 'Descartado'],
+    ['hired', 'Contratado'],
+  ].map(([value, label]) => `<option value="${value}" ${value === current ? 'selected' : ''}>${label}</option>`).join('');
+}
+
+function applicantFitClass(score) {
+  const value = Number(score || 0);
+  if (value >= 85) return 'is-very-high';
+  if (value >= 70) return 'is-high';
+  if (value >= 50) return 'is-medium';
+  return 'is-initial';
+}
+
+function applicantYesNo(value) {
+  return value === true ? 'Sí' : 'No';
+}
+
+function applicantCardHTML(item) {
+  const id = String(item.id || '');
+  const key = leadKey('application', id);
+  const isOpen = !!state.openLeadKeys[key];
+  const score = Math.max(0, Math.min(100, Number(item.fit_score || 0)));
+  const status = applicationStatusMeta(item.status);
+  const breakdown = Array.isArray(item.fit_breakdown) ? item.fit_breakdown : [];
+  const phone = normalizeWhatsAppNumber(item.phone || '');
+  const whatsappMessage = `Hola ${item.full_name || ''}, soy de RG Cars TDF. Recibimos tu postulación para vendedor/a y quería conversar sobre tu perfil.`;
+  const whatsappUrl = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(whatsappMessage)}` : '';
+  const scoreRows = breakdown.map((criterion) => {
+    const points = Number(criterion.points || 0);
+    const max = Math.max(1, Number(criterion.max || 1));
+    const width = Math.max(0, Math.min(100, Math.round((points / max) * 100)));
+    return `
+      <div class="applicant-score-row">
+        <div><span>${escape(criterion.label || '')}</span><strong>${points}/${max}</strong></div>
+        <span class="applicant-score-row__track"><span style="width:${width}%"></span></span>
+      </div>`;
+  }).join('');
+
+  return `
+    <article class="lead-card lead-card-full applicant-card ${isOpen ? 'is-open' : ''}">
+      <div class="lead-card-body">
+        <div class="applicant-card__head">
+          <div class="applicant-score ${applicantFitClass(score)}" style="--applicant-score:${score}" aria-label="Afinidad ${score} de 100">
+            <div><strong>${score}</strong><span>/100</span></div>
+          </div>
+          <div class="applicant-card__identity">
+            <div class="lead-pill-row">
+              <span class="status-pill is-inline ${status.className}">${escape(status.label)}</span>
+              <span class="status-pill is-inline ${applicantFitClass(score)}">Afinidad ${escape(item.fit_label || 'Inicial')}</span>
+              ${item.automotive_sales_experience ? '<span class="status-pill is-inline is-available">Experiencia automotriz</span>' : ''}
+            </div>
+            <h3>${escape(item.full_name || 'Postulante sin nombre')}</h3>
+            <p>${escape(item.phone || 'Sin teléfono')} · ${escape(item.email || 'Sin email')} · ${formatAdminDateTime(item.created_at)}</p>
+          </div>
+          <button type="button" class="btn btn-soft lead-toggle-btn" data-applicant-toggle="${escape(id)}" aria-expanded="${isOpen ? 'true' : 'false'}">${isOpen ? 'Cerrar ficha' : 'Revisar perfil'}</button>
+        </div>
+
+        <div class="lead-meta applicant-card__summary">
+          <span><strong>${Number(item.sales_experience_years || 0)}</strong> años en ventas</span>
+          <span>Objetivos: <strong>${applicantYesNo(item.target_based_sales_experience)}</strong></span>
+          <span>CRM: <strong>${applicantYesNo(item.crm_experience)}</strong></span>
+          <span>Full time: <strong>${applicantYesNo(item.full_time_availability)}</strong></span>
+          <span>Carnet: <strong>Sí</strong></span>
+        </div>
+
+        <div class="lead-quick-actions">
+          ${whatsappUrl ? `<a class="btn btn-ghost" href="${escape(whatsappUrl)}" target="_blank" rel="noreferrer">WhatsApp</a>` : ''}
+          ${item.email ? `<a class="btn btn-ghost" href="mailto:${escape(item.email)}">Email</a>` : ''}
+          <button type="button" class="btn btn-ghost" data-lead-copy="application" data-id="${escape(id)}">Copiar datos</button>
+          <button type="button" class="btn btn-primary" data-applicant-download="${escape(id)}" data-applicant-name="${escape(item.full_name || 'postulante')}" ${item.cv_available ? '' : 'disabled'}>Descargar CV</button>
+        </div>
+
+        ${isOpen ? `
+          <div class="applicant-detail-grid">
+            <div class="applicant-detail-main">
+              <section class="lead-admin-box applicant-section">
+                <div class="applicant-section__head"><strong>Experiencia declarada</strong><span>Información para validar en entrevista</span></div>
+                <p class="lead-copy">${escape(item.experience || 'Sin detalle de experiencia.')}</p>
+              </section>
+              <section class="lead-admin-box applicant-section">
+                <div class="applicant-section__head"><strong>Datos de postulación</strong><span>No participan del puntaje automático</span></div>
+                <div class="lead-history-deltas">
+                  <div><strong>Edad</strong><span>${escape(item.age ?? '-')}</span></div>
+                  <div><strong>Estado civil</strong><span>${escape(item.marital_status_label || '-')}</span></div>
+                  <div><strong>Hijos</strong><span>${escape(item.children_count ?? '-')}</span></div>
+                  <div><strong>Archivo</strong><span>${escape(item.cv_original_name || 'CV adjunto')}</span></div>
+                </div>
+              </section>
+              <section class="lead-admin-box applicant-management">
+                <div class="applicant-management__grid">
+                  <label class="field"><span>Estado del postulante</span><select class="select" data-applicant-status="${escape(id)}">${applicationStatusOptions(item.status || 'new')}</select></label>
+                  <label class="field applicant-management__notes"><span>Notas internas</span><textarea class="textarea" rows="4" data-applicant-notes="${escape(id)}" placeholder="Fortalezas, dudas y próximos pasos…">${escape(item.admin_notes || '')}</textarea></label>
+                </div>
+                <div class="applicant-management__actions"><button type="button" class="btn btn-soft" data-applicant-save="${escape(id)}">Guardar seguimiento</button></div>
+              </section>
+            </div>
+            <aside class="applicant-score-detail">
+              <span class="eyebrow">Ranking preliminar</span>
+              <strong>${score}/100 · Afinidad ${escape(item.fit_label || 'Inicial')}</strong>
+              <p>El puntaje ordena la revisión; no acepta ni descarta postulantes automáticamente.</p>
+              <div class="applicant-score-list">${scoreRows}</div>
+              <small>Edad, estado civil e hijos están excluidos del cálculo.</small>
+            </aside>
+          </div>
+        ` : ''}
+      </div>
+    </article>`;
+}
+
+function matchesApplicantFitFilter(item) {
+  const score = Number(item.fit_score || 0);
+  const fit = state.applicantFilters.fit;
+  if (fit === 'very_high' && score < 85) return false;
+  if (fit === 'high' && score < 70) return false;
+  if (fit === 'medium' && (score < 50 || score >= 70)) return false;
+  if (fit === 'initial' && score >= 50) return false;
+  if (state.applicantFilters.status && String(item.status || 'new') !== state.applicantFilters.status) return false;
+  if (state.applicantFilters.automotive === 'yes' && item.automotive_sales_experience !== true) return false;
+  if (state.applicantFilters.automotive === 'no' && item.automotive_sales_experience === true) return false;
+  return true;
+}
+
+function filteredApplications() {
+  const dateFrom = state.leadFilters.dateFrom;
+  const dateTo = state.leadFilters.dateTo;
+  return state.leads.applications.filter((item) => {
+    const createdDay = String(item.created_at || '').slice(0, 10);
+    if (dateFrom && (!createdDay || createdDay < dateFrom)) return false;
+    if (dateTo && (!createdDay || createdDay > dateTo)) return false;
+    if (!matchesApplicantFitFilter(item)) return false;
+    if (!state.leadSearch) return true;
+    const haystack = [
+      item.full_name, item.email, item.phone, item.position, item.experience,
+      item.fit_label, item.fit_score, item.status, item.admin_notes,
+    ].join(' ').toLowerCase();
+    return haystack.includes(state.leadSearch);
+  }).sort((a, b) => {
+    const scoreDiff = Number(b.fit_score || 0) - Number(a.fit_score || 0);
+    if (scoreDiff) return scoreDiff;
+    return (new Date(b.created_at).getTime() || 0) - (new Date(a.created_at).getTime() || 0);
+  });
+}
+
+function renderApplicationsPanel() {
+  const panel = $('applicationsPanel');
+  if (!panel) return;
+  const rows = filteredApplications();
+  const total = state.leads.applications.length;
+  const highFit = state.leads.applications.filter((item) => Number(item.fit_score || 0) >= 70).length;
+  const pending = state.leads.applications.filter((item) => ['new', 'review'].includes(item.status || 'new')).length;
+  const header = `
+    <section class="applicant-ranking-intro">
+      <div><span class="eyebrow">Priorización automática</span><strong>Perfiles ordenados de mayor a menor afinidad</strong><p>El cálculo usa sólo años en ventas, experiencia automotriz, objetivos, CRM y disponibilidad. Sirve para ordenar la revisión, no para tomar la decisión final.</p></div>
+      <div class="applicant-ranking-stats"><span><strong>${total}</strong> postulantes</span><span><strong>${highFit}</strong> afinidad alta</span><span><strong>${pending}</strong> pendientes</span></div>
+    </section>`;
+  if (state.applicationsError) {
+    panel.innerHTML = `${header}<div class="empty-state"><strong>No pudimos cargar los postulantes.</strong><span>${escape(state.applicationsError)}</span></div>`;
+    return;
+  }
+  panel.innerHTML = `${header}${rows.length
+    ? rows.map(applicantCardHTML).join('')
+    : '<div class="empty-state"><strong>Sin postulantes para mostrar.</strong><span>Aún no ingresaron postulaciones o no coinciden con los filtros.</span></div>'}`;
+}
+
+function matchesLeadFilters(type, item = {}) {
+  const filters = state.leadFilters || {};
+  const createdDay = String(leadCreatedAt(item) || '').slice(0, 10);
+  if (filters.dateFrom && (!createdDay || createdDay < filters.dateFrom)) return false;
+  if (filters.dateTo && (!createdDay || createdDay > filters.dateTo)) return false;
+  if (type === 'application') return matchesApplicantFitFilter(item);
+  if (filters.assignee && normalizeEmail(item.assigned_to_email || '') !== filters.assignee) return false;
+  if (filters.stage && String(item.crm_stage || 'lead') !== filters.stage) return false;
+  if (filters.campaign) {
+    const campaignText = [leadOriginText(type, item), JSON.stringify(item.first_touch || {}), JSON.stringify(item.last_touch || {})].join(' ').toLowerCase();
+    if (!campaignText.includes(filters.campaign)) return false;
+  }
+  if (filters.vehicle) {
+    const vehicleText = [item.vehicle_id, leadVehicleText(type, item)].join(' ').toLowerCase();
+    if (!vehicleText.includes(filters.vehicle)) return false;
+  }
+  return true;
+}
+
+function filterItems(items, fields, type) {
+  return items.filter((item) => {
+    if (!matchesLeadFilters(type, item)) return false;
+    if (!state.leadSearch) return true;
+    return fields.some((field) => String(item[field] || '').toLowerCase().includes(state.leadSearch));
+  });
 }
 
 function renderPanel(panelId, items, renderer, emptyTitle, emptyCopy) {
@@ -1082,6 +1405,7 @@ function allLeadRows() {
     ...state.leads.insurance,
     ...state.leads.peritaje,
     ...state.leads.feedback,
+    ...state.leads.applications,
   ];
 }
 
@@ -1093,6 +1417,7 @@ function allLeadEntries() {
     ...state.leads.insurance.map((item) => ({ type: 'insurance', item })),
     ...state.leads.peritaje.map((item) => ({ type: 'peritaje', item })),
     ...state.leads.feedback.map((item) => ({ type: 'feedback', item })),
+    ...state.leads.applications.map((item) => ({ type: 'application', item })),
   ];
 }
 
@@ -1101,8 +1426,9 @@ function leadCreatedAt(item = {}) {
 }
 
 function filterLeadEntries(entries) {
-  if (!state.leadSearch) return entries;
   return entries.filter(({ type, item }) => {
+    if (!matchesLeadFilters(type, item)) return false;
+    if (!state.leadSearch) return true;
     const haystack = [
       leadTypeLabel(type),
       leadContactName(type, item),
@@ -1120,6 +1446,9 @@ function filterLeadEntries(entries) {
       item.message,
       item.cuil,
       item.plate,
+      item.experience,
+      item.fit_label,
+      item.fit_score,
     ].join(' ').toLowerCase();
     return haystack.includes(state.leadSearch);
   });
@@ -1148,6 +1477,7 @@ function renderAllLeadPanel(entries) {
         insurance: insuranceCardHTML,
         peritaje: peritajeCardHTML,
         feedback: feedbackCardHTML,
+        application: applicantCardHTML,
       };
       return renderers[type] ? renderers[type](item) : '';
     }).join('')
@@ -1166,24 +1496,26 @@ function renderLeadStats() {
   const wrap = $('leadStats');
   if (!wrap) return;
   const all = allLeadRows();
+  const now = Date.now();
   const items = [
     ['Total', all.length],
-    ['Oportunidades', all.filter((item) => item.crm_stage === 'opportunity').length],
+    ['Válidos', all.filter((item) => ['valid', 'qualified'].includes(item.lead_validity)).length],
+    ['Calificados', all.filter((item) => item.lead_validity === 'qualified').length],
     ['Ganados', all.filter((item) => item.crm_stage === 'won').length],
-    ['Seguimientos', all.filter((item) => item.follow_up_at).length],
-    ['Sin asignar', all.filter((item) => !normalizeEmail(item.assigned_to_email || '')).length],
-    ['Urgentes', all.filter((item) => item.lead_priority === 'urgent').length],
+    ['Acciones vencidas', all.filter((item) => item.follow_up_at && new Date(item.follow_up_at).getTime() < now && !['won', 'lost'].includes(item.crm_stage)).length],
+    ['Sin asignar', allLeadEntries().filter(({ type, item }) => type !== 'application' && !normalizeEmail(item.assigned_to_email || '')).length],
+    ['Postulantes', state.leads.applications.length],
   ];
   wrap.innerHTML = items.map(([label, value]) => `<div class="admin-kpi-card admin-kpi-card--small"><strong>${value}</strong><span>${label}</span></div>`).join('');
 }
 
 function renderLeads() {
-  const consignmentRows = filterItems(state.leads.consignments, ['owner_name', 'owner_phone', 'owner_email', 'brand', 'model', 'plate']);
-  const scoutingRows = filterItems(state.leads.scouting, ['customer_name', 'phone', 'email', 'brand', 'model', 'version']);
-  const financingRows = filterItems(state.leads.financing, ['customer_name', 'phone', 'email', 'cuil', 'vehicle_title', 'vehicle_brand', 'vehicle_model']);
-  const insuranceRows = filterItems(state.leads.insurance, ['customer_name', 'phone', 'email', 'cuil', 'vehicle_title', 'vehicle_brand', 'vehicle_model', 'plate']);
-  const peritajeRows = filterItems(state.leads.peritaje, ['customer_name', 'phone', 'email', 'vehicle_brand', 'vehicle_model', 'plate']);
-  const feedbackRows = filterItems(state.leads.feedback, ['visitor_name', 'visitor_contact', 'message', 'source_page', 'source_title']);
+  const consignmentRows = filterItems(state.leads.consignments, ['owner_name', 'owner_phone', 'owner_email', 'brand', 'model', 'plate'], 'consignment');
+  const scoutingRows = filterItems(state.leads.scouting, ['customer_name', 'phone', 'email', 'brand', 'model', 'version'], 'scouting');
+  const financingRows = filterItems(state.leads.financing, ['customer_name', 'phone', 'email', 'cuil', 'vehicle_title', 'vehicle_brand', 'vehicle_model'], 'financing');
+  const insuranceRows = filterItems(state.leads.insurance, ['customer_name', 'phone', 'email', 'cuil', 'vehicle_title', 'vehicle_brand', 'vehicle_model', 'plate'], 'insurance');
+  const peritajeRows = filterItems(state.leads.peritaje, ['customer_name', 'phone', 'email', 'vehicle_brand', 'vehicle_model', 'plate'], 'peritaje');
+  const feedbackRows = filterItems(state.leads.feedback, ['visitor_name', 'visitor_contact', 'message', 'source_page', 'source_title'], 'feedback');
 
   renderAllLeadPanel(allLeadEntries());
   renderPanel('consignmentPanel', consignmentRows, consignmentCardHTML, 'Sin leads de consignación.', 'Aún no hay fichas cargadas o no coinciden con la búsqueda actual.');
@@ -1192,9 +1524,10 @@ function renderLeads() {
   renderPanel('insurancePanel', insuranceRows, insuranceCardHTML, 'Sin leads de seguros.', 'Todavía no ingresaron pre-cotizaciones o no coinciden con la búsqueda actual.');
   renderPanel('peritajePanel', peritajeRows, peritajeCardHTML, 'Sin leads de peritaje.', 'Todavía no ingresaron solicitudes de peritaje o no coinciden con la búsqueda actual.');
   renderPanel('feedbackPanel', feedbackRows, feedbackCardHTML, 'Sin sugerencias.', 'Todavía no ingresaron comentarios desde el sitio o no coinciden con la búsqueda actual.');
+  renderApplicationsPanel();
 
   if ($('leadsMeta')) {
-    const baseMeta = `${state.leads.consignments.length} consignaciones · ${state.leads.scouting.length} búsquedas · ${state.leads.financing.length} financiaciones · ${state.leads.insurance.length} seguros · ${state.leads.peritaje.length} peritajes · ${state.leads.feedback.length} sugerencias.`;
+    const baseMeta = `${state.leads.consignments.length} consignaciones · ${state.leads.scouting.length} búsquedas · ${state.leads.financing.length} financiaciones · ${state.leads.insurance.length} seguros · ${state.leads.peritaje.length} peritajes · ${state.leads.feedback.length} sugerencias · ${state.leads.applications.length} postulantes.`;
     const warnings = [];
     if (state.historyMissing) warnings.push('Ejecutá el SQL de historial para activar la timeline por usuario.');
     if (state.crmStageMissing) warnings.push('La etapa comercial necesita el SQL CRM para guardarse.');
@@ -1207,6 +1540,44 @@ function renderLeads() {
   renderOverview();
 }
 
+function filteredLeadEntriesForExport() {
+  const entries = filterLeadEntries(allLeadEntries());
+  const scopedType = state.currentLeadTab === 'applications' ? 'application' : state.currentLeadTab;
+  const scoped = scopedType === 'all' ? entries : entries.filter((entry) => entry.type === scopedType);
+  return sortLeadEntries(scoped);
+}
+
+function csvCell(value) {
+  let normalized = String(value ?? '').replace(/\r?\n/g, ' ').trim();
+  if (/^[=+\-@]/.test(normalized)) normalized = `'${normalized}`;
+  return `"${normalized.replace(/"/g, '""')}"`;
+}
+
+function exportLeadsCsv() {
+  const rows = filteredLeadEntriesForExport();
+  const headers = ['id', 'servicio', 'creado', 'nombre', 'telefono', 'email', 'vehiculo', 'fuente', 'campaña', 'responsable', 'estado', 'etapa', 'calidad', 'primera_respuesta', 'proxima_accion', 'seguimiento', 'visita_agendada', 'visita_realizada', 'cierre', 'motivo_perdida', 'afinidad', 'anios_ventas', 'experiencia_automotriz'];
+  const lines = [headers.map(csvCell).join(',')];
+  rows.forEach(({ type, item }) => {
+    const firstTouch = item.first_touch || {};
+    lines.push([
+      item.id, leadTypeLabel(type), leadCreatedAt(item), leadContactName(type, item), leadPhone(type, item), leadEmail(type, item),
+      leadVehicleText(type, item), firstTouch.utm_source || leadOriginText(type, item), firstTouch.utm_campaign || '', item.assigned_to_email || '',
+      item.status || '', item.crm_stage || 'lead', item.lead_validity || 'pending', item.first_response_at || '', item.next_action || '', item.follow_up_at || '',
+      item.visit_scheduled_at || '', item.visit_completed_at || '', item.closed_at || '', item.loss_reason || '',
+      type === 'application' ? item.fit_score || 0 : '', type === 'application' ? item.sales_experience_years || 0 : '', type === 'application' ? applicantYesNo(item.automotive_sales_experience) : '',
+    ].map(csvCell).join(','));
+  });
+  const blob = new Blob([`\ufeff${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `rgcars-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 function updateLeadBadge() {
   const badge = $('adminLeadBadge');
   if (!badge) return;
@@ -1214,7 +1585,8 @@ function updateLeadBadge() {
     + state.leads.financing.filter((item) => !item.status || item.status === 'new').length
     + state.leads.insurance.filter((item) => !item.status || item.status === 'new').length
     + state.leads.peritaje.filter((item) => !item.status || item.status === 'new').length
-    + state.leads.feedback.filter((item) => !item.status || item.status === 'new').length;
+    + state.leads.feedback.filter((item) => !item.status || item.status === 'new').length
+    + state.leads.applications.filter((item) => !item.status || item.status === 'new').length;
   badge.textContent = String(fresh);
   badge.hidden = fresh < 1;
 }
@@ -1222,7 +1594,7 @@ function updateLeadBadge() {
 function renderInsuranceStandalone() {
   const list = $('insuranceStandaloneList');
   if (!list) return;
-  const rows = filterItems(state.leads.insurance, ['customer_name', 'phone', 'email', 'cuil', 'vehicle_title', 'vehicle_brand', 'vehicle_model', 'plate']);
+  const rows = filterItems(state.leads.insurance, ['customer_name', 'phone', 'email', 'cuil', 'vehicle_title', 'vehicle_brand', 'vehicle_model', 'plate'], 'insurance');
   list.innerHTML = rows.length
     ? rows.map(insuranceCardHTML).join('')
     : '<div class="empty-state"><strong>Sin leads de seguros.</strong><span>Todavía no ingresaron pre-cotizaciones.</span></div>';
@@ -1274,12 +1646,17 @@ async function loadAssignees() {
     const currentEmail = normalizeEmail(state.session?.user?.email || '');
     state.assignees = currentEmail ? [{ email: currentEmail, role_key: 'session_user', restricted: false, label: assigneeDisplayName(currentEmail) }] : [];
   }
+  const assigneeFilter = $('leadAssigneeFilter');
+  if (assigneeFilter) {
+    assigneeFilter.innerHTML = '<option value="">Todos</option>' + state.assignees.map((item) => `<option value="${escape(item.email)}">${escape(item.label || item.email)}</option>`).join('');
+    assigneeFilter.value = state.leadFilters.assignee || '';
+  }
   if ($('consignmentPanel')) renderLeads();
 }
 
 
 async function loadLeads() {
-  const [consignments, scouting, matches, financing, insurance, peritaje, feedback] = await Promise.all([
+  const results = await Promise.allSettled([
     safeSelect(sb.from('consignment_leads').select('*, consignment_lead_photos(*)').order('created_at', { ascending: false })),
     safeSelect(sb.from('scouting_requests').select('*').order('created_at', { ascending: false })),
     safeSelect(sb.from('scouting_matches').select('*').order('matched_at', { ascending: false })),
@@ -1287,7 +1664,16 @@ async function loadLeads() {
     safeSelect(sb.from('insurance_leads').select('*').order('created_at', { ascending: false })),
     safeSelect(sb.from('peritaje_leads').select('*').order('created_at', { ascending: false })),
     safeSelect(sb.from('feedback_submissions').select('*').order('created_at', { ascending: false })),
+    loadJobApplications(),
   ]);
+  const [consignments, scouting, matches, financing, insurance, peritaje, feedback, applications] = results.map((result) => (
+    result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []
+  ));
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.warn(`No se pudo cargar la fuente de leads ${index + 1}:`, result.reason?.message || result.reason);
+    }
+  });
 
   state.leads.consignments = Array.isArray(consignments) ? consignments : [];
   state.leads.scouting = Array.isArray(scouting) ? scouting : [];
@@ -1296,13 +1682,54 @@ async function loadLeads() {
   state.leads.insurance = Array.isArray(insurance) ? insurance : [];
   state.leads.peritaje = Array.isArray(peritaje) ? peritaje : [];
   state.leads.feedback = Array.isArray(feedback) ? feedback : [];
+  state.leads.applications = Array.isArray(applications) ? applications : [];
 
+  renderLeads();
+}
+
+function crmEventsForTransition(previous = {}, next = {}) {
+  const events = [];
+  if (!previous.first_response_at && next.first_response_at) events.push('working_lead');
+  if (previous.lead_validity !== next.lead_validity && next.lead_validity === 'qualified') events.push('qualify_lead');
+  if (previous.lead_validity !== next.lead_validity && next.lead_validity === 'disqualified') events.push('disqualify_lead');
+  if (previous.visit_scheduled_at !== next.visit_scheduled_at && next.visit_scheduled_at) events.push('schedule_test_drive');
+  if (previous.crm_stage !== next.crm_stage && next.crm_stage === 'won') events.push('close_convert_lead');
+  if (previous.crm_stage !== next.crm_stage && next.crm_stage === 'lost') events.push('close_unconvert_lead');
+  return [...new Set(events)];
+}
+
+async function syncCrmTransitionEvents(type, id, previous = {}, next = {}) {
+  if (type === 'feedback') return;
+  const events = crmEventsForTransition(previous, next);
+  for (const eventName of events) {
+    const { error } = await sb.functions.invoke('sync-crm-event', {
+      body: { lead_type: type, lead_id: id, event_name: eventName },
+    });
+    if (error) throw error;
+  }
+}
+
+async function markLeadFirstResponse(type, id) {
+  const table = leadTableName(type);
+  const collection = leadCollectionKey(type);
+  const current = findLeadByType(type, id);
+  if (!table || !collection || !current || current.first_response_at) return;
+  const firstResponseAt = new Date().toISOString();
+  const payload = {
+    first_response_at: firstResponseAt,
+    last_touched_at: firstResponseAt,
+  };
+  const { data, error } = await sb.from(table).update(payload).eq('id', id).select('*').single();
+  if (error) throw error;
+  state.leads[collection] = (state.leads[collection] || []).map((item) => (String(item.id) === String(id) ? { ...item, ...data } : item));
+  await syncCrmTransitionEvents(type, id, current, data || { ...current, ...payload });
   renderLeads();
 }
 
 async function updateLead(type, id) {
   const table = leadTableName(type);
   if (!table) return;
+  const current = findLeadByType(type, id) || {};
 
   const status = document.querySelector(`[data-lead-status-type="${type}"][data-id="${id}"]`)?.value || defaultLeadStatus(type);
   const stage = normalizeLeadStage(document.querySelector(`[data-lead-stage-type="${type}"][data-id="${id}"]`)?.value || 'lead');
@@ -1312,6 +1739,15 @@ async function updateLead(type, id) {
   const nextAction = document.querySelector(`[data-lead-next-action="${type}"][data-id="${id}"]`)?.value?.trim() || null;
   const followUpRaw = document.querySelector(`[data-lead-follow-up="${type}"][data-id="${id}"]`)?.value || '';
   const notes = document.querySelector(`[data-lead-notes="${type}"][data-id="${id}"]`)?.value?.trim() || null;
+  const validity = document.querySelector(`[data-lead-validity="${type}"][data-id="${id}"]`)?.value || 'pending';
+  const lossReason = document.querySelector(`[data-lead-loss-reason="${type}"][data-id="${id}"]`)?.value?.trim() || null;
+  const visitScheduledRaw = document.querySelector(`[data-lead-visit-scheduled="${type}"][data-id="${id}"]`)?.value || '';
+  const visitCompletedRaw = document.querySelector(`[data-lead-visit-completed="${type}"][data-id="${id}"]`)?.value || '';
+  if ((stage === 'lost' || validity === 'disqualified') && !lossReason) {
+    throw new Error('Ingresá el motivo de pérdida o descalificación antes de guardar.');
+  }
+
+  const nowIso = new Date().toISOString();
 
   const payload = {
     status,
@@ -1322,7 +1758,15 @@ async function updateLead(type, id) {
     next_action: nextAction,
     follow_up_at: followUpRaw ? new Date(followUpRaw).toISOString() : null,
     admin_notes: notes,
-    last_touched_at: new Date().toISOString(),
+    lead_validity: validity,
+    qualified_at: validity === 'qualified' ? (current.qualified_at || nowIso) : current.qualified_at || null,
+    disqualified_at: validity === 'disqualified' ? (current.disqualified_at || nowIso) : current.disqualified_at || null,
+    visit_scheduled_at: visitScheduledRaw ? new Date(visitScheduledRaw).toISOString() : null,
+    visit_completed_at: visitCompletedRaw ? new Date(visitCompletedRaw).toISOString() : null,
+    proposal_at: ['proposal', 'negotiation', 'won'].includes(stage) ? (current.proposal_at || nowIso) : current.proposal_at || null,
+    closed_at: ['won', 'lost'].includes(stage) ? (current.closed_at || nowIso) : current.closed_at || null,
+    loss_reason: lossReason,
+    last_touched_at: nowIso,
   };
 
   const { data, error } = await sb.from(table).update(payload).eq('id', id).select('*').single();
@@ -1339,9 +1783,30 @@ async function updateLead(type, id) {
   if (data && type !== 'feedback' && window.RGShared?.sendLeadNotification) {
     await window.RGShared.sendLeadNotification(type, status || data.status || defaultLeadStatus(type), data, { event: 'status_update' }).catch((err) => console.warn('No se pudo enviar el email de actualización:', err.message || err));
   }
+
+  await syncCrmTransitionEvents(type, id, current, data).catch((error) => {
+    console.warn('No se pudo sincronizar el resultado comercial:', error.message || error);
+  });
 }
 
 function leadCopyText(type, item = {}) {
+  if (type === 'application') {
+    return [
+      'Tipo: Postulante',
+      `Nombre: ${item.full_name || '-'}`,
+      `WhatsApp: ${item.phone || '-'}`,
+      `Email: ${item.email || '-'}`,
+      `Afinidad: ${item.fit_score || 0}/100 · ${item.fit_label || 'Sin evaluar'}`,
+      `Años en ventas: ${item.sales_experience_years ?? '-'}`,
+      `Experiencia automotriz: ${applicantYesNo(item.automotive_sales_experience)}`,
+      `Trabajo por objetivos: ${applicantYesNo(item.target_based_sales_experience)}`,
+      `Uso de CRM: ${applicantYesNo(item.crm_experience)}`,
+      `Disponibilidad full time: ${applicantYesNo(item.full_time_availability)}`,
+      `Estado: ${applicationStatusMeta(item.status).label}`,
+      `Experiencia declarada: ${item.experience || '-'}`,
+      `Notas internas: ${item.admin_notes || '-'}`,
+    ].join('\n');
+  }
   return [
     `Tipo: ${leadTypeLabel(type)}`,
     `Nombre: ${leadContactName(type, item) || '-'}`,
@@ -1376,6 +1841,54 @@ async function copyLeadData(type, id) {
   }
 }
 
+function toggleApplicant(id) {
+  const key = leadKey('application', id);
+  if (state.openLeadKeys[key]) delete state.openLeadKeys[key];
+  else state.openLeadKeys[key] = true;
+  renderLeads();
+}
+
+async function updateApplicant(id) {
+  const status = document.querySelector(`[data-applicant-status="${id}"]`)?.value || 'new';
+  const notes = document.querySelector(`[data-applicant-notes="${id}"]`)?.value?.trim() || '';
+  const result = await jobApplicationsRequest({
+    method: 'POST',
+    payload: { action: 'update', id, status, admin_notes: notes },
+  });
+  if (!result.item) throw new Error('El servidor no devolvió la postulación actualizada.');
+  state.leads.applications = state.leads.applications.map((item) => (String(item.id) === String(id) ? result.item : item));
+  renderLeads();
+}
+
+async function downloadApplicantCv(id, applicantName = 'postulante') {
+  const token = state.session?.access_token || '';
+  if (!token) throw new Error('La sesión de administrador no está disponible.');
+  const response = await fetch(jobApplicationsEndpoint({ action: 'download', id }), {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  if (!response.ok) {
+    const result = await response.json().catch(() => ({}));
+    throw new Error(result?.error || 'No se pudo descargar el CV.');
+  }
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get('Content-Disposition') || '';
+  const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  const fallbackName = `CV-${String(applicantName || 'postulante').replace(/[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ._-]+/g, '-')}.pdf`;
+  let fileName = fallbackName;
+  if (encodedMatch?.[1]) {
+    try { fileName = decodeURIComponent(encodedMatch[1]); } catch { fileName = fallbackName; }
+  }
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 function archivedStatusForLead(type) {
   const map = {
     consignment: 'rejected',
@@ -1395,10 +1908,15 @@ async function archiveLead(type, id) {
 
   const current = findLeadByType(type, id);
   const nextStatus = archivedStatusForLead(type);
+  const lossReason = window.prompt('Motivo de pérdida o descalificación (obligatorio):', current?.loss_reason || '')?.trim() || '';
+  if (!lossReason) return;
+  const nowIso = new Date().toISOString();
   const payload = {
     status: nextStatus,
     crm_stage: 'lost',
-    last_touched_at: new Date().toISOString(),
+    loss_reason: lossReason,
+    closed_at: current?.closed_at || nowIso,
+    last_touched_at: nowIso,
   };
 
   let response = await sb.from(table).update(payload).eq('id', id).select('*').single();
@@ -1411,6 +1929,7 @@ async function archiveLead(type, id) {
   const updated = response.data || { ...(current || {}), ...payload };
   state.leads[collection] = (state.leads[collection] || []).map((item) => (String(item.id) === String(id) ? { ...item, ...updated } : item));
   await loadLeadHistory(type, id, { force: true }).catch(() => []);
+  await syncCrmTransitionEvents(type, id, current || {}, updated).catch((error) => console.warn('No se pudo sincronizar el cierre perdido:', error.message || error));
   renderLeads();
 }
 
@@ -1674,6 +2193,7 @@ async function saveVehicleMaintenanceEntry() {
   ['maintenanceTitle', 'maintenanceKm', 'maintenanceCost', 'maintenanceNextDue', 'maintenanceNotes'].forEach((id) => { if ($(id)) $(id).value = ''; });
   if ($('maintenanceType')) $('maintenanceType').value = 'revision';
   if ($('maintenanceDate')) $('maintenanceDate').value = new Date().toISOString().slice(0, 10);
+  if ($('spendMonth')) $('spendMonth').value = new Date().toISOString().slice(0, 7);
   await loadVehicleMaintenance(vehicleId, { force: true });
   await loadVehicleAlerts();
 }
@@ -1827,13 +2347,24 @@ async function loadAnalyticsViews() {
     return;
   }
 
-  const since = new Date(Date.now() - (1000 * 60 * 60 * 24 * 29)).toISOString();
-  const { data, error } = await sb
-    .from('web_page_views')
-    .select('created_at, page_key, page_path')
-    .gte('created_at', since)
-    .order('created_at', { ascending: true })
-    .limit(5000);
+  const since = new Date(Date.now() - (1000 * 60 * 60 * 24 * 179)).toISOString();
+  const [viewsResponse, eventsResponse, spendResponse] = await Promise.all([
+    sb.from('web_page_views')
+      .select('created_at, page_key, page_path, session_key, visitor_key, vehicle_id, attribution')
+      .gte('created_at', since)
+      .order('created_at', { ascending: true })
+      .limit(20000),
+    sb.from('web_events')
+      .select('occurred_at, event_name, vehicle_id, service_type, session_key, payload, attribution')
+      .gte('occurred_at', since)
+      .order('occurred_at', { ascending: true })
+      .limit(20000),
+    sb.from('ad_spend_monthly')
+      .select('*')
+      .order('spend_month', { ascending: false })
+      .limit(5000),
+  ]);
+  const { data, error } = viewsResponse;
 
   if (error) {
     state.analyticsViews = [];
@@ -1845,6 +2376,8 @@ async function loadAnalyticsViews() {
   }
 
   state.analyticsViews = Array.isArray(data) ? data : [];
+  state.analyticsEvents = eventsResponse.error ? [] : (Array.isArray(eventsResponse.data) ? eventsResponse.data : []);
+  state.adSpend = spendResponse.error ? [] : (Array.isArray(spendResponse.data) ? spendResponse.data : []);
   state.analyticsStatus = 'ready';
   renderOverview();
   renderMetricsDashboard();
@@ -2036,6 +2569,222 @@ function renderOverview() {
   renderMetricsDashboard();
 }
 
+function metricDate(value) {
+  const time = new Date(value || 0).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function metricWindows() {
+  const days = Number(state.metricsPeriodDays || 30);
+  const end = Date.now();
+  const start = end - (days * 86400000);
+  const previousStart = start - (days * 86400000);
+  return { days, end, start, previousStart };
+}
+
+function inMetricWindow(value, start, end) {
+  const time = metricDate(value);
+  return time >= start && time < end;
+}
+
+function metricLeadRows(start, end) {
+  return allLeadEntries().filter(({ type, item }) => type !== 'feedback' && inMetricWindow(leadCreatedAt(item), start, end));
+}
+
+function uniqueSessions(rows = []) {
+  return new Set(rows.map((row) => row.session_key).filter(Boolean)).size;
+}
+
+function percentile(values = [], percentileValue = 0.5) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil(sorted.length * percentileValue) - 1));
+  return sorted[index];
+}
+
+function durationHoursLabel(milliseconds) {
+  if (milliseconds == null || !Number.isFinite(milliseconds)) return 'Sin datos';
+  const hours = milliseconds / 3600000;
+  if (hours < 1) return `${Math.round(milliseconds / 60000)} min`;
+  return `${hours.toLocaleString('es-AR', { maximumFractionDigits: 1 })} h`;
+}
+
+function rateValue(numerator, denominator) {
+  return denominator > 0 ? (numerator / denominator) * 100 : null;
+}
+
+function kpiValueLabel(value, type = 'number', currency = 'ARS') {
+  if (value == null || !Number.isFinite(Number(value))) return 'Sin datos';
+  if (type === 'rate') return `${Number(value).toLocaleString('es-AR', { maximumFractionDigits: 1 })}%`;
+  if (type === 'ratio') return `${Number(value).toLocaleString('es-AR', { maximumFractionDigits: 2 })}×`;
+  if (type === 'currency') return new Intl.NumberFormat('es-AR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(Number(value));
+  return Number(value).toLocaleString('es-AR', { maximumFractionDigits: 1 });
+}
+
+function kpiCardHtml({ title, value, previous, type = 'number', numerator, denominator, formula, period, detail = '', currency = 'ARS' }) {
+  const currentLabel = type === 'duration' ? durationHoursLabel(value) : kpiValueLabel(value, type, currency);
+  const previousLabel = type === 'duration' ? durationHoursLabel(previous) : kpiValueLabel(previous, type, currency);
+  const delta = value != null && previous != null ? Number(value) - Number(previous) : null;
+  const deltaLabel = delta == null ? 'Comparación no disponible' : `Anterior: ${previousLabel} · Variación absoluta: ${type === 'rate' ? `${delta.toLocaleString('es-AR', { maximumFractionDigits: 1 })} pp` : (type === 'duration' ? durationHoursLabel(Math.abs(delta)) : kpiValueLabel(Math.abs(delta), type, currency))}`;
+  return `<article class="admin-kpi-card"><span>${escape(title)}</span><strong>${escape(currentLabel)}</strong><small>${escape(formula)} · ${escape(period)}</small><small>Numerador: ${escape(numerator ?? '-')} · Denominador: ${escape(denominator ?? '-')}</small><small>${escape(deltaLabel)}</small>${detail ? `<small>${escape(detail)}</small>` : ''}</article>`;
+}
+
+function spendForWindow(start, end) {
+  const rows = (state.adSpend || []).map((item) => {
+    const monthStart = new Date(`${item.spend_month}T00:00:00Z`).getTime();
+    const monthEndDate = new Date(monthStart);
+    monthEndDate.setUTCMonth(monthEndDate.getUTCMonth() + 1);
+    const monthEnd = monthEndDate.getTime();
+    const overlap = Math.max(0, Math.min(end, monthEnd) - Math.max(start, monthStart));
+    const ratio = monthEnd > monthStart ? overlap / (monthEnd - monthStart) : 0;
+    return { ...item, prorated_amount: (Number(item.amount) || 0) * ratio, has_overlap: overlap > 0 };
+  }).filter((item) => item.has_overlap);
+  const currencies = [...new Set(rows.map((item) => item.currency || 'ARS'))];
+  if (!rows.length) return { amount: null, currency: 'ARS', mixed: false };
+  if (currencies.length > 1) return { amount: null, currency: '', mixed: true };
+  return { amount: rows.reduce((sum, item) => sum + item.prorated_amount, 0), currency: currencies[0], mixed: false };
+}
+
+function calculatePeriodKpis(start, end) {
+  const leads = metricLeadRows(start, end);
+  const leadItems = leads.map((entry) => entry.item);
+  const views = (state.analyticsViews || []).filter((item) => inMetricWindow(item.created_at, start, end));
+  const events = (state.analyticsEvents || []).filter((item) => inMetricWindow(item.occurred_at, start, end));
+  const sessions = uniqueSessions(views);
+  const valid = leadItems.filter((item) => ['valid', 'qualified'].includes(item.lead_validity)).length;
+  const qualified = leadItems.filter((item) => item.lead_validity === 'qualified').length;
+  const won = leadItems.filter((item) => item.crm_stage === 'won').length;
+  const scheduled = leadItems.filter((item) => item.visit_scheduled_at).length;
+  const attended = leadItems.filter((item) => item.visit_completed_at).length;
+  const vehicleViews = events.filter((item) => item.event_name === 'view_item').length;
+  const vehicleContacts = events.filter((item) => ['click_whatsapp', 'generate_lead'].includes(item.event_name) && (item.vehicle_id || item.payload?.vehicle_id)).length;
+  const responseTimes = leadItems
+    .filter((item) => item.first_response_at && leadCreatedAt(item))
+    .map((item) => metricDate(item.first_response_at) - metricDate(leadCreatedAt(item)))
+    .filter((value) => value >= 0);
+  const spend = spendForWindow(start, end);
+  const marginRows = leadItems.filter((item) => item.crm_stage === 'won' && item.gross_margin != null && item.gross_margin !== '' && Number.isFinite(Number(item.gross_margin)));
+  const grossMargin = marginRows.reduce((sum, item) => sum + Number(item.gross_margin || 0), 0);
+  return {
+    leads: leadItems.length, sessions, valid, qualified, won, scheduled, attended, vehicleViews, vehicleContacts,
+    webConversion: rateValue(valid, sessions),
+    vehicleContactRate: rateValue(vehicleContacts, vehicleViews),
+    qualificationRate: rateValue(qualified, valid),
+    agendaRate: rateValue(scheduled, qualified),
+    attendanceRate: rateValue(attended, scheduled),
+    closeRate: rateValue(won, qualified),
+    responseMedian: percentile(responseTimes, 0.5),
+    responseP90: responseTimes.length >= 10 ? percentile(responseTimes, 0.9) : null,
+    responseCount: responseTimes.length,
+    spend,
+    costPerValid: spend.amount != null && valid > 0 ? spend.amount / valid : null,
+    costPerQualified: spend.amount != null && qualified > 0 ? spend.amount / qualified : null,
+    costPerSale: spend.amount != null && won > 0 ? spend.amount / won : null,
+    grossMargin,
+    marginCount: marginRows.length,
+    marginEfficiency: spend.amount != null && spend.amount > 0 && marginRows.length ? grossMargin / spend.amount : null,
+  };
+}
+
+function renderBusinessKpis() {
+  const wrap = $('businessKpiGrid');
+  if (!wrap) return;
+  const windowRange = metricWindows();
+  const current = calculatePeriodKpis(windowRange.start, windowRange.end);
+  const previous = calculatePeriodKpis(windowRange.previousStart, windowRange.start);
+  const period = `últimos ${windowRange.days} días`;
+  const currency = current.spend.currency || 'ARS';
+  const cards = [
+    { title: 'Tasa de conversión web', value: current.webConversion, previous: previous.webConversion, type: 'rate', numerator: current.valid, denominator: current.sessions, formula: 'Leads válidos ÷ sesiones × 100' },
+    { title: 'Ficha a contacto', value: current.vehicleContactRate, previous: previous.vehicleContactRate, type: 'rate', numerator: current.vehicleContacts, denominator: current.vehicleViews, formula: 'Leads o WhatsApp de ficha ÷ vistas de ficha × 100' },
+    { title: 'Tasa de calificación', value: current.qualificationRate, previous: previous.qualificationRate, type: 'rate', numerator: current.qualified, denominator: current.valid, formula: 'Leads calificados ÷ leads válidos × 100' },
+    { title: 'Primera respuesta (mediana)', value: current.responseMedian, previous: previous.responseMedian, type: 'duration', numerator: current.responseCount, denominator: current.leads, formula: 'Mediana de primera respuesta − creación', detail: current.responseP90 == null ? 'P90 se muestra desde 10 respuestas.' : `P90: ${durationHoursLabel(current.responseP90)}` },
+    { title: 'Tasa de agenda', value: current.agendaRate, previous: previous.agendaRate, type: 'rate', numerator: current.scheduled, denominator: current.qualified, formula: 'Visitas/pruebas agendadas ÷ calificados × 100' },
+    { title: 'Tasa de asistencia', value: current.attendanceRate, previous: previous.attendanceRate, type: 'rate', numerator: current.attended, denominator: current.scheduled, formula: 'Visitas realizadas ÷ agendadas × 100' },
+    { title: 'Tasa de cierre', value: current.closeRate, previous: previous.closeRate, type: 'rate', numerator: current.won, denominator: current.qualified, formula: 'Ventas ÷ leads calificados × 100' },
+    { title: 'Costo por lead válido', value: current.costPerValid, previous: previous.costPerValid, type: 'currency', numerator: current.spend.amount ?? '-', denominator: current.valid, formula: 'Inversión cargada ÷ leads válidos', currency },
+    { title: 'Costo por lead calificado', value: current.costPerQualified, previous: previous.costPerQualified, type: 'currency', numerator: current.spend.amount ?? '-', denominator: current.qualified, formula: 'Inversión cargada ÷ leads calificados', currency },
+    { title: 'Costo por venta', value: current.costPerSale, previous: previous.costPerSale, type: 'currency', numerator: current.spend.amount ?? '-', denominator: current.won, formula: 'Inversión cargada ÷ ventas atribuidas', currency },
+  ].map((item) => kpiCardHtml({ ...item, period }));
+  if (window.RG?.SHOW_MARGIN_KPI === true) {
+    cards.push(kpiCardHtml({
+      title: 'Eficiencia sobre margen', value: current.marginEfficiency, previous: previous.marginEfficiency,
+      type: 'ratio', numerator: current.grossMargin, denominator: current.spend.amount ?? '-', formula: 'Margen bruto atribuido ÷ inversión',
+      period, detail: `${current.marginCount} venta(s) con margen registrado`,
+    }));
+  }
+  if (current.spend.mixed) cards.unshift(kpiCardHtml({ title: 'Costos publicitarios', value: null, previous: null, numerator: '-', denominator: '-', formula: 'No se suman monedas distintas', period, detail: 'Separá ARS y USD para calcular costos.' }));
+  wrap.innerHTML = cards.join('');
+}
+
+function renderCampaignPerformance() {
+  const wrap = $('campaignPerformance');
+  if (!wrap) return;
+  const range = metricWindows();
+  const groups = new Map();
+  const groupFor = (touch = {}) => {
+    const source = touch.utm_source || 'direct';
+    const campaign = touch.utm_campaign || '(sin campaña)';
+    const ad = touch.ad_code || touch.utm_content || '(sin anuncio)';
+    const key = `${source} · ${campaign} · ${ad}`;
+    if (!groups.has(key)) groups.set(key, { sessions: new Set(), leads: 0, valid: 0, qualified: 0, visits: 0, sales: 0 });
+    return groups.get(key);
+  };
+  (state.analyticsViews || []).filter((item) => inMetricWindow(item.created_at, range.start, range.end)).forEach((row) => {
+    const attribution = row.attribution || {};
+    const touch = attribution.first_touch || attribution.last_touch || attribution;
+    const bucket = groupFor(touch);
+    if (row.session_key) bucket.sessions.add(row.session_key);
+  });
+  metricLeadRows(range.start, range.end).forEach(({ item }) => {
+    const touch = item.first_touch || {};
+    const bucket = groupFor({ ...touch, utm_source: touch.utm_source || leadOriginText('', item) || 'direct' });
+    if (item.session_key) bucket.sessions.add(item.session_key);
+    bucket.leads += 1;
+    if (['valid', 'qualified'].includes(item.lead_validity)) bucket.valid += 1;
+    if (item.lead_validity === 'qualified') bucket.qualified += 1;
+    if (item.visit_scheduled_at) bucket.visits += 1;
+    if (item.crm_stage === 'won') bucket.sales += 1;
+  });
+  wrap.innerHTML = [...groups.entries()].sort((a, b) => b[1].leads - a[1].leads || b[1].sessions.size - a[1].sessions.size).slice(0, 12).map(([label, item]) => `<div class="admin-summary-item"><strong>${escape(label)}</strong><span>Sesiones: ${item.sessions.size} · Leads: ${item.leads} · Válidos: ${item.valid} · Calificados: ${item.qualified} · Citas: ${item.visits} · Ventas: ${item.sales}</span></div>`).join('') || '<div class="admin-summary-item"><span>Sin atribución de campañas en el período.</span></div>';
+}
+
+function renderVehiclePerformance() {
+  const wrap = $('vehiclePerformance');
+  if (!wrap) return;
+  const range = metricWindows();
+  const groups = new Map();
+  metricLeadRows(range.start, range.end).forEach(({ item }) => {
+    const vehicleId = String(item.vehicle_id || item.last_touch?.vehicle_id || '').trim();
+    if (!vehicleId) return;
+    if (!groups.has(vehicleId)) groups.set(vehicleId, { leads: 0, qualified: 0, sales: 0 });
+    const bucket = groups.get(vehicleId);
+    if (['valid', 'qualified'].includes(item.lead_validity)) bucket.leads += 1;
+    if (item.lead_validity === 'qualified') bucket.qualified += 1;
+    if (item.crm_stage === 'won') bucket.sales += 1;
+  });
+  const performanceHtml = [...groups.entries()].sort((a, b) => b[1].leads - a[1].leads).slice(0, 12).map(([vehicleId, item]) => {
+    const vehicle = state.vehicles.find((row) => String(row.id) === vehicleId) || {};
+    const rotationDays = vehicle.sold_at && vehicle.published_at ? Math.max(0, Math.round((metricDate(vehicle.sold_at) - metricDate(vehicle.published_at)) / 86400000)) : null;
+    const conversion = rateValue(item.sales, item.qualified);
+    return `<div class="admin-summary-item"><strong>${escape(vehicle.title || vehicleId)}</strong><span>Leads válidos: ${item.leads} · Calificados: ${item.qualified} · Ventas: ${item.sales} · Conversión: ${escape(kpiValueLabel(conversion, 'rate'))} · Rotación: ${rotationDays == null ? 'sin fecha de venta/publicación' : `${rotationDays} días`}</span></div>`;
+  }).join('') || '<div class="admin-summary-item"><span>Sin leads relacionados con vehículos en el período.</span></div>';
+  const rotationHtml = state.vehicles
+    .filter((vehicle) => vehicle.sold_at && vehicle.published_at)
+    .map((vehicle) => ({ vehicle, days: Math.max(0, Math.round((metricDate(vehicle.sold_at) - metricDate(vehicle.published_at)) / 86400000)) }))
+    .sort((a, b) => a.days - b.days)
+    .slice(0, 12)
+    .map(({ vehicle, days }) => `<div class="admin-summary-item"><strong>Rotación · ${escape(vehicle.title || vehicle.id)}</strong><span>${days} días desde publicación hasta venta</span></div>`)
+    .join('');
+  wrap.innerHTML = `${performanceHtml}${rotationHtml}`;
+}
+
+function renderSpendList() {
+  const wrap = $('spendList');
+  if (!wrap) return;
+  wrap.innerHTML = (state.adSpend || []).slice(0, 18).map((item) => `<div class="admin-summary-item"><strong>${escape(item.spend_month)} · ${escape(item.source)}</strong><span>${escape(item.campaign || 'Sin campaña')} · ${escape(kpiValueLabel(item.amount, 'currency', item.currency || 'ARS'))}</span></div>`).join('') || '<div class="admin-summary-item"><span>No hay inversión publicitaria cargada.</span></div>';
+}
+
 function renderMetricsDashboard() {
   const all = allLeadRows();
   const assigned = all.filter((item) => normalizeEmail(item.assigned_to_email || '')).length;
@@ -2078,6 +2827,10 @@ function renderMetricsDashboard() {
   }
 
   renderTrafficCharts();
+  renderBusinessKpis();
+  renderCampaignPerformance();
+  renderVehiclePerformance();
+  renderSpendList();
 }
 
 function renderVehicleAlertsLists() {
@@ -2131,10 +2884,17 @@ function parseFormattedNumber(value) {
 
 function parseMoneyInputValue(value, { required = false } = {}) {
   const raw = String(value ?? '').trim();
-  if (!raw) return required ? NaN : null;
-  if (raw.includes('-') || /[a-zA-Z]/.test(raw)) return NaN;
-  if (!/^[\d\s.]+$/.test(raw)) return NaN;
-  return parseFormattedNumber(raw);
+  if (!raw || raw.toLowerCase() === 'opcional') return required ? NaN : null;
+  if (raw.includes('-')) return NaN;
+
+  const normalized = raw
+    .replace(/\./g, '')
+    .replace(/,/g, '.')
+    .replace(/[^\d.]/g, '');
+
+  if (!normalized) return required ? NaN : null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : NaN;
 }
 
 function parseMoneyField(id) {
@@ -2142,7 +2902,7 @@ function parseMoneyField(id) {
 }
 
 function vehicleMinimumDownPayment(vehicle = {}) {
-  const value = vehicle.minimum_down_payment ?? vehicle.min_down_payment ?? null;
+  const value = vehicle.minimum_down_payment ?? vehicle.entrega_minima ?? vehicle.min_down_payment ?? null;
   const num = Number(value);
   return Number.isFinite(num) && num > 0 ? num : null;
 }
@@ -2309,17 +3069,108 @@ function renderPhotoList(vehicle) {
 
   wrap.innerHTML = images.map((url, index) => {
     const selected = url === state.selectedVehiclePhoto;
+    const positionLabel = index === 0 ? 'Principal' : `Foto ${index + 1}`;
     return `
-      <div class="photo-item ${selected ? 'is-selected' : ''}" data-photo-select="${escape(url)}" tabindex="0" role="button" aria-pressed="${selected ? 'true' : 'false'}">
+      <div class="photo-item ${selected ? 'is-selected' : ''}" data-photo-select="${escape(url)}" data-photo-index="${index}" draggable="true" tabindex="0" role="button" aria-pressed="${selected ? 'true' : 'false'}" aria-describedby="photoReorderHelp">
         <img src="${url}" alt="Foto ${index + 1} del vehículo" loading="lazy" />
         <div class="photo-item__footer">
-          <span>${selected ? 'Seleccionada' : `Foto ${index + 1}`}</span>
+          <span>${positionLabel}${selected ? ' · seleccionada' : ''}</span>
+          <span class="photo-item__drag-handle" aria-hidden="true" title="Arrastrar para reordenar">⠿</span>
           <button class="btn btn-danger" type="button" data-delphoto="${vehicle.id}" data-url="${url}">Eliminar</button>
         </div>
       </div>
     `;
   }).join('');
   updateSelectedPhotoActions(vehicle);
+}
+
+function clearPhotoDropIndicators() {
+  const wrap = $('photoList');
+  if (!wrap) return;
+  wrap.classList.remove('is-dragging');
+  wrap.querySelectorAll('.photo-item').forEach((item) => {
+    item.classList.remove('is-dragging', 'is-drop-before', 'is-drop-after');
+  });
+}
+
+function photoDropPosition(item, event) {
+  const bounds = item.getBoundingClientRect();
+  return event.clientX >= bounds.left + (bounds.width / 2) ? 'after' : 'before';
+}
+
+async function reorderPhoto(vehicleId, draggedUrl, targetUrl, position = 'before') {
+  if (!vehicleId || !draggedUrl || !targetUrl || draggedUrl === targetUrl || state.photoReorderSaving) return;
+  state.photoReorderSaving = true;
+  try {
+    const { data, error } = await sb.from('vehicles').select('images').eq('id', vehicleId).single();
+    if (error) throw error;
+    const images = Array.isArray(data?.images) ? [...data.images] : [];
+    const draggedIndex = images.findIndex((item) => item === draggedUrl);
+    if (draggedIndex === -1 || !images.includes(targetUrl)) return;
+
+    const [draggedImage] = images.splice(draggedIndex, 1);
+    const targetIndex = images.findIndex((item) => item === targetUrl);
+    const insertionIndex = targetIndex + (position === 'after' ? 1 : 0);
+    images.splice(insertionIndex, 0, draggedImage);
+
+    const { error: updateError } = await sb.from('vehicles').update({ images }).eq('id', vehicleId);
+    if (updateError) throw updateError;
+    state.selectedVehiclePhoto = draggedUrl;
+    showMsg('Orden de fotos actualizado.', true);
+    renderPhotoList({ id: vehicleId, images });
+    await loadRows();
+  } catch (error) {
+    console.error(error);
+    showMsg(error.message || 'No se pudo actualizar el orden de las fotos.', false);
+    const currentVehicle = vehicleId ? await getVehicleById(vehicleId).catch(() => null) : null;
+    if (currentVehicle) renderPhotoList(currentVehicle);
+  } finally {
+    state.photoReorderSaving = false;
+    state.draggedVehiclePhoto = '';
+    clearPhotoDropIndicators();
+  }
+}
+
+function bindPhotoDragAndDrop() {
+  const wrap = $('photoList');
+  if (!wrap) return;
+
+  wrap.addEventListener('dragstart', (event) => {
+    const item = event.target.closest?.('.photo-item[data-photo-select]');
+    if (!item || event.target.closest?.('button') || state.photoReorderSaving) {
+      event.preventDefault();
+      return;
+    }
+    state.draggedVehiclePhoto = item.dataset.photoSelect || '';
+    state.selectedVehiclePhoto = state.draggedVehiclePhoto;
+    wrap.classList.add('is-dragging');
+    item.classList.add('is-dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', state.draggedVehiclePhoto);
+  });
+
+  wrap.addEventListener('dragover', (event) => {
+    const item = event.target.closest?.('.photo-item[data-photo-select]');
+    if (!item || !state.draggedVehiclePhoto || item.dataset.photoSelect === state.draggedVehiclePhoto) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    wrap.querySelectorAll('.photo-item').forEach((photo) => photo.classList.remove('is-drop-before', 'is-drop-after'));
+    item.classList.add(photoDropPosition(item, event) === 'after' ? 'is-drop-after' : 'is-drop-before');
+  });
+
+  wrap.addEventListener('drop', async (event) => {
+    const item = event.target.closest?.('.photo-item[data-photo-select]');
+    if (!item || !state.draggedVehiclePhoto) return clearPhotoDropIndicators();
+    event.preventDefault();
+    const targetUrl = item.dataset.photoSelect || '';
+    const position = photoDropPosition(item, event);
+    await reorderPhoto(currentVehicleId(), state.draggedVehiclePhoto, targetUrl, position);
+  });
+
+  wrap.addEventListener('dragend', () => {
+    state.draggedVehiclePhoto = '';
+    clearPhotoDropIndicators();
+  });
 }
 
 async function movePhoto(vehicleId, url, direction = 'right') {
@@ -2341,42 +3192,102 @@ async function movePhoto(vehicleId, url, direction = 'right') {
   await loadRows();
 }
 
-function storagePathFromPublicUrl(url) {
+function supabaseStoragePathFromPublicUrl(url) {
   const marker = '/storage/v1/object/public/vehicles/';
   const index = url.indexOf(marker);
   return index === -1 ? null : url.slice(index + marker.length);
 }
 
+function cpanelStoragePathFromPublicUrl(url) {
+  try {
+    const pathname = new URL(String(url || ''), window.location.href).pathname;
+    const marker = '/uploads/vehicles/';
+    const index = pathname.indexOf(marker);
+    return index === -1 ? null : decodeURIComponent(pathname.slice(index + marker.length));
+  } catch (error) {
+    return null;
+  }
+}
+
+function vehicleStorageEndpoint() {
+  return String(window.RG?.VEHICLE_STORAGE_ENDPOINT || '/api/vehicle-images.php').trim();
+}
+
+async function cpanelStorageRequest({ formData = null, payload = null } = {}) {
+  const { data, error } = await sb.auth.getSession();
+  if (error) throw error;
+  const session = data?.session || state.session;
+  if (!session?.access_token) throw new Error('La sesión venció. Volvé a ingresar al panel.');
+  state.session = session;
+
+  const headers = {
+    Authorization: `Bearer ${session.access_token}`,
+  };
+  if (payload) headers['Content-Type'] = 'application/json';
+
+  const response = await fetch(vehicleStorageEndpoint(), {
+    method: 'POST',
+    headers,
+    body: formData || JSON.stringify(payload || {}),
+  });
+
+  const responseText = await response.text();
+  let result = {};
+  try {
+    result = responseText ? JSON.parse(responseText) : {};
+  } catch (error) {
+    result = {};
+  }
+
+  if (!response.ok) {
+    const fallback = response.status === 404
+      ? 'El servicio de imágenes todavía no está publicado en cPanel.'
+      : `No se pudo completar la operación de archivos (${response.status}).`;
+    throw new Error(result.error || fallback);
+  }
+
+  return result;
+}
+
 async function deletePhoto(vehicleId, url) {
   if (!confirm('¿Eliminar esta foto?')) return;
-  const { data, error } = await sb.from('vehicles').select('images').eq('id', vehicleId).single();
-  if (error) return showMsg(error.message, false);
+  try {
+    const { data, error } = await sb.from('vehicles').select('images').eq('id', vehicleId).single();
+    if (error) throw error;
 
-  const nextImages = (data.images || []).filter((item) => item !== url);
-  const path = storagePathFromPublicUrl(url);
-  if (path) {
-    const { error: storageError } = await sb.storage.from('vehicles').remove([path]);
-    if (storageError) console.warn(storageError.message);
+    const nextImages = (data.images || []).filter((item) => item !== url);
+    const cpanelPath = cpanelStoragePathFromPublicUrl(url);
+    const supabasePath = supabaseStoragePathFromPublicUrl(url);
+    if (cpanelPath) {
+      await cpanelStorageRequest({ payload: { action: 'delete', path: cpanelPath } });
+    } else if (supabasePath) {
+      const { error: storageError } = await sb.storage.from('vehicles').remove([supabasePath]);
+      if (storageError) console.warn(storageError.message);
+    }
+    const { error: updateError } = await sb.from('vehicles').update({ images: nextImages }).eq('id', vehicleId);
+    if (updateError) throw updateError;
+
+    if (state.selectedVehiclePhoto === url) state.selectedVehiclePhoto = nextImages[0] || '';
+    showMsg('Foto eliminada.', true);
+    renderPhotoList({ id: vehicleId, images: nextImages });
+    await loadRows();
+  } catch (error) {
+    console.error(error);
+    showMsg(error.message || 'No se pudo eliminar la foto.', false);
   }
-  const { error: updateError } = await sb.from('vehicles').update({ images: nextImages }).eq('id', vehicleId);
-  if (updateError) return showMsg(updateError.message, false);
-
-  if (state.selectedVehiclePhoto === url) state.selectedVehiclePhoto = nextImages[0] || '';
-  showMsg('Foto eliminada.', true);
-  renderPhotoList({ id: vehicleId, images: nextImages });
-  await loadRows();
 }
 
 async function uploadFiles(files, vehicleId) {
   if (!files?.length) return [];
   const uploaded = [];
   for (const file of files) {
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    const path = `${vehicleId}/${crypto.randomUUID()}.${ext}`;
-    const { error } = await sb.storage.from('vehicles').upload(path, file, { upsert: false });
-    if (error) throw error;
-    const { data } = sb.storage.from('vehicles').getPublicUrl(path);
-    uploaded.push(data.publicUrl);
+    const formData = new FormData();
+    formData.append('action', 'upload');
+    formData.append('vehicle_id', String(vehicleId));
+    formData.append('image', file, file.name);
+    const result = await cpanelStorageRequest({ formData });
+    if (!result.url) throw new Error('cPanel no devolvió la URL de la imagen.');
+    uploaded.push(new URL(result.url, window.location.href).href);
   }
   return uploaded;
 }
@@ -2475,7 +3386,7 @@ function filteredVehicleRows() {
 function quickStatusHTML(vehicleId) {
   const status = state.quickPriceStatus[String(vehicleId)];
   if (!status) return '<span class="quick-row-status" aria-live="polite"></span>';
-  const className = status.ok === false ? 'is-error' : status.saving ? 'is-saving' : 'is-ok';
+  const className = status.saving ? 'is-saving' : status.warning ? 'is-warning' : status.ok === false ? 'is-error' : 'is-ok';
   return `<span class="quick-row-status ${className}" aria-live="polite">${escape(status.message || '')}</span>`;
 }
 
@@ -2493,6 +3404,7 @@ function vehicleStatusOptionsHTML(current) {
 function quickSaveButtonLabel(vehicleId) {
   const status = state.quickPriceStatus[String(vehicleId)];
   if (status?.saving) return 'Guardando…';
+  if (status?.warning) return 'Guardado';
   if (status?.ok === false) return 'Error';
   if (status?.message === 'Guardado') return 'Guardado';
   return 'Guardar';
@@ -2548,6 +3460,7 @@ function setQuickPriceStatus(vehicleId, message, options = {}) {
   state.quickPriceStatus[String(vehicleId)] = {
     message,
     saving: !!options.saving,
+    warning: !!options.warning,
     ok: options.ok !== false,
   };
   renderQuickPrices();
@@ -2626,6 +3539,10 @@ async function saveVehicle(triggerButton = $('save')) {
     finance_entities: listValue('finance_entities'),
     finance_note: $('finance_note').value.trim() || null,
   };
+  const existingVehicle = id ? state.vehicles.find((item) => String(item.id) === String(id)) : null;
+  const vehicleTimestamp = new Date().toISOString();
+  if (payload.status !== 'hidden') payload.published_at = existingVehicle?.published_at || vehicleTimestamp;
+  if (payload.status === 'sold') payload.sold_at = existingVehicle?.sold_at || vehicleTimestamp;
 
   if (!payload.title) return showMsg('El título es obligatorio.', false);
   if (!Number.isFinite(payload.price)) return showMsg('El precio es obligatorio.', false);
@@ -2642,40 +3559,36 @@ async function saveVehicle(triggerButton = $('save')) {
     let savedId = id;
     let minimumDownPaymentFallback = '';
     if (!id) {
-      let response = await sb.from('vehicles').insert(payload).select('id').single();
+      let insertPayload = payload;
+      let response = await sb.from('vehicles').insert(insertPayload).select('id').single();
       if (response.error && isPlateSchemaError(response.error)) {
         supportsPlate = false;
         warnPlateCompatibility();
-        const { plate, ...payloadWithoutPlate } = payload;
-        response = await sb.from('vehicles').insert(payloadWithoutPlate).select('id').single();
-      } else if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
-        const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
-        response = await sb.from('vehicles').insert({ ...payloadWithoutMinimumDownPayment, min_down_payment: minimum_down_payment }).select('id').single();
-        if (response.error && isSchemaMissingError(response.error, 'min_down_payment')) {
-          response = await sb.from('vehicles').insert(payloadWithoutMinimumDownPayment).select('id').single();
-          if (!response.error) minimumDownPaymentFallback = 'skipped';
-        } else if (!response.error) {
-          minimumDownPaymentFallback = 'legacy';
-        }
+        const { plate, ...payloadWithoutPlate } = insertPayload;
+        insertPayload = payloadWithoutPlate;
+        response = await sb.from('vehicles').insert(insertPayload).select('id').single();
+      }
+      if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
+        const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = insertPayload;
+        response = await sb.from('vehicles').insert(payloadWithoutMinimumDownPayment).select('id').single();
+        if (!response.error) minimumDownPaymentFallback = 'skipped';
       }
       if (response.error) throw response.error;
       savedId = response.data.id;
     } else {
-      let response = await sb.from('vehicles').update(payload).eq('id', id);
+      let updatePayload = payload;
+      let response = await sb.from('vehicles').update(updatePayload).eq('id', id);
       if (response.error && isPlateSchemaError(response.error)) {
         supportsPlate = false;
         warnPlateCompatibility();
-        const { plate, ...payloadWithoutPlate } = payload;
-        response = await sb.from('vehicles').update(payloadWithoutPlate).eq('id', id);
-      } else if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
-        const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
-        response = await sb.from('vehicles').update({ ...payloadWithoutMinimumDownPayment, min_down_payment: minimum_down_payment }).eq('id', id);
-        if (response.error && isSchemaMissingError(response.error, 'min_down_payment')) {
-          response = await sb.from('vehicles').update(payloadWithoutMinimumDownPayment).eq('id', id);
-          if (!response.error) minimumDownPaymentFallback = 'skipped';
-        } else if (!response.error) {
-          minimumDownPaymentFallback = 'legacy';
-        }
+        const { plate, ...payloadWithoutPlate } = updatePayload;
+        updatePayload = payloadWithoutPlate;
+        response = await sb.from('vehicles').update(updatePayload).eq('id', id);
+      }
+      if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
+        const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = updatePayload;
+        response = await sb.from('vehicles').update(payloadWithoutMinimumDownPayment).eq('id', id);
+        if (!response.error) minimumDownPaymentFallback = 'skipped';
       }
       if (response.error) throw response.error;
     }
@@ -2689,9 +3602,7 @@ async function saveVehicle(triggerButton = $('save')) {
       if (error) throw error;
     }
 
-    const fallbackMessage = minimumDownPaymentFallback === 'legacy'
-      ? 'Vehículo guardado. La entrega mínima se guardó en compatibilidad; ejecutá la migración minimum_down_payment para normalizar el campo.'
-      : minimumDownPaymentFallback === 'skipped'
+    const fallbackMessage = minimumDownPaymentFallback === 'skipped'
         ? 'Vehículo guardado sin entrega mínima. Ejecutá la migración minimum_down_payment para habilitar el campo.'
         : '';
     lastSavedVehicle = await getVehicleById(savedId);
@@ -2746,26 +3657,29 @@ async function saveQuickVehicleRow(id) {
     minimum_down_payment: minimumDownPayment,
     currency: document.querySelector(`[data-price-currency="${id}"]`)?.value || 'ARS',
     status: document.querySelector(`[data-price-status="${id}"]`)?.value || 'available',
+    updated_at: new Date().toISOString(),
   };
+  const existingVehicle = state.vehicles.find((item) => String(item.id) === String(id));
+  if (payload.status !== 'hidden') payload.published_at = existingVehicle?.published_at || payload.updated_at;
+  if (payload.status === 'sold') payload.sold_at = existingVehicle?.sold_at || payload.updated_at;
 
   setQuickPriceStatus(id, 'Guardando…', { saving: true });
+  let warningMessage = '';
   let response = await sb.from('vehicles').update(payload).eq('id', id).select('*').single();
   if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
     const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
-    response = await sb.from('vehicles').update({ ...payloadWithoutMinimumDownPayment, min_down_payment: minimum_down_payment }).eq('id', id).select('*').single();
-    if (response.error && isSchemaMissingError(response.error, 'min_down_payment')) {
-      response = await sb.from('vehicles').update(payloadWithoutMinimumDownPayment).eq('id', id).select('*').single();
-    }
-    if (!response.error) setQuickPriceStatus(id, 'Guardado con compatibilidad: falta migración', { ok: false });
+    response = await sb.from('vehicles').update(payloadWithoutMinimumDownPayment).eq('id', id).select('*').single();
+    if (!response.error) warningMessage = 'Precio guardado. Falta migración para entrega mínima.';
   }
   const { data, error } = response;
   if (error) {
+    console.error('Quick price update failed', { vehicleId: id, payload, error });
     setQuickPriceStatus(id, error.message || 'Error', { ok: false });
     return;
   }
 
   state.vehicles = state.vehicles.map((vehicle) => (String(vehicle.id) === String(id) ? { ...vehicle, ...data } : vehicle));
-  if (!state.quickPriceStatus[String(id)]?.message?.includes('falta migración')) setQuickPriceStatus(id, 'Guardado');
+  setQuickPriceStatus(id, warningMessage || 'Guardado', warningMessage ? { warning: true } : {});
   filterRowsLocally();
   renderOverview();
 }
@@ -2775,7 +3689,7 @@ function vehicleDuplicatePayload(vehicle) {
     'brand', 'model', 'year', 'km', 'price', 'currency', 'category', 'description', 'engine',
     'transmission', 'drivetrain', 'color', 'doors', 'fuel_type', 'vehicle_condition',
     'featured_equipment', 'is_recent', 'outlet', 'insurance_available', 'financing_enabled',
-    'private_financing_enabled', 'finance_max_months', 'minimum_down_payment', 'min_down_payment', 'finance_entities',
+    'private_financing_enabled', 'finance_max_months', 'minimum_down_payment', 'finance_entities',
     'finance_note', 'stock_alert_days', 'images',
   ];
   const payload = {
@@ -2787,6 +3701,7 @@ function vehicleDuplicatePayload(vehicle) {
   keys.forEach((key) => {
     if (Object.prototype.hasOwnProperty.call(vehicle, key) && vehicle[key] !== undefined) payload[key] = vehicle[key];
   });
+  payload.minimum_down_payment = vehicleMinimumDownPayment(vehicle);
   payload.is_recent = false;
   return payload;
 }
@@ -2799,7 +3714,12 @@ async function duplicateVehicle(id) {
   if (response.error && isPlateSchemaError(response.error)) {
     supportsPlate = false;
     const { plate, ...payloadWithoutPlate } = payload;
+    payload = payloadWithoutPlate;
     response = await sb.from('vehicles').insert(payloadWithoutPlate).select('id').single();
+  }
+  if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
+    const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
+    response = await sb.from('vehicles').insert(payloadWithoutMinimumDownPayment).select('id').single();
   }
   if (response.error) throw response.error;
   const duplicate = await getVehicleById(response.data.id);
@@ -2912,7 +3832,10 @@ async function generateVehicleFichaWithAi() {
     aiAssistantMessage('Propuesta generada. Revisala antes de aplicar.', true);
   } catch (error) {
     console.error(error);
-    aiAssistantMessage(error.message || 'No se pudo generar la ficha con IA.', false);
+    const message = error instanceof TypeError && String(error.message || '').toLowerCase().includes('fetch')
+      ? 'No se pudo conectar con el asistente IA. Revisá CORS o la configuración de la función en Supabase.'
+      : error.message || 'No se pudo generar la ficha con IA.';
+    aiAssistantMessage(message, false);
   } finally {
     if (button) {
       button.disabled = false;
@@ -3190,7 +4113,81 @@ async function changePassword() {
   alert('Contraseña actualizada.');
 }
 
+function spendPayloadFromValues(values = {}) {
+  const month = String(values.spend_month || '').trim().slice(0, 7);
+  const source = String(values.source || '').trim().toLowerCase();
+  const amount = Number(values.amount);
+  const currency = String(values.currency || 'ARS').trim().toUpperCase();
+  if (!/^\d{4}-\d{2}$/.test(month)) throw new Error('Indicá un mes válido.');
+  if (!source) throw new Error('Indicá la fuente publicitaria.');
+  if (!Number.isFinite(amount) || amount < 0) throw new Error('Indicá un importe válido.');
+  if (!['ARS', 'USD'].includes(currency)) throw new Error('La moneda debe ser ARS o USD.');
+  return {
+    spend_month: `${month}-01`,
+    source,
+    campaign: String(values.campaign || '').trim(),
+    ad_code: String(values.ad_code || '').trim(),
+    amount,
+    currency,
+    notes: String(values.notes || '').trim() || null,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+async function saveAdSpend() {
+  const payload = spendPayloadFromValues({
+    spend_month: $('spendMonth')?.value,
+    source: $('spendSource')?.value,
+    campaign: $('spendCampaign')?.value,
+    amount: $('spendAmount')?.value,
+    currency: $('spendCurrency')?.value,
+  });
+  const { error } = await sb.from('ad_spend_monthly').upsert(payload, { onConflict: 'spend_month,source,campaign,ad_code,currency' });
+  if (error) throw error;
+  await loadAnalyticsViews();
+}
+
+function parseCsvRows(csvText) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let quoted = false;
+  for (let index = 0; index < csvText.length; index += 1) {
+    const char = csvText[index];
+    if (char === '"' && quoted && csvText[index + 1] === '"') { field += '"'; index += 1; continue; }
+    if (char === '"') { quoted = !quoted; continue; }
+    if (char === ',' && !quoted) { row.push(field); field = ''; continue; }
+    if ((char === '\n' || char === '\r') && !quoted) {
+      if (char === '\r' && csvText[index + 1] === '\n') index += 1;
+      row.push(field); field = '';
+      if (row.some((item) => item.trim())) rows.push(row);
+      row = [];
+      continue;
+    }
+    field += char;
+  }
+  row.push(field);
+  if (row.some((item) => item.trim())) rows.push(row);
+  return rows;
+}
+
+async function importAdSpendCsv() {
+  const file = $('spendCsv')?.files?.[0];
+  if (!file) throw new Error('Seleccioná un archivo CSV.');
+  const rows = parseCsvRows(await file.text());
+  if (rows.length < 2) throw new Error('El CSV no contiene filas para importar.');
+  const headers = rows[0].map((item) => item.replace(/^\ufeff/, '').trim().toLowerCase());
+  const payloads = rows.slice(1).map((values) => {
+    const item = Object.fromEntries(headers.map((header, index) => [header, values[index] || '']));
+    return spendPayloadFromValues(item);
+  });
+  const { error } = await sb.from('ad_spend_monthly').upsert(payloads, { onConflict: 'spend_month,source,campaign,ad_code,currency' });
+  if (error) throw error;
+  await loadAnalyticsViews();
+}
+
 function bindEvents() {
+  bindPhotoDragAndDrop();
   $('adminSidebarToggle')?.addEventListener('click', () => {
     setSidebarCollapsed(!state.sidebarCollapsed);
   });
@@ -3232,6 +4229,50 @@ function bindEvents() {
   $('leadSearch')?.addEventListener('input', (event) => {
     state.leadSearch = event.target.value.trim().toLowerCase();
     renderLeads();
+  });
+  [
+    ['leadDateFrom', 'dateFrom', 'change'],
+    ['leadDateTo', 'dateTo', 'change'],
+    ['leadAssigneeFilter', 'assignee', 'change'],
+    ['leadStageFilter', 'stage', 'change'],
+    ['leadCampaignFilter', 'campaign', 'input'],
+    ['leadVehicleFilter', 'vehicle', 'input'],
+  ].forEach(([id, key, eventName]) => {
+    $(id)?.addEventListener(eventName, (event) => {
+      const value = String(event.target.value || '').trim();
+      state.leadFilters[key] = ['campaign', 'vehicle'].includes(key) ? value.toLowerCase() : value;
+      renderLeads();
+    });
+  });
+  [
+    ['applicantFitFilter', 'fit'],
+    ['applicantStatusFilter', 'status'],
+    ['applicantAutomotiveFilter', 'automotive'],
+  ].forEach(([id, key]) => {
+    $(id)?.addEventListener('change', (event) => {
+      state.applicantFilters[key] = String(event.target.value || '');
+      renderLeads();
+    });
+  });
+  $('clearLeadFilters')?.addEventListener('click', () => {
+    state.leadSearch = '';
+    state.leadFilters = { dateFrom: '', dateTo: '', assignee: '', stage: '', campaign: '', vehicle: '' };
+    state.applicantFilters = { fit: '', status: '', automotive: '' };
+    ['leadSearch', 'leadDateFrom', 'leadDateTo', 'leadAssigneeFilter', 'leadStageFilter', 'leadCampaignFilter', 'leadVehicleFilter', 'applicantFitFilter', 'applicantStatusFilter', 'applicantAutomotiveFilter'].forEach((id) => { if ($(id)) $(id).value = ''; });
+    renderLeads();
+  });
+  $('exportLeadsCsv')?.addEventListener('click', exportLeadsCsv);
+  $('metricsPeriodDays')?.addEventListener('change', (event) => {
+    state.metricsPeriodDays = Number(event.target.value || 30);
+    renderMetricsDashboard();
+  });
+  $('saveSpend')?.addEventListener('click', async () => {
+    try { await saveAdSpend(); alert('Gasto publicitario guardado.'); }
+    catch (error) { alert(error.message || 'No se pudo guardar el gasto.'); }
+  });
+  $('importSpendCsv')?.addEventListener('click', async () => {
+    try { await importAdSpendCsv(); alert('Gastos importados correctamente.'); }
+    catch (error) { alert(error.message || 'No se pudo importar el CSV.'); }
   });
   $('photos')?.addEventListener('change', (event) => renderSelectedFilesPreview(event.target.files));
   $('newVehicleBtn')?.addEventListener('click', () => {
@@ -3325,6 +4366,7 @@ function bindEvents() {
     const leadToggleButton = event.target.closest('[data-lead-toggle]');
     const leadArchiveButton = event.target.closest('[data-lead-archive]');
     const leadCopyButton = event.target.closest('[data-lead-copy]');
+    const leadContactLink = event.target.closest('[data-lead-contact]');
     const photoSelectButton = event.target.closest('[data-photo-select]');
     const priceSaveButton = event.target.closest('[data-price-save]');
     const duplicateButton = event.target.closest('[data-duplicate]');
@@ -3332,6 +4374,51 @@ function bindEvents() {
     const completeAdvancedButton = event.target.closest('[data-complete-advanced]');
     const vehiclePanelTarget = event.target.closest('[data-vehicle-panel-target]');
     const aiApplyButton = event.target.closest('[data-ai-apply]');
+    const applicantToggleButton = event.target.closest('[data-applicant-toggle]');
+    const applicantSaveButton = event.target.closest('[data-applicant-save]');
+    const applicantDownloadButton = event.target.closest('[data-applicant-download]');
+
+    if (applicantToggleButton) {
+      toggleApplicant(applicantToggleButton.dataset.applicantToggle);
+      return;
+    }
+
+    if (applicantSaveButton) {
+      const original = applicantSaveButton.textContent;
+      applicantSaveButton.disabled = true;
+      applicantSaveButton.textContent = 'Guardando…';
+      try {
+        await updateApplicant(applicantSaveButton.dataset.applicantSave);
+        alert('Seguimiento del postulante actualizado.');
+      } catch (error) {
+        alert(error.message || 'No se pudo actualizar el postulante.');
+      } finally {
+        applicantSaveButton.disabled = false;
+        applicantSaveButton.textContent = original;
+      }
+      return;
+    }
+
+    if (applicantDownloadButton) {
+      const original = applicantDownloadButton.textContent;
+      applicantDownloadButton.disabled = true;
+      applicantDownloadButton.textContent = 'Descargando…';
+      try {
+        await downloadApplicantCv(applicantDownloadButton.dataset.applicantDownload, applicantDownloadButton.dataset.applicantName);
+      } catch (error) {
+        alert(error.message || 'No se pudo descargar el CV.');
+      } finally {
+        applicantDownloadButton.disabled = false;
+        applicantDownloadButton.textContent = original;
+      }
+      return;
+    }
+
+    if (leadContactLink) {
+      markLeadFirstResponse(leadContactLink.dataset.leadContact, leadContactLink.dataset.id)
+        .catch((error) => console.warn('No se pudo registrar la primera respuesta:', error.message || error));
+      return;
+    }
 
     if (editButton) {
       const vehicle = await getVehicleById(editButton.getAttribute('data-edit'));
@@ -3384,7 +4471,12 @@ function bindEvents() {
     if (statusButton) {
       const id = statusButton.getAttribute('data-st');
       const status = statusButton.getAttribute('data-v');
-      const { error } = await sb.from('vehicles').update({ status }).eq('id', id);
+      const current = state.vehicles.find((item) => String(item.id) === String(id));
+      const nowIso = new Date().toISOString();
+      const statusPayload = { status, updated_at: nowIso };
+      if (status !== 'hidden') statusPayload.published_at = current?.published_at || nowIso;
+      if (status === 'sold') statusPayload.sold_at = current?.sold_at || nowIso;
+      const { error } = await sb.from('vehicles').update(statusPayload).eq('id', id);
       if (error) return showMsg(error.message, false);
       showMsg(`Estado actualizado a ${window.RGShared.statusLabel(status)}.`, true);
       await loadRows();

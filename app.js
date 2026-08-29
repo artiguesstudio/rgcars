@@ -1,4 +1,5 @@
-const sb = window.supabase.createClient(RG.SUPABASE_URL, RG.SUPABASE_ANON_KEY);
+const sb = window.RGShared?.publicSupabaseClient?.()
+  || window.supabase.createClient(RG.SUPABASE_URL, RG.SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
 
 const $grid = document.getElementById('grid');
 const $q = document.getElementById('q');
@@ -33,6 +34,8 @@ let stockExpanded = false;
 let soldAutoplayTimer = null;
 let soldAutoplayResumeTimer = null;
 let soldCarouselBound = false;
+let searchTrackingTimer = null;
+let lastSearchTrackingSignature = '';
 const soldReducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
 function escape(value) {
@@ -90,11 +93,11 @@ function statusPillHTML(vehicle) {
   return `<span class="status-pill ${escape(window.RGShared.statusClass(status))}">${escape(window.RGShared.statusLabel(status))}</span>`;
 }
 
-function cardHTML(vehicle) {
+function cardHTML(vehicle, position = 0) {
   const year = String(vehicle.year || '').trim();
   const minimumDownPayment = window.RGShared.minimumDownPaymentLabel(vehicle);
   return `
-    <article class="vehicle-card vehicle-card--catalog">
+    <article class="vehicle-card vehicle-card--catalog" data-catalog-vehicle-id="${escape(vehicle.id)}" data-catalog-position="${position + 1}">
       <a class="vehicle-card-link" href="./vehicle.html?id=${encodeURIComponent(vehicle.id)}" aria-label="Ver detalle de ${escape(vehicle.title || 'Vehículo')}">
         <div class="vehicle-media">
           ${imagesHTML(vehicle)}
@@ -448,7 +451,7 @@ function renderRows(rows, emptyTitle, emptyCopy) {
   const visibleRows = stockExpanded ? sorted : sorted.slice(0, limit);
 
   $grid.innerHTML = `
-    ${visibleRows.map(cardHTML).join('')}
+    ${visibleRows.map((vehicle, index) => cardHTML(vehicle, index)).join('')}
     ${shouldShowToggle ? `
       <div class="stock-more-wrap">
         <button type="button" class="btn btn-ghost stock-more-button" id="stockMoreButton" aria-expanded="${stockExpanded ? 'true' : 'false'}">
@@ -474,6 +477,70 @@ function renderSearchResults(emptyTitle = 'No encontramos vehículos con esos fi
   renderRows(filtered, emptyTitle, emptyCopy);
 }
 
+function activeSearchTrackingPayload() {
+  const rawSearch = String($q?.value || '').trim().toLowerCase();
+  const knownTerms = new Set();
+  vehiclesCache.forEach((vehicle) => {
+    [vehicle.brand, vehicle.model, vehicle.category, vehicle.fuel, vehicle.transmission, vehicle.color, vehicle.year]
+      .filter(Boolean)
+      .forEach((value) => knownTerms.add(String(value).trim().toLowerCase()));
+  });
+  const searchTerm = [...knownTerms].filter((term) => term.length >= 2 && rawSearch.includes(term)).slice(0, 4).join(' ') || (rawSearch ? 'other' : '');
+  const rawColor = String($filterColor?.value || '').trim().toLowerCase();
+  const knownColors = new Set(vehiclesCache.map((vehicle) => String(vehicle.color || '').trim().toLowerCase()).filter(Boolean));
+  return {
+    search_term: searchTerm,
+    filter_featured: !!$filterFeatured?.checked,
+    filter_zero_km: !!$filterZeroKm?.checked,
+    filter_used: !!$filterUsed?.checked,
+    filter_brand: $filterBrand?.value || null,
+    filter_fuel: $filterFuel?.value || null,
+    filter_transmission: $filterTransmission?.value || null,
+    filter_drivetrain: $filterDrivetrain?.value || null,
+    filter_color: rawColor ? (knownColors.has(rawColor) ? rawColor : 'other') : null,
+    filter_year_min: $filterYearMin?.value || null,
+    filter_year_max: $filterYearMax?.value || null,
+    filter_price_min: $filterPriceMin?.value || null,
+    filter_price_max: $filterPriceMax?.value || null,
+    sort: $sort?.value || 'newest',
+    result_count: filteredVehicles(vehiclesCache).length,
+  };
+}
+
+function scheduleSearchTracking() {
+  clearTimeout(searchTrackingTimer);
+  searchTrackingTimer = setTimeout(() => {
+    const payload = activeSearchTrackingPayload();
+    if (!payload.search_term && activeFilterCount() === 0) return;
+    const signature = JSON.stringify(payload);
+    if (signature === lastSearchTrackingSignature) return;
+    lastSearchTrackingSignature = signature;
+    window.RGShared.trackEvent?.('search', payload);
+  }, 500);
+}
+
+function bindCatalogSelectionTracking() {
+  $grid?.addEventListener('click', (event) => {
+    const link = event.target.closest('.vehicle-card-link');
+    const card = link?.closest('[data-catalog-vehicle-id]');
+    if (!link || !card) return;
+    const vehicle = vehiclesCache.find((item) => String(item.id) === String(card.dataset.catalogVehicleId));
+    if (!vehicle) return;
+    window.RGShared.trackEvent?.('select_item', {
+      item_list_id: 'public_stock',
+      item_list_name: 'Stock disponible',
+      vehicle_id: vehicle.id,
+      item_id: String(vehicle.id),
+      item_name: vehicle.title || [vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(' '),
+      brand: vehicle.brand || null,
+      model: vehicle.model || null,
+      year: vehicle.year || null,
+      category: vehicle.category || null,
+      position: Number(card.dataset.catalogPosition || 0) || null,
+    });
+  });
+}
+
 async function fetchVehicles() {
   if (!$grid) return;
   stockExpanded = false;
@@ -493,6 +560,18 @@ async function fetchVehicles() {
     updateBrandOptions(vehiclesCache);
     renderSearchResults();
     renderSoldVehicles(soldVehiclesCache);
+    window.RGShared.trackEvent?.('view_item_list', {
+      item_list_id: 'public_stock',
+      item_list_name: 'Stock disponible',
+      item_count: vehiclesCache.length,
+      items: vehiclesCache.slice(0, 50).map((vehicle, index) => ({
+        item_id: String(vehicle.id),
+        item_name: vehicle.title || [vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(' '),
+        item_brand: vehicle.brand || null,
+        item_category: vehicle.category || null,
+        index: index + 1,
+      })),
+    });
   } catch (error) {
     console.error(error);
     renderSoldVehicles([]);
@@ -504,6 +583,7 @@ function bindFilterEvents() {
   const rerender = () => {
     stockExpanded = false;
     renderSearchResults();
+    scheduleSearchTracking();
   };
 
   $q?.addEventListener('input', rerender);
@@ -530,6 +610,7 @@ function bindFilterEvents() {
     if ($filterPriceMax) $filterPriceMax.value = '';
     stockExpanded = false;
     renderSearchResults();
+    lastSearchTrackingSignature = '';
   });
 
   let resizeTimer = null;
@@ -541,4 +622,5 @@ function bindFilterEvents() {
 
 initFilterMenu();
 bindFilterEvents();
+bindCatalogSelectionTracking();
 fetchVehicles();

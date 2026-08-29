@@ -1,0 +1,9 @@
+Options -Indexes
+
+# Algunos servidores Apache no reenvían Authorization a PHP sin esta regla.
+SetEnvIf Authorization "(.+)" HTTP_AUTHORIZATION=$1
+
+<IfModule mod_headers.c>
+  Header always set Cache-Control "no-store"
+  Header always set X-Content-Type-Options "nosniff"
+</IfModule>

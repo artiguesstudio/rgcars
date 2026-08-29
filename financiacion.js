@@ -303,6 +303,13 @@ function openFinancingModal(optionId, trigger) {
   if (!option || !refs) return;
 
   lastFinancingOptionTrigger = trigger || document.activeElement;
+  window.RGShared.trackEvent?.('click_financing', {
+    financing_entity: option.id,
+    financing_type: option.id === 'propia' ? 'own_financing' : 'third_party_financing',
+    destination: 'financing_option_detail',
+    vehicle_id: form?.vehicle_id?.value || urlParams.get('vehicle_id') || null,
+    source: 'financing_page',
+  });
   refs.image.src = option.image;
   refs.image.alt = option.imageAlt;
   refs.title.textContent = option.title;

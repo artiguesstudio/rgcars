@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="../styles.css?v=20260829-automotive-premium-v2" />
 </head>
 <body class="admin-body admin-saas-page">
   <div class="admin-saas-shell">
@@ -171,6 +171,7 @@
                 </div>
                 <p class="admin-muted" id="metricsMeta">Visión consolidada de tráfico, leads y stock.</p>
               </div>
+              <div class="field"><label for="metricsPeriodDays">Período</label><select id="metricsPeriodDays" class="select"><option value="30" selected>Últimos 30 días vs. 30 anteriores</option><option value="7">Últimos 7 días vs. 7 anteriores</option><option value="90">Últimos 90 días vs. 90 anteriores</option></select></div>
               <div id="metricsAreas" class="admin-summary-strip"></div>
             </article>
 
@@ -185,6 +186,31 @@
               <div id="metricsFunnel" class="admin-summary-list admin-summary-list--clean"></div>
             </article>
           </div>
+
+          <article class="admin-card admin-panel-card">
+            <div class="admin-panel-head"><div><span class="eyebrow">KPI automáticos</span><h2>Embudo, tiempos y costos</h2></div><p class="admin-muted">Cada tarjeta muestra valor absoluto, fórmula, período y comparación.</p></div>
+            <div id="businessKpiGrid" class="admin-kpi-grid"></div>
+          </article>
+
+          <div class="admin-overview-grid admin-overview-grid--reports">
+            <article class="admin-card admin-panel-card"><div class="admin-panel-head"><div><span class="eyebrow">Atribución</span><h2>Resultado por fuente y campaña</h2></div></div><div id="campaignPerformance" class="admin-summary-list admin-summary-list--clean"></div></article>
+            <article class="admin-card admin-panel-card"><div class="admin-panel-head"><div><span class="eyebrow">Inventario</span><h2>Consultas y rotación por vehículo</h2></div></div><div id="vehiclePerformance" class="admin-summary-list admin-summary-list--clean"></div></article>
+          </div>
+
+          <article class="admin-card admin-panel-card">
+            <div class="admin-panel-head"><div><span class="eyebrow">Inversión</span><h2>Carga manual de gasto publicitario</h2></div><p class="admin-muted">No se calculan costos hasta cargar importes reales.</p></div>
+            <div class="form-grid">
+              <div class="field col-2"><label for="spendMonth">Mes</label><input id="spendMonth" class="input" type="month" /></div>
+              <div class="field col-2"><label for="spendSource">Fuente</label><input id="spendSource" class="input" placeholder="meta, google…" /></div>
+              <div class="field col-3"><label for="spendCampaign">Campaña</label><input id="spendCampaign" class="input" placeholder="Opcional" /></div>
+              <div class="field col-2"><label for="spendAmount">Importe</label><input id="spendAmount" class="input" type="number" min="0" step="0.01" /></div>
+              <div class="field col-1"><label for="spendCurrency">Moneda</label><select id="spendCurrency" class="select"><option value="ARS">ARS</option><option value="USD">USD</option></select></div>
+              <div class="field col-2"><label for="spendCsv">Importar CSV</label><input id="spendCsv" class="input" type="file" accept=".csv,text/csv" /></div>
+            </div>
+            <div class="action-row action-row--admin action-row--compact"><button id="saveSpend" class="btn btn-primary" type="button">Guardar gasto</button><button id="importSpendCsv" class="btn btn-ghost" type="button">Importar CSV</button></div>
+            <p class="field-help">Columnas CSV: spend_month, source, campaign, ad_code, amount, currency, notes.</p>
+            <div id="spendList" class="admin-summary-list admin-summary-list--clean"></div>
+          </article>
 
           <div class="admin-overview-grid admin-overview-grid--reports admin-overview-grid--traffic">
             <article class="admin-card admin-panel-card">
@@ -356,8 +382,9 @@
                   <div class="field">
                     <label for="photos">Fotos</label>
                     <input id="photos" class="input" type="file" accept="image/*" multiple />
-                    <p class="field-help">Las imágenes se almacenan en el bucket <strong>vehicles</strong>.</p>
+                    <p class="field-help">Las imágenes se almacenan en cPanel, sin límite de cantidad por vehículo.</p>
                   </div>
+                  <p class="field-help photo-reorder-help" id="photoReorderHelp">Mantené clic sobre una foto y arrastrala hasta su nueva posición. La primera foto queda como principal.</p>
                   <div class="photo-toolbar">
                     <button type="button" class="btn btn-ghost" id="photoMoveLeft" disabled>Mover antes</button>
                     <button type="button" class="btn btn-ghost" id="photoMoveRight" disabled>Mover después</button>
@@ -529,10 +556,24 @@
                 <button type="button" class="tab-button" data-tab="insurance">Seguros</button>
                 <button type="button" class="tab-button" data-tab="peritaje">Peritaje</button>
                 <button type="button" class="tab-button" data-tab="feedback">Sugerencias</button>
+                <button type="button" class="tab-button" data-tab="applications">Postulantes</button>
               </div>
               <div class="field">
                 <label for="leadSearch">Buscar lead</label>
                 <input id="leadSearch" class="input" placeholder="Nombre, email, teléfono, CUIL, marca o modelo" autocomplete="off" />
+              </div>
+              <div class="field"><label for="leadDateFrom">Desde</label><input id="leadDateFrom" class="input" type="date" /></div>
+              <div class="field"><label for="leadDateTo">Hasta</label><input id="leadDateTo" class="input" type="date" /></div>
+              <div class="field"><label for="leadAssigneeFilter">Responsable</label><select id="leadAssigneeFilter" class="select"><option value="">Todos</option></select></div>
+              <div class="field"><label for="leadStageFilter">Etapa</label><select id="leadStageFilter" class="select"><option value="">Todas</option><option value="lead">Lead</option><option value="opportunity">Oportunidad</option><option value="proposal">Propuesta</option><option value="negotiation">Negociación</option><option value="won">Ganado</option><option value="lost">Perdido</option></select></div>
+              <div class="field"><label for="leadCampaignFilter">Fuente o campaña</label><input id="leadCampaignFilter" class="input" placeholder="Meta, Google, campaña…" /></div>
+              <div class="field"><label for="leadVehicleFilter">Vehículo</label><input id="leadVehicleFilter" class="input" placeholder="ID, marca o modelo" /></div>
+              <div class="field applicant-only-filter" hidden><label for="applicantFitFilter">Afinidad del perfil</label><select id="applicantFitFilter" class="select"><option value="">Todas</option><option value="very_high">Muy alta · 85+</option><option value="high">Alta · 70+</option><option value="medium">Media · 50–69</option><option value="initial">Inicial · menos de 50</option></select></div>
+              <div class="field applicant-only-filter" hidden><label for="applicantStatusFilter">Estado del postulante</label><select id="applicantStatusFilter" class="select"><option value="">Todos</option><option value="new">Nuevo</option><option value="review">En revisión</option><option value="interview">Entrevista</option><option value="rejected">Descartado</option><option value="hired">Contratado</option></select></div>
+              <div class="field applicant-only-filter" hidden><label for="applicantAutomotiveFilter">Experiencia automotriz</label><select id="applicantAutomotiveFilter" class="select"><option value="">Todos</option><option value="yes">Con experiencia</option><option value="no">Sin experiencia</option></select></div>
+              <div class="action-row action-row--admin action-row--compact">
+                <button type="button" class="btn btn-ghost" id="clearLeadFilters">Limpiar filtros</button>
+                <button type="button" class="btn btn-soft" id="exportLeadsCsv">Exportar CSV</button>
               </div>
             </div>
 
@@ -545,6 +586,7 @@
             <section id="insurancePanel" class="lead-panel"></section>
             <section id="peritajePanel" class="lead-panel"></section>
             <section id="feedbackPanel" class="lead-panel"></section>
+            <section id="applicationsPanel" class="lead-panel"></section>
           </article>
         </section>
 
@@ -636,7 +678,7 @@
               </div>
               <div class="admin-summary-list admin-summary-list--clean">
                 <div class="admin-summary-item"><strong>Vehículos</strong><span>Stock, edición y estados comerciales.</span></div>
-                <div class="admin-summary-item"><strong>Leads</strong><span>Consignación, búsquedas, financiación, seguros, peritajes y sugerencias.</span></div>
+                <div class="admin-summary-item"><strong>Leads</strong><span>Consignación, búsquedas, financiación, seguros, peritajes, sugerencias y postulantes.</span></div>
                 <div class="admin-summary-item"><strong>Financiación</strong><span>Edición de líneas, tasas, cuotas y notas comerciales.</span></div>
                 <div class="admin-summary-item"><strong>Seguros</strong><span>Seguimiento específico de pre-cotizaciones.</span></div>
                 <div class="admin-summary-item"><strong>Peritaje</strong><span>Agenda, fichas y seguimiento de inspecciones coordinadas.</span></div>
@@ -652,9 +694,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="../config.js"></script>
   <script src="../finance-rate-defaults.js"></script>
-  <script src="../shared.js"></script>
+  <script src="../shared.js?v=20260829-automotive-premium-v2"></script>
   <script src="./admin-access.js"></script>
   <script src="../ficha.js"></script>
-  <script src="./admin.js" defer></script>
+  <script src="./admin.js?v=20260829-photo-order-v1" defer></script>
 </body>
 </html>
