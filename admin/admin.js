@@ -61,6 +61,7 @@ const state = {
 };
 
 let supportsPlate = true;
+let supportsVehicleLifecycle = true;
 let lastSavedVehicle = null;
 const SIDEBAR_COLLAPSED_KEY = 'rg-admin-sidebar-collapsed';
 
@@ -2947,14 +2948,73 @@ function isMinimumDownPaymentSchemaError(error) {
   return message.includes('column') && message.includes('minimum_down_payment');
 }
 
+function isVehicleLifecycleSchemaError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  return (message.includes('published_at') || message.includes('sold_at'))
+    && (message.includes('column') || message.includes('schema cache'));
+}
+
 function isOptionalPriceSchemaError(error) {
   const message = String(error?.message || '').toLowerCase();
   return message.includes('price')
     && (message.includes('not-null') || message.includes('not null') || message.includes('null value'));
 }
 
-function warnPlateCompatibility() {
-  showMsg('La tabla vehicles no tiene la columna patente. Se guardará sin ese campo hasta que actualices el esquema.', false);
+async function writeVehicleWithSchemaFallback(initialPayload, write) {
+  let payload = { ...initialPayload };
+  const compatibility = {
+    lifecycle: false,
+    minimumDownPayment: false,
+    plate: false,
+    price: false,
+  };
+  let response = null;
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    response = await write(payload);
+    if (!response.error) return { ...response, compatibility, payload };
+
+    if (isVehicleLifecycleSchemaError(response.error) && ('published_at' in payload || 'sold_at' in payload)) {
+      const { published_at, sold_at, ...payloadWithoutLifecycle } = payload;
+      payload = payloadWithoutLifecycle;
+      supportsVehicleLifecycle = false;
+      compatibility.lifecycle = true;
+      continue;
+    }
+
+    if (isPlateSchemaError(response.error) && 'plate' in payload) {
+      const { plate, ...payloadWithoutPlate } = payload;
+      payload = payloadWithoutPlate;
+      supportsPlate = false;
+      compatibility.plate = true;
+      continue;
+    }
+
+    if (isMinimumDownPaymentSchemaError(response.error) && 'minimum_down_payment' in payload) {
+      const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
+      payload = payloadWithoutMinimumDownPayment;
+      compatibility.minimumDownPayment = true;
+      continue;
+    }
+
+    if (initialPayload.price == null && payload.price == null && isOptionalPriceSchemaError(response.error)) {
+      payload = { ...payload, price: 0 };
+      compatibility.price = true;
+      continue;
+    }
+
+    return { ...response, compatibility, payload };
+  }
+
+  return { ...response, compatibility, payload };
+}
+
+function vehicleCompatibilityMessage(compatibility = {}, baseMessage = 'Vehículo guardado correctamente.') {
+  const notices = [];
+  if (compatibility.lifecycle) notices.push('Falta aplicar la migración de fechas de publicación y venta.');
+  if (compatibility.minimumDownPayment) notices.push('Falta aplicar la migración de entrega mínima.');
+  if (compatibility.plate) notices.push('Falta aplicar la migración de patente.');
+  return notices.length ? `${baseMessage} ${notices.join(' ')}` : baseMessage;
 }
 
 function fillForm(vehicle) {
@@ -3517,6 +3577,10 @@ async function loadRows() {
   }
   state.vehicles = (data || []).map((item) => ({ plate: null, ...item }));
   if (state.vehicles.length && !Object.prototype.hasOwnProperty.call(state.vehicles[0], 'plate')) supportsPlate = false;
+  if (state.vehicles.length) {
+    supportsVehicleLifecycle = Object.prototype.hasOwnProperty.call(state.vehicles[0], 'published_at')
+      && Object.prototype.hasOwnProperty.call(state.vehicles[0], 'sold_at');
+  }
   const plateField = $('plate');
   if (plateField) plateField.disabled = !supportsPlate;
   filterRowsLocally();
@@ -3560,8 +3624,8 @@ async function saveVehicle(triggerButton = $('save')) {
   };
   const existingVehicle = id ? state.vehicles.find((item) => String(item.id) === String(id)) : null;
   const vehicleTimestamp = new Date().toISOString();
-  if (payload.status !== 'hidden') payload.published_at = existingVehicle?.published_at || vehicleTimestamp;
-  if (payload.status === 'sold') payload.sold_at = existingVehicle?.sold_at || vehicleTimestamp;
+  if (supportsVehicleLifecycle && payload.status !== 'hidden') payload.published_at = existingVehicle?.published_at || vehicleTimestamp;
+  if (supportsVehicleLifecycle && payload.status === 'sold') payload.sold_at = existingVehicle?.sold_at || vehicleTimestamp;
 
   if (!payload.title) return showMsg('El título es obligatorio.', false);
   if (payload.price != null && !Number.isFinite(payload.price)) return showMsg('Ingresá un precio válido o escribí “Consultar”.', false);
@@ -3576,50 +3640,22 @@ async function saveVehicle(triggerButton = $('save')) {
 
   try {
     let savedId = id;
-    let minimumDownPaymentFallback = '';
+    let compatibility = {};
     if (!id) {
-      let insertPayload = payload;
-      let response = await sb.from('vehicles').insert(insertPayload).select('id').single();
-      if (response.error && isPlateSchemaError(response.error)) {
-        supportsPlate = false;
-        warnPlateCompatibility();
-        const { plate, ...payloadWithoutPlate } = insertPayload;
-        insertPayload = payloadWithoutPlate;
-        response = await sb.from('vehicles').insert(insertPayload).select('id').single();
-      }
-      if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
-        const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = insertPayload;
-        insertPayload = payloadWithoutMinimumDownPayment;
-        response = await sb.from('vehicles').insert(insertPayload).select('id').single();
-        if (!response.error) minimumDownPaymentFallback = 'skipped';
-      }
-      if (response.error && payload.price == null && isOptionalPriceSchemaError(response.error)) {
-        insertPayload = { ...insertPayload, price: 0 };
-        response = await sb.from('vehicles').insert(insertPayload).select('id').single();
-      }
+      const response = await writeVehicleWithSchemaFallback(
+        payload,
+        (insertPayload) => sb.from('vehicles').insert(insertPayload).select('id').single()
+      );
       if (response.error) throw response.error;
+      compatibility = response.compatibility;
       savedId = response.data.id;
     } else {
-      let updatePayload = payload;
-      let response = await sb.from('vehicles').update(updatePayload).eq('id', id);
-      if (response.error && isPlateSchemaError(response.error)) {
-        supportsPlate = false;
-        warnPlateCompatibility();
-        const { plate, ...payloadWithoutPlate } = updatePayload;
-        updatePayload = payloadWithoutPlate;
-        response = await sb.from('vehicles').update(updatePayload).eq('id', id);
-      }
-      if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
-        const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = updatePayload;
-        updatePayload = payloadWithoutMinimumDownPayment;
-        response = await sb.from('vehicles').update(updatePayload).eq('id', id);
-        if (!response.error) minimumDownPaymentFallback = 'skipped';
-      }
-      if (response.error && payload.price == null && isOptionalPriceSchemaError(response.error)) {
-        updatePayload = { ...updatePayload, price: 0 };
-        response = await sb.from('vehicles').update(updatePayload).eq('id', id);
-      }
+      const response = await writeVehicleWithSchemaFallback(
+        payload,
+        (updatePayload) => sb.from('vehicles').update(updatePayload).eq('id', id)
+      );
       if (response.error) throw response.error;
+      compatibility = response.compatibility;
     }
 
     const files = $('photos')?.files;
@@ -3631,15 +3667,9 @@ async function saveVehicle(triggerButton = $('save')) {
       if (error) throw error;
     }
 
-    const fallbackMessage = minimumDownPaymentFallback === 'skipped'
-        ? 'Vehículo guardado sin entrega mínima. Ejecutá la migración minimum_down_payment para habilitar el campo.'
-        : '';
     lastSavedVehicle = await getVehicleById(savedId);
     renderPostSaveActions(lastSavedVehicle, true);
-    showMsg(
-      fallbackMessage || 'Vehículo guardado correctamente.',
-      true
-    );
+    showMsg(vehicleCompatibilityMessage(compatibility), true);
     fillForm(lastSavedVehicle);
     await loadRows();
     await loadVehicleAlerts();
@@ -3689,23 +3719,14 @@ async function saveQuickVehicleRow(id) {
     updated_at: new Date().toISOString(),
   };
   const existingVehicle = state.vehicles.find((item) => String(item.id) === String(id));
-  if (payload.status !== 'hidden') payload.published_at = existingVehicle?.published_at || payload.updated_at;
-  if (payload.status === 'sold') payload.sold_at = existingVehicle?.sold_at || payload.updated_at;
+  if (supportsVehicleLifecycle && payload.status !== 'hidden') payload.published_at = existingVehicle?.published_at || payload.updated_at;
+  if (supportsVehicleLifecycle && payload.status === 'sold') payload.sold_at = existingVehicle?.sold_at || payload.updated_at;
 
   setQuickPriceStatus(id, 'Guardando…', { saving: true });
-  let warningMessage = '';
-  let quickPayload = payload;
-  let response = await sb.from('vehicles').update(quickPayload).eq('id', id).select('*').single();
-  if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
-    const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = quickPayload;
-    quickPayload = payloadWithoutMinimumDownPayment;
-    response = await sb.from('vehicles').update(quickPayload).eq('id', id).select('*').single();
-    if (!response.error) warningMessage = 'Precio guardado. Falta migración para entrega mínima.';
-  }
-  if (response.error && price == null && isOptionalPriceSchemaError(response.error)) {
-    quickPayload = { ...quickPayload, price: 0 };
-    response = await sb.from('vehicles').update(quickPayload).eq('id', id).select('*').single();
-  }
+  const response = await writeVehicleWithSchemaFallback(
+    payload,
+    (quickPayload) => sb.from('vehicles').update(quickPayload).eq('id', id).select('*').single()
+  );
   const { data, error } = response;
   if (error) {
     console.error('Quick price update failed', { vehicleId: id, payload, error });
@@ -3714,6 +3735,11 @@ async function saveQuickVehicleRow(id) {
   }
 
   state.vehicles = state.vehicles.map((vehicle) => (String(vehicle.id) === String(id) ? { ...vehicle, ...data } : vehicle));
+  const warningMessage = response.compatibility.lifecycle
+    ? 'Precio guardado. Falta migración para fechas de publicación y venta.'
+    : response.compatibility.minimumDownPayment
+      ? 'Precio guardado. Falta migración para entrega mínima.'
+      : '';
   setQuickPriceStatus(id, warningMessage || 'Guardado', warningMessage ? { warning: true } : {});
   filterRowsLocally();
   renderOverview();
@@ -3744,23 +3770,11 @@ function vehicleDuplicatePayload(vehicle) {
 async function duplicateVehicle(id) {
   const source = state.vehicles.find((vehicle) => String(vehicle.id) === String(id)) || await getVehicleById(id);
   if (!source) throw new Error('No encontramos la unidad para duplicar.');
-  let payload = vehicleDuplicatePayload(source);
-  let response = await sb.from('vehicles').insert(payload).select('id').single();
-  if (response.error && isPlateSchemaError(response.error)) {
-    supportsPlate = false;
-    const { plate, ...payloadWithoutPlate } = payload;
-    payload = payloadWithoutPlate;
-    response = await sb.from('vehicles').insert(payloadWithoutPlate).select('id').single();
-  }
-  if (response.error && isMinimumDownPaymentSchemaError(response.error)) {
-    const { minimum_down_payment, ...payloadWithoutMinimumDownPayment } = payload;
-    payload = payloadWithoutMinimumDownPayment;
-    response = await sb.from('vehicles').insert(payload).select('id').single();
-  }
-  if (response.error && payload.price == null && isOptionalPriceSchemaError(response.error)) {
-    payload = { ...payload, price: 0 };
-    response = await sb.from('vehicles').insert(payload).select('id').single();
-  }
+  const payload = vehicleDuplicatePayload(source);
+  const response = await writeVehicleWithSchemaFallback(
+    payload,
+    (duplicatePayload) => sb.from('vehicles').insert(duplicatePayload).select('id').single()
+  );
   if (response.error) throw response.error;
   const duplicate = await getVehicleById(response.data.id);
   lastSavedVehicle = duplicate;
@@ -4516,11 +4530,15 @@ function bindEvents() {
       const current = state.vehicles.find((item) => String(item.id) === String(id));
       const nowIso = new Date().toISOString();
       const statusPayload = { status, updated_at: nowIso };
-      if (status !== 'hidden') statusPayload.published_at = current?.published_at || nowIso;
-      if (status === 'sold') statusPayload.sold_at = current?.sold_at || nowIso;
-      const { error } = await sb.from('vehicles').update(statusPayload).eq('id', id);
+      if (supportsVehicleLifecycle && status !== 'hidden') statusPayload.published_at = current?.published_at || nowIso;
+      if (supportsVehicleLifecycle && status === 'sold') statusPayload.sold_at = current?.sold_at || nowIso;
+      const response = await writeVehicleWithSchemaFallback(
+        statusPayload,
+        (nextStatusPayload) => sb.from('vehicles').update(nextStatusPayload).eq('id', id)
+      );
+      const { error } = response;
       if (error) return showMsg(error.message, false);
-      showMsg(`Estado actualizado a ${window.RGShared.statusLabel(status)}.`, true);
+      showMsg(vehicleCompatibilityMessage(response.compatibility, `Estado actualizado a ${window.RGShared.statusLabel(status)}.`), true);
       await loadRows();
       return;
     }
