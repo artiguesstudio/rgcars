@@ -1,53 +1,93 @@
-/* Shared service landing pages, with individual editorial photography. */
-body.service-landing-page .wizard-shell { padding:28px 0 72px; }
-body.service-landing-page :is(.service-hero,.service-benefits,.service-process,.service-related) { width:min(1120px, calc(100% - 40px)); max-width:1120px; }
-.service-hero { display:grid; grid-template-columns:1fr 1fr; overflow:hidden; border:1px solid #e2e5e8; border-radius:28px; background:#fff; box-shadow:0 18px 54px #18212d0c; }
-.service-hero__copy { padding:clamp(28px,4vw,54px); display:flex; flex-direction:column; align-items:flex-start; justify-content:center; }
-body.service-landing-page .service-kicker { display:block; color:#a5121b; font-size:.7rem; line-height:1.5; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
-body.service-landing-page .service-hero h1 { margin:20px 0; color:#1b2027; font-size:clamp(2.1rem,3.4vw,3.25rem); font-weight:700; line-height:1.08; letter-spacing:-.055em; text-wrap:balance; }
-.service-hero__copy > p { margin:0 0 26px; color:#606976; font-size:.97rem; line-height:1.75; }
-body.service-landing-page .service-cta { min-height:48px; padding:13px 20px; gap:20px; border-radius:10px; background:#c8161e; border:1px solid #b2121a; color:#fff; box-shadow:0 4px 12px #b20d1424; font-size:.88rem; font-weight:600; }
+/* Portadas de servicios: fotografía real integrada sobre blanco. */
+body.service-landing-page .wizard-shell { padding:20px 0 56px; }
+body.service-landing-page :is(.service-hero,.service-related) { width:min(980px,calc(100% - 32px)); max-width:980px; }
+.service-hero {
+ position:relative;
+ isolation:isolate;
+ overflow:hidden;
+ min-height:420px;
+ border:1px solid #e2e5e8;
+ border-radius:28px;
+ background:#fff;
+ box-shadow:0 16px 42px #18212d0c;
+}
+.service-hero::before {
+ content:'';
+ position:absolute;
+ inset:0;
+ z-index:1;
+ pointer-events:none;
+ background:linear-gradient(90deg,#fff 0%,#fff 30%,rgba(255,255,255,.96) 40%,rgba(255,255,255,.65) 51%,rgba(255,255,255,.12) 68%,transparent 80%);
+}
+.service-hero__copy {
+ position:relative;
+ z-index:2;
+ width:62%;
+ min-height:420px;
+ padding:38px 42px;
+ display:flex;
+ flex-direction:column;
+ align-items:flex-start;
+ justify-content:center;
+}
+body.service-landing-page .service-kicker {
+ display:inline-block;
+ padding:8px 12px;
+ border-radius:999px;
+ background:#fbecee;
+ color:#b5121b;
+ font-size:.7rem;
+ line-height:1.4;
+ font-weight:750;
+ letter-spacing:.12em;
+ text-transform:uppercase;
+}
+body.service-landing-page .service-hero h1 {
+ margin:18px 0;
+ color:#151b26;
+ font-size:clamp(2.3rem,4.1vw,3.65rem);
+ font-weight:750;
+ line-height:1.04;
+ letter-spacing:-.055em;
+ text-wrap:balance;
+}
+.service-hero__copy > p { max-width:40ch; margin:0 0 24px; color:#526073; font-size:.98rem; line-height:1.65; }
+body.service-landing-page .service-cta {
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ min-height:44px;
+ padding:12px 18px;
+ gap:14px;
+ border-radius:9px;
+ background:#c8161e;
+ border:1px solid #b2121a;
+ color:#fff;
+ box-shadow:0 3px 9px #b20d141a;
+ font-size:.86rem;
+ font-weight:650;
+ line-height:1.2;
+ text-decoration:none;
+}
 body.service-landing-page .service-cta:hover { background:#a51018; }
-.service-hero__signature { margin-top:22px; color:#727a85; font-size:.7rem; }
-.service-hero__visual { position:relative; min-width:0; min-height:480px; background:#dbe0e3; }
-.service-hero__visual img { width:100%; height:100%; position:absolute; object-fit:cover; object-position:center; }
-.service-image-caption { position:absolute; bottom:20px; left:20px; right:20px; width:fit-content; padding:8px 12px; border:1px solid #ffffff45; border-radius:6px; background:#19222dcc; color:#fff; font-size:.64rem; letter-spacing:.06em; }
-.service-benefits { padding-block:58px; }
-.service-section-heading h2,.service-form-intro h2,.service-related h2 { margin:12px 0 0; color:#20262e; font-size:clamp(1.6rem,2.5vw,2.15rem); line-height:1.2; letter-spacing:-.04em; font-weight:650; text-wrap:balance; }
-.service-benefits__grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:26px; }
-.service-benefit { padding:28px; background:#ffffffc9; border:1px solid #e0e4e9; border-radius:18px; }
-.service-benefit__icon { display:grid; place-items:center; width:42px; height:42px; border-radius:12px; background:#f8e9eb; color:#a5121b; margin-bottom:24px; }
-.service-benefit__icon svg { width:23px; height:23px; }
-.service-benefit h3,.service-process h3 { margin:0 0 10px; color:#252d37; font-size:1rem; font-weight:650; line-height:1.35; }
-.service-benefit p,.service-process p,.service-form-intro p,.service-related p { margin:0; color:#616b78; font-size:.88rem; line-height:1.75; }
-.service-process { display:grid; grid-template-columns:.85fr 1.15fr; gap:60px; border-block:1px solid #dce1e6; padding-block:40px; }
-.service-process .service-section-heading > p { margin-top:20px; max-width:42ch; font-size:.8rem; }
-.service-process ol { list-style:none; margin:0; padding:0; display:grid; gap:26px; }
-.service-process li { display:flex; gap:22px; }
-.service-step-number { font-variant-numeric:tabular-nums; font-size:1.5rem; font-weight:500; color:#a5121b; line-height:1.25; }
-body.service-landing-page .service-form-intro { max-width:760px; padding-top:54px; padding-bottom:24px; scroll-margin-top:105px; }
-.service-form-intro p { margin-top:14px; }
-body.service-landing-page .wizard-grid { margin-top:0; }
-body.service-landing-page .wizard-card { padding:30px; border-radius:20px; }
-.service-related { display:flex; gap:28px; align-items:center; justify-content:space-between; margin-top:42px; padding:30px; border-radius:20px; border:1px solid #dce1e6; background:#ffffffa6; scroll-margin-top:105px; }
-.service-related h2 { font-size:1.35rem; }
-.service-related p { margin-top:12px; }
+.service-hero__visual { position:absolute; inset:0 0 0 36%; z-index:0; }
+.service-hero__visual img { width:100%; height:100%; object-fit:cover; object-position:center 64%; }
+body.service-landing-page .wizard-grid { margin-top:24px; scroll-margin-top:100px; }
+body.service-landing-page .wizard-card { padding:28px; border-radius:22px; }
+.service-related { display:flex; gap:24px; align-items:center; justify-content:space-between; margin-top:28px; padding:24px; border-radius:20px; border:1px solid #dce1e6; background:#ffffffa6; scroll-margin-top:100px; }
+.service-related h2 { margin:14px 0 0; color:#20262e; font-size:1.2rem; line-height:1.3; letter-spacing:-.025em; }
+.service-related p { margin:10px 0 0; color:#616b78; font-size:.86rem; line-height:1.65; }
 .service-related .btn { flex-shrink:0; }
 @media(max-width:760px) {
- body.service-landing-page .wizard-shell { padding-top:16px; }
- body.service-landing-page :is(.service-hero,.service-benefits,.service-process,.service-related) { width:calc(100% - 28px); }
- .service-hero { grid-template-columns:1fr; border-radius:20px; }
- .service-hero__copy { padding:28px 24px; }
- body.service-landing-page .service-hero h1 { font-size:2.15rem; margin-block:16px; }
- .service-hero__copy > p { font-size:.9rem; line-height:1.65; margin-bottom:20px; }
- .service-hero__visual { min-height:0; aspect-ratio:3 / 2; }
- .service-hero__signature { margin-top:16px; }
- .service-benefits { padding-block:36px; }
- .service-benefits__grid { grid-template-columns:1fr; gap:12px; margin-top:22px; }
- .service-benefit { padding:22px; }
- .service-benefit__icon { margin-bottom:16px; }
- .service-process { grid-template-columns:1fr; gap:28px; padding-block:30px; }
- body.service-landing-page .service-form-intro { padding-top:36px; }
+ body.service-landing-page .wizard-shell { padding-top:14px; }
+ .service-hero { min-height:0; border-radius:22px; }
+ .service-hero__copy { width:100%; min-height:0; padding:28px 24px 0; }
+ body.service-landing-page .service-hero h1 { max-width:16ch; font-size:2.3rem; margin-block:16px; }
+ .service-hero__copy > p { max-width:36ch; font-size:.92rem; margin-bottom:20px; }
+ .service-hero__visual { position:relative; inset:auto; height:280px; margin-top:-12px; }
+ .service-hero__visual img { object-position:center 63%; }
+ .service-hero::before { display:none; }
+ .service-hero__visual::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.9) 7%,rgba(255,255,255,.3) 23%,transparent 42%); }
  body.service-landing-page .wizard-card { padding:22px; }
- .service-related { flex-direction:column; align-items:flex-start; padding:24px; }
+ .service-related { flex-direction:column; align-items:flex-start; }
 }
