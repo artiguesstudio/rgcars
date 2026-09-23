@@ -27,7 +27,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./styles.css?v=20260625-deploy-refresh" />
-  <link rel="stylesheet" href="./index.css?v=20260829-consent-actions-v3" />
+  <link rel="stylesheet" href="./index.css?v=20260923-categories-refinement" />
 </head>
 <body class="public-theme home-page">
   <header class="site-header">
@@ -59,6 +59,7 @@
       <div class="hero-overlay"></div>
 
       <div class="container hero-content">
+        <p class="hero-eyebrow">RG Cars TDF · Compra, venta y servicios</p>
         <h1>Cuidamos el valor de tu esfuerzo</h1>
         <div class="hero-location-badge"><strong>Dirección:</strong> Sarmiento 2760 · Río Grande, Tierra del Fuego</div>
 
@@ -223,6 +224,23 @@
             </select>
           </label>
         
+          <label class="filter-inline-field" for="filterCategory">
+            <span>Categoría</span>
+            <select id="filterCategory" class="select toolbar-sort__select">
+              <option value="">Todas</option>
+              <option value="auto">Auto</option>
+              <option value="camioneta">Camioneta</option>
+              <option value="suv">SUV</option>
+              <option value="camion">Camión</option>
+              <option value="moto">Moto</option>
+              <option value="utilitario">Utilitario</option>
+              <option value="minibus">Minibus</option>
+              <option value="colectivo">Colectivo</option>
+              <option value="maquinaria">Maquinaria</option>
+              <option value="jeep">Jeep</option>
+              <option value="otro">Otro</option>
+            </select>
+          </label>
           <label class="filter-inline-field" for="filterBrand">
             <span>Marca</span>
             <select id="filterBrand" class="select toolbar-sort__select">
@@ -301,7 +319,9 @@
         <div class="section-head catalog-head">
           <div>
 
+            <span class="mini-kicker">Nuestro stock</span>
             <h2>Unidades listas para explorar</h2>
+            <p class="catalog-intro">Encontrá tu próximo vehículo. Nosotros te acompañamos en cada paso.</p>
           </div>
          </div>
 
@@ -394,8 +414,8 @@
   <script src="./config.js?v=20260625-deploy-refresh"></script>
   <script src="./measurement.js?v=20260829-consent-actions-v3"></script>
   <script src="./catalog-data.js?v=20260625-deploy-refresh"></script>
-  <script src="./shared.js?v=20260829-recruitment-page-v2"></script>
-  <script src="./app.js?v=20260829-price-consultar-v1" defer></script>
+  <script src="./shared.js?v=20260923-categories-refinement"></script>
+  <script src="./app.js?v=20260923-categories-refinement" defer></script>
   <script src="./home-ui.js?v=20260626-supermovilidad-benefits" defer></script>
 </body>
 </html>

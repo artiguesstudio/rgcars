@@ -6,6 +6,10 @@
     camion: 'Camión',
     moto: 'Moto',
     utilitario: 'Utilitario',
+    minibus: 'Minibus',
+    colectivo: 'Colectivo',
+    maquinaria: 'Maquinaria',
+    jeep: 'Jeep',
     otro: 'Otro',
   };
 

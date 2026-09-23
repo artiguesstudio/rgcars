@@ -14,6 +14,7 @@ const $sort = document.getElementById('sort');
 const $filterFeatured = document.getElementById('filterFeatured');
 const $filterZeroKm = document.getElementById('filterZeroKm');
 const $filterUsed = document.getElementById('filterUsed');
+const $filterCategory = document.getElementById('filterCategory');
 const $filterBrand = document.getElementById('filterBrand');
 const $filterFuel = document.getElementById('filterFuel');
 const $filterTransmission = document.getElementById('filterTransmission');
@@ -145,6 +146,7 @@ function activeFilterCount() {
     $filterFeatured?.checked,
     $filterZeroKm?.checked,
     $filterUsed?.checked,
+    !!$filterCategory?.value,
     !!$filterBrand?.value,
     !!$filterFuel?.value,
     !!$filterTransmission?.value,
@@ -294,6 +296,7 @@ function filteredVehicles(rows) {
     if (wantsZeroKm && !wantsUsed && !isZeroKm(vehicle)) return false;
     if (wantsUsed && !wantsZeroKm && isZeroKm(vehicle)) return false;
 
+    if ($filterCategory?.value && formatText(vehicle.category) !== formatText($filterCategory.value)) return false;
     if ($filterBrand?.value && formatText(vehicle.brand) !== formatText($filterBrand.value)) return false;
     if ($filterFuel?.value && formatText(vehicle.fuel_type) !== formatText($filterFuel.value)) return false;
     if ($filterTransmission?.value && formatText(vehicle.transmission) !== formatText($filterTransmission.value)) return false;
@@ -503,6 +506,7 @@ function activeSearchTrackingPayload() {
     filter_featured: !!$filterFeatured?.checked,
     filter_zero_km: !!$filterZeroKm?.checked,
     filter_used: !!$filterUsed?.checked,
+    filter_category: $filterCategory?.value || null,
     filter_brand: $filterBrand?.value || null,
     filter_fuel: $filterFuel?.value || null,
     filter_transmission: $filterTransmission?.value || null,
@@ -598,9 +602,9 @@ function bindFilterEvents() {
 
   $q?.addEventListener('input', rerender);
   $sort?.addEventListener('change', rerender);
-  [$filterFeatured, $filterZeroKm, $filterUsed, $filterBrand, $filterFuel, $filterTransmission, $filterDrivetrain, $filterColor, $filterYearMin, $filterYearMax, $filterPriceMin, $filterPriceMax]
+  [$filterFeatured, $filterZeroKm, $filterUsed, $filterCategory, $filterBrand, $filterFuel, $filterTransmission, $filterDrivetrain, $filterColor, $filterYearMin, $filterYearMax, $filterPriceMin, $filterPriceMax]
     .forEach((control) => control?.addEventListener('input', rerender));
-  [$filterFeatured, $filterZeroKm, $filterUsed, $filterBrand, $filterFuel, $filterTransmission, $filterDrivetrain]
+  [$filterFeatured, $filterZeroKm, $filterUsed, $filterCategory, $filterBrand, $filterFuel, $filterTransmission, $filterDrivetrain]
     .forEach((control) => control?.addEventListener('change', rerender));
 
   $clearFilters?.addEventListener('click', () => {
@@ -609,6 +613,7 @@ function bindFilterEvents() {
     if ($filterFeatured) $filterFeatured.checked = false;
     if ($filterZeroKm) $filterZeroKm.checked = false;
     if ($filterUsed) $filterUsed.checked = false;
+    if ($filterCategory) $filterCategory.value = '';
     if ($filterBrand) $filterBrand.value = '';
     if ($filterFuel) $filterFuel.value = '';
     if ($filterTransmission) $filterTransmission.value = '';

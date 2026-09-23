@@ -25,9 +25,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./styles.css?v=20260625-deploy-refresh" />
-  <link rel="stylesheet" href="./index.css?v=20260829-consent-actions-v3" />
+  <link rel="stylesheet" href="./index.css?v=20260923-categories-refinement" />
+  <link rel="stylesheet" href="./services.css?v=20260923-service-landings" />
 </head>
-<body class="public-theme wizard-page insurance-page">
+<body class="public-theme wizard-page insurance-page service-landing-page">
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="./index.html" aria-label="RG Cars TDF">
@@ -49,11 +50,28 @@
   </header>
 
   <main class="wizard-shell service-form-shell insurance-shell">
-    <section class="container wizard-intro">
-      <span class="eyebrow">Seguros del automotor</span>
-      <h1>Consultá tu seguro con un formulario corto</h1>
-      <p>Dejanos tus datos y, si querés, la unidad a asegurar. Después seguimos por WhatsApp con una propuesta más concreta.</p>
+    <section class="container service-hero" aria-labelledby="serviceTitle">
+      <div class="service-hero__copy">
+        <span class="service-kicker">Seguros del automotor</span>
+        <h1 id="serviceTitle">Cuidá tu vehículo. Seguí disfrutando el camino.</h1>
+        <p>Encontrá orientación para elegir una cobertura acorde a tu vehículo y a cómo lo usás. Te acompañamos a entender las opciones antes de decidir.</p>
+        <a class="btn btn-primary service-cta" href="#consulta">Consultar por mi seguro <span aria-hidden="true">↗</span></a>
+        <span class="service-hero__signature">RG Cars TDF · Atención personalizada</span>
+      </div>
+      <div class="service-hero__visual"><img src="./imagenes/servicios/seguros-hero.webp" alt="SUV plateado junto a un lago y montañas de Tierra del Fuego" width="1536" height="1024" fetchpriority="high" decoding="async" /><span class="service-image-caption">Seguros del automotor / RG Cars TDF</span></div>
     </section>
+
+    <section class="container service-benefits" aria-labelledby="benefitsTitle">
+      <div class="service-section-heading"><span class="service-kicker">Pensado para vos</span><h2 id="benefitsTitle">Elegí con información y tranquilidad.</h2></div>
+      <div class="service-benefits__grid"><article class="service-benefit"><span class="service-benefit__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M7 4v6m10-6v6M5 7v13h14V7M8 14h3m-3 3h7"/></svg></span><h3>Según tu vehículo</h3><p>Compartí qué unidad querés asegurar para orientar tu consulta.</p></article><article class="service-benefit"><span class="service-benefit__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6M4 21h16"/></svg></span><h3>Opciones claras</h3><p>Consultá por alcances, condiciones y alternativas de cobertura.</p></article><article class="service-benefit"><span class="service-benefit__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 1-8 8H5l-3 3V11a9 9 0 0 1 18 0ZM7 10h10m-10 4h6"/></svg></span><h3>Atención personalizada</h3><p>Resolvé tus dudas con nuestro equipo y definí cómo continuar.</p></article></div>
+    </section>
+
+    <section class="container service-process" aria-labelledby="processTitle">
+      <div class="service-section-heading"><span class="service-kicker">Cómo funciona</span><h2 id="processTitle">Un camino simple, paso a paso.</h2><p>Coberturas, exclusiones, costos y aceptación sujetos a las condiciones de la aseguradora y de la póliza.</p></div>
+      <ol><li><span class="service-step-number" aria-hidden="true">01</span><div><h3>Dejanos tu consulta</h3><p>Completá tus datos y la referencia del vehículo que querés asegurar.</p></div></li><li><span class="service-step-number" aria-hidden="true">02</span><div><h3>Conversamos sobre el uso</h3><p>Te contactamos para reunir la información necesaria.</p></div></li><li><span class="service-step-number" aria-hidden="true">03</span><div><h3>Revisá las condiciones</h3><p>Evaluá la propuesta, sus alcances y requisitos antes de contratar.</p></div></li></ol>
+    </section>
+
+    <div class="container service-form-intro" id="consulta"><span class="service-kicker">Hablemos</span><h2>Empecemos por tu consulta.</h2><p>Contanos qué vehículo querés asegurar y te contactamos para orientar tu consulta.</p></div>
 
     <section class="container wizard-grid">
       <article class="wizard-card insurance-card">
@@ -143,7 +161,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="./config.js?v=20260625-deploy-refresh"></script>
   <script src="./measurement.js?v=20260829-consent-actions-v3"></script>
-  <script src="./shared.js?v=20260829-recruitment-page-v2"></script>
+  <script src="./shared.js?v=20260923-categories-refinement"></script>
   <script src="./seguros.js?v=20260625-deploy-refresh" defer></script>
 </body>
 </html>

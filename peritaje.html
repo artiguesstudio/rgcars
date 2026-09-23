@@ -23,9 +23,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css?v=20260625-deploy-refresh" />
-  <link rel="stylesheet" href="./index.css?v=20260829-consent-actions-v3" />
+  <link rel="stylesheet" href="./index.css?v=20260923-categories-refinement" />
+  <link rel="stylesheet" href="./services.css?v=20260923-service-landings" />
 </head>
-<body class="public-theme wizard-page peritaje-page">
+<body class="public-theme wizard-page peritaje-page service-landing-page">
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="./index.html" aria-label="RG Cars TDF">
@@ -45,11 +46,28 @@
   </header>
 
   <main class="wizard-shell peritaje-shell service-form-shell">
-    <section class="container wizard-intro peritaje-intro">
-      <span class="eyebrow">Peritajes pre-compra</span>
-      <h1>Solicitá un peritaje sin fricción</h1>
-      <p>Dejanos tus datos y la unidad a revisar si ya la tenés identificada. Después coordinamos el resto con contacto directo.</p>
+    <section class="container service-hero" aria-labelledby="serviceTitle">
+      <div class="service-hero__copy">
+        <span class="service-kicker">Peritaje pre-compra</span>
+        <h1 id="serviceTitle">Conocé más del vehículo antes de elegirlo.</h1>
+        <p>Una mirada técnica para acompañar tu decisión. Contanos qué unidad querés revisar y coordinemos el alcance del peritaje.</p>
+        <a class="btn btn-primary service-cta" href="#consulta">Solicitar un peritaje <span aria-hidden="true">↗</span></a>
+        <span class="service-hero__signature">RG Cars TDF · Atención personalizada</span>
+      </div>
+      <div class="service-hero__visual"><img src="./imagenes/servicios/peritaje-hero.webp" alt="Técnico inspeccionando el motor de un vehículo en un taller" width="1536" height="1024" fetchpriority="high" decoding="async" /><span class="service-image-caption">Peritaje pre-compra / RG Cars TDF</span></div>
     </section>
+
+    <section class="container service-benefits" aria-labelledby="benefitsTitle">
+      <div class="service-section-heading"><span class="service-kicker">Pensado para vos</span><h2 id="benefitsTitle">Más información para tu próxima compra.</h2></div>
+      <div class="service-benefits__grid"><article class="service-benefit"><span class="service-benefit__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M7 4v6m10-6v6M5 7v13h14V7M8 14h3m-3 3h7"/></svg></span><h3>Revisión de la unidad</h3><p>Coordinamos una evaluación del vehículo que te interesa comprar.</p></article><article class="service-benefit"><span class="service-benefit__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6M4 21h16"/></svg></span><h3>Alcance acordado</h3><p>Consultá qué aspectos se revisan y qué necesitás para coordinar la inspección.</p></article><article class="service-benefit"><span class="service-benefit__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 1-8 8H5l-3 3V11a9 9 0 0 1 18 0ZM7 10h10m-10 4h6"/></svg></span><h3>Una decisión informada</h3><p>Conversá sobre las observaciones de la revisión antes de dar el próximo paso.</p></article></div>
+    </section>
+
+    <section class="container service-process" aria-labelledby="processTitle">
+      <div class="service-section-heading"><span class="service-kicker">Cómo funciona</span><h2 id="processTitle">Un camino simple, paso a paso.</h2><p>El alcance, costo y disponibilidad se confirman al coordinar. El peritaje no constituye una garantía sobre el estado futuro del vehículo.</p></div>
+      <ol><li><span class="service-step-number" aria-hidden="true">01</span><div><h3>Identificá el vehículo</h3><p>Compartí la unidad que te interesa y tus datos de contacto.</p></div></li><li><span class="service-step-number" aria-hidden="true">02</span><div><h3>Coordinamos la revisión</h3><p>Acordamos disponibilidad, lugar y alcance del servicio.</p></div></li><li><span class="service-step-number" aria-hidden="true">03</span><div><h3>Conocé las observaciones</h3><p>Revisá la información obtenida para acompañar tu decisión de compra.</p></div></li></ol>
+    </section>
+
+    <div class="container service-form-intro" id="consulta"><span class="service-kicker">Hablemos</span><h2>Empecemos por tu consulta.</h2><p>Dejanos una referencia del vehículo. Nos contactamos para coordinar los detalles de la revisión.</p></div>
 
     <section class="container wizard-grid peritaje-grid">
       <article class="wizard-card peritaje-card">
@@ -93,6 +111,10 @@
           </div>
         </form>
       </article>
+    </section>
+    <section class="container service-related" id="gestoria" aria-labelledby="gestoriaTitle">
+      <div><span class="service-kicker">También te acompañamos</span><h2 id="gestoriaTitle">¿Necesitás orientación con los trámites?</h2><p>Consultanos por gestoría y los próximos pasos de tu operación.</p></div>
+      <a class="btn btn-ghost" href="https://wa.me/5492964588267?text=Hola%2C%20quiero%20consultar%20por%20gestor%C3%ADa." target="_blank" rel="noopener noreferrer">Consultar por gestoría ↗</a>
     </section>
   </main>
 
@@ -140,7 +162,7 @@
   <script src="./config.js?v=20260625-deploy-refresh"></script>
   <script src="./measurement.js?v=20260829-consent-actions-v3"></script>
   <script src="./catalog-data.js?v=20260625-deploy-refresh"></script>
-  <script src="./shared.js?v=20260829-recruitment-page-v2"></script>
+  <script src="./shared.js?v=20260923-categories-refinement"></script>
   <script src="./peritaje.js?v=20260625-deploy-refresh" defer></script>
 </body>
 </html>
