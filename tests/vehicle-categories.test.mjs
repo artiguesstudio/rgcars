@@ -15,9 +15,9 @@ test('new categories filter independently from the Jeep brand and combine with o
   }
   vm.createContext(context);
   vm.runInContext(source.slice(source.indexOf('function filteredVehicles('), source.indexOf('function shouldReduceSoldMotion(')), context);
-  const rows = ['minibus', 'colectivo', 'maquinaria', 'jeep', 'auto'].map((category) => ({ category, brand: 'Otra', price: 100 }));
+  const rows = ['minibus', 'colectivo', 'maquinaria', 'maquinaria_agricola', 'maquinaria_vial', 'transporte_pasajeros', 'jeep', 'auto'].map((category) => ({ category, brand: 'Otra', price: 100 }));
   rows.push({ category: 'suv', brand: 'Jeep', price: 200 });
-  for (const category of ['minibus', 'colectivo', 'maquinaria', 'jeep']) {
+  for (const category of ['minibus', 'colectivo', 'maquinaria', 'maquinaria_agricola', 'maquinaria_vial', 'transporte_pasajeros', 'jeep']) {
     context.$filterCategory.value = category;
     assert.deepEqual(context.filteredVehicles(rows).map((row) => row.category), [category]);
   }

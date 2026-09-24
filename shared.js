@@ -9,6 +9,9 @@
     minibus: 'Minibus',
     colectivo: 'Colectivo',
     maquinaria: 'Maquinaria',
+    maquinaria_agricola: 'Maquinaria Agrícola',
+    maquinaria_vial: 'Maquinaria Vial',
+    transporte_pasajeros: 'Transporte de pasajeros',
     jeep: 'Jeep',
     otro: 'Otro',
   };

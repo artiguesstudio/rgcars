@@ -47,7 +47,7 @@ test('the recruitment form has a shareable direct URL', async () => {
   assert.match(shared, /syncRecruitmentModalWithUrl\(\)/);
   assert.match(shared, /window\.addEventListener\('hashchange', syncRecruitmentModalWithUrl\)/);
   assert.match(page, /<body class="public-theme legal-page recruitment-direct-page">/);
-  assert.match(page, /shared\.js\?v=20260923-categories-refinement/);
+  assert.match(page, /shared\.js\?v=20260924-vehicle-categories/);
 });
 
 test('the fit score uses job-relevant criteria and excludes sensitive personal data', async () => {
