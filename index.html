@@ -28,8 +28,10 @@
 
   <link rel="stylesheet" href="./styles.css?v=20260625-deploy-refresh" />
   <link rel="stylesheet" href="./index.css?v=20261018-whatsapp-number" />
+  <link rel="stylesheet" href="./home.css?v=20261018-video-cover-v2" />
 </head>
 <body class="public-theme home-page">
+  <a class="home-skip-link" href="#mainContent">Ir al contenido</a>
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="./index.html" aria-label="RG Cars TDF">
@@ -51,44 +53,36 @@
     </div>
   </header>
 
-  <main>
-    <section class="home-video-hero">
-      <video class="hero-video" autoplay muted loop playsinline>
-        <source src="./videos/video-top-bar.mp4" type="video/mp4">
+  <main id="mainContent">
+    <section class="home-cover" aria-labelledby="homeTitle">
+      <video id="homeCoverVideo" class="home-cover-video" autoplay muted loop playsinline preload="metadata" poster="./imagenes/portada-video.webp" aria-hidden="true" tabindex="-1">
+        <source src="./videos/video-top-bar.mp4" type="video/mp4" />
       </video>
-      <div class="hero-overlay"></div>
-
-      <div class="container hero-content">
-        <p class="hero-eyebrow">RG Cars TDF · Compra, venta y servicios</p>
-        <h1>Cuidamos el valor de tu esfuerzo</h1>
-        <div class="hero-location-badge"><strong>Dirección:</strong> Sarmiento 2760 · Río Grande, Tierra del Fuego</div>
-
-        <form id="heroSearchForm" class="hero-search-card" action="#stock">
-          <div class="hero-search-bar">
-            <label class="sr-only" for="q">Buscar vehículos</label>
-            <input id="q" class="hero-search-input" type="search" inputmode="search" autocomplete="off" enterkeyhint="search" placeholder="Buscá por marca, modelo o segmento" />
-            <button class="hero-search-button" type="submit">Buscar</button>
-          </div>
-
-          <div class="hero-pill-row" aria-label="Acciones rápidas">
-            <a class="pill-link is-active" href="#explorar-stock">Comprar</a>
-            <a class="pill-link" href="./consignacion.html">Vender</a>
-            <a class="pill-link" href="./scouting.html">Búsqueda personalizada</a>
-            <a class="pill-link" href="./financiacion.html">Financiación</a>
-          </div>
-        </form>
+      <div class="container home-cover-content">
+        <p class="home-cover-eyebrow">RG Cars TDF · Compra, venta y servicios</p>
+        <h1 id="homeTitle">Cuidamos el valor de tu esfuerzo</h1>
+        <a class="home-cover-address" href="#contacto"><strong>Dirección:</strong> <span>Sarmiento 2760 · Río Grande, Tierra del Fuego</span></a>
       </div>
+      <button id="homeVideoToggle" class="home-video-toggle" type="button" aria-controls="homeCoverVideo" aria-label="Pausar video" aria-pressed="true" hidden><span data-video-icon aria-hidden="true">Ⅱ</span><span data-video-label>Pausar video</span></button>
     </section>
 
-    <section class="container compact-search-shell" id="explorar-stock">
-      <div class="catalog-toolbar catalog-toolbar--button-only" aria-label="Filtros de búsqueda de stock">
-        <div class="catalog-toolbar__actions">
-          <button type="button" class="filter-trigger" id="filterButton" aria-haspopup="dialog" aria-expanded="false">
-            Filtros
-          </button>
+    <section class="home-catalog catalog-shell" id="stock" aria-labelledby="catalogTitle">
+      <div class="container">
+        <span id="explorar-stock" class="home-anchor" aria-hidden="true"></span>
+        <div class="home-section-heading">
+          <div><p class="home-eyebrow">EL PRÓXIMO PUEDE SER TUYO</p><h2 id="catalogTitle">Encontrá el tuyo.</h2></div>
+          <p id="catalogCount" class="home-catalog-count" role="status" aria-live="polite">Consultando stock…</p>
         </div>
-      </div>
-
+        <div class="home-catalog-tools">
+          <form id="heroSearchForm" class="home-search" action="#stock" role="search">
+            <label class="sr-only" for="q">Buscar vehículos por marca, modelo o segmento</label>
+            <input id="q" type="search" inputmode="search" autocomplete="off" enterkeyhint="search" placeholder="Marca, modelo o lo que estás buscando…" />
+            <button type="submit" aria-label="Buscar vehículos">Buscar <span aria-hidden="true">↗</span></button>
+          </form>
+          <button type="button" class="filter-trigger" id="filterButton" aria-haspopup="dialog" aria-controls="filterDialog" aria-expanded="false">Filtros</button>
+        </div>
+        <nav id="catalogCategories" class="home-category-list" aria-label="Filtrar por tipo de vehículo"></nav>
+        <div id="catalogActiveFilters" class="home-active-filters" aria-label="Filtros aplicados"></div>
       <div class="filter-dialog-backdrop" id="filterBackdrop" hidden></div>
       <section class="filter-dialog" id="filterDialog" role="dialog" aria-modal="true" aria-labelledby="filterDialogTitle" hidden>
         <div class="filter-dialog__header">
@@ -207,30 +201,42 @@
           <button type="button" class="btn btn-primary" id="applyFilters">Mostrar resultados</button>
         </div>
       </section>
-
+        <section id="grid" class="vehicle-grid" aria-label="Vehículos disponibles" aria-live="polite"></section>
+      </div>
     </section>
 
-    <section class="catalog-shell" id="stock">
+    <section class="home-services" aria-labelledby="homeServicesTitle" data-home-reveal>
       <div class="container">
-        <div class="section-head catalog-head">
-          <div>
+        <div class="home-section-heading"><div><p class="home-eyebrow">MÁS FORMAS DE AVANZAR</p><h2 id="homeServicesTitle">Cada próximo paso cuenta.</h2></div><p class="home-section-note">Comprá, vendé o encontrá una alternativa<br>para llegar a tu próxima unidad.</p></div>
+        <div class="home-services-grid">
+          <article class="home-sell-panel">
+            <img src="./imagenes/servicios/consignacion-stock.webp" alt="Jeep exhibido en el salón de RG Cars TDF" width="720" height="1280" loading="lazy" />
+            <div><p class="home-eyebrow">VENDÉ CON NOSOTROS</p><h3>Tu usado.<br>Un nuevo comienzo.</h3><p>Contanos sobre tu vehículo y conversemos cómo podemos ayudarte a venderlo.</p><a class="home-button home-button--light" href="./consignacion.html">Quiero vender mi auto <span aria-hidden="true">↗</span></a></div>
+          </article>
+          <article class="home-finance-panel">
+            <p class="home-eyebrow">FINANCIACIÓN</p><h3>Acercate a<br>lo que querés.</h3><p>Conocé las alternativas de financiación y consultá las opciones para la unidad que te interesa.</p>
+            <div class="home-bank-logos" aria-label="Opciones de financiación"><img src="./imagenes/bna.png" alt="BNA +Autos" loading="lazy" /><img src="./imagenes/santander.png?v=20261018-financing-update" alt="Santander" loading="lazy" /><img src="./imagenes/BBVA.png?v=20261018-financing-update" alt="BBVA" loading="lazy" /><img src="./imagenes/prendo.png" alt="Prendo" loading="lazy" /></div>
+            <a class="home-text-link" href="./financiacion.html">Conocé las alternativas <span aria-hidden="true">↗</span></a><small>Sujeto a evaluación y condiciones de cada entidad. También contamos con financiación propia.</small>
+          </article>
+        </div>
+        <div class="home-service-links"><a href="./scouting.html"><span>¿Buscás algo en particular?</span><strong>Lo buscamos con vos <span aria-hidden="true">↗</span></strong></a><a href="./peritaje.html"><span>Antes de decidir</span><strong>Consultá por un peritaje <span aria-hidden="true">↗</span></strong></a><a href="./seguros.html"><span>Para lo que viene</span><strong>Encontrá tu seguro <span aria-hidden="true">↗</span></strong></a></div>
+      </div>
+    </section>
 
-            <span class="mini-kicker">Nuestro stock</span>
-            <h2>Unidades listas para explorar</h2>
-            <p class="catalog-intro">Encontrá tu próximo vehículo. Nosotros te acompañamos en cada paso.</p>
-          </div>
-         </div>
-
-        <section id="grid" class="vehicle-grid" aria-live="polite"></section>
+    <section class="home-about container" aria-labelledby="homeAboutTitle" data-home-reveal>
+      <div class="home-about-image"><img src="./imagenes/servicios/seguros-stock.webp" alt="Toyota Hilux en el salón de RG Cars TDF, con el logo de la agencia al fondo" width="675" height="1200" loading="lazy" /><span>RG CARS TDF / RÍO GRANDE</span></div>
+      <div class="home-about-copy"><p class="home-eyebrow">CERCA, EN CADA PASO</p><h2 id="homeAboutTitle">De Río Grande.<br>Para acompañarte.</h2><p>Detrás de cada vehículo hay un proyecto. En RG Cars te recibimos, escuchamos lo que necesitás y te ayudamos a evaluar tu próximo paso.</p>
+        <ol class="home-steps"><li><span aria-hidden="true">01</span><div><h3>Encontrá tu unidad</h3><p>Explorá el stock o contanos qué estás buscando.</p></div></li><li><span aria-hidden="true">02</span><div><h3>Conocela de cerca</h3><p>Coordiná una visita y conversá con nuestro equipo.</p></div></li><li><span aria-hidden="true">03</span><div><h3>Elegí cómo avanzar</h3><p>Revisamos juntos las opciones para tu operación.</p></div></li></ol>
+        <a class="home-text-link" href="https://wa.me/5492964588267?text=Hola%2C%20quiero%20coordinar%20una%20visita%20a%20RG%20Cars." target="_blank" rel="noopener noreferrer">Hablemos de tu próximo auto <span aria-hidden="true">↗</span></a>
       </div>
     </section>
 
     <section class="sold-vehicles-section" id="soldVehiclesSection" aria-labelledby="soldVehiclesTitle" hidden>
       <div class="container sold-vehicles-container">
         <div class="sold-vehicles-header">
-          <span class="mini-kicker">Vendidos</span>
+          <span class="mini-kicker">Historias que siguen</span>
           <h2 id="soldVehiclesTitle">Ya tienen dueño</h2>
-          <p>Estas unidades ya fueron elegidas. Mirá el stock disponible y encontrá la próxima oportunidad.</p>
+          <p>Unidades que ya encontraron su próximo camino.</p>
         </div>
 
         <div class="sold-vehicles-carousel-shell">
@@ -241,28 +247,14 @@
       </div>
     </section>
 
-    <section class="container contact-strip-shell contact-strip-shell--final" id="contacto">
-      <article class="contact-strip-card contact-strip-card--enhanced">
-        <div class="contact-strip-copy">
-          <span class="mini-kicker">Contacto</span>
+    <section class="home-location" id="contacto" aria-labelledby="homeLocationTitle" data-home-reveal>
+      <div class="container home-location-grid">
+        <div class="home-location-copy"><p class="home-eyebrow">ESTAMOS ACÁ</p><h2 id="homeLocationTitle">Vení a<br>conocernos.</h2><address><strong>Sarmiento 2760</strong><span>Río Grande, Tierra del Fuego.</span></address><p>Conocé las unidades y conversemos sobre lo que estás buscando. Escribinos para coordinar tu visita.</p>
+          <div class="home-location-actions"><a class="home-button home-button--primary" href="https://www.google.com/maps/dir/?api=1&amp;destination=Sarmiento%202760%2C%20R%C3%ADo%20Grande%2C%20Tierra%20del%20Fuego%2C%20Argentina" target="_blank" rel="noopener noreferrer">Cómo llegar <span aria-hidden="true">↗</span></a><a class="home-text-link" href="https://wa.me/5492964588267?text=Hola%2C%20quiero%20coordinar%20una%20visita%20a%20RG%20Cars." target="_blank" rel="noopener noreferrer">Coordinar visita <span aria-hidden="true">↗</span></a></div>
+          <a class="home-location-phone" href="https://wa.me/5492964588267" target="_blank" rel="noopener noreferrer">WhatsApp · 2964-588267</a>
         </div>
-        <aside class="contact-strip-panel" aria-label="Datos de contacto de la agencia">
-          <span class="contact-strip-panel__eyebrow">Agencia y canales</span>
-          <strong class="contact-strip-panel__title">RG Cars TDF · Sarmiento 2760</strong>
-          <p class="contact-strip-panel__text">Río Grande, Tierra del Fuego.</p>
-          <div class="contact-strip-actions contact-strip-actions--icons" aria-label="Redes sociales y contacto directo">
-            <a class="social-icon-button" href="https://wa.me/5492964588267" target="_blank" rel="noreferrer" aria-label="Abrir WhatsApp" title="WhatsApp">
-              <img src="./imagenes/whatsapp-black.png" alt="" aria-hidden="true" />
-            </a>
-            <a class="social-icon-button" href="https://www.instagram.com/rgcars.tdf/" target="_blank" rel="noreferrer" aria-label="Abrir Instagram" title="Instagram">
-              <img src="./imagenes/instagram.png" alt="" aria-hidden="true" />
-            </a>
-            <a class="social-icon-button" href="https://www.facebook.com/profile.php?id=61582999230196" target="_blank" rel="noreferrer" aria-label="Abrir Facebook" title="Facebook">
-              <img src="./imagenes/facebook.png" alt="" aria-hidden="true" />
-            </a>
-          </div>
-        </aside>
-      </article>
+        <div class="home-map-wrap"><div class="home-map-canvas"><iframe data-location-map data-src="https://www.google.com/maps?q=Sarmiento%202760%2C%20R%C3%ADo%20Grande%2C%20Tierra%20del%20Fuego%2C%20Argentina&amp;z=16&amp;output=embed" title="Ubicación de RG Cars TDF en Sarmiento 2760, Río Grande" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div><div class="home-map-caption"><span id="homeMapStatus" role="status">Sarmiento 2760 · Río Grande</span><a id="homeMapFallback" href="https://www.google.com/maps/search/?api=1&amp;query=Sarmiento%202760%2C%20R%C3%ADo%20Grande%2C%20Tierra%20del%20Fuego%2C%20Argentina" target="_blank" rel="noopener noreferrer">Abrir en Google Maps <span aria-hidden="true">↗</span></a></div></div>
+      </div>
     </section>
   </main>
 
@@ -310,8 +302,8 @@
   <script src="./config.js?v=20260625-deploy-refresh"></script>
   <script src="./measurement.js?v=20260829-consent-actions-v3"></script>
   <script src="./catalog-data.js?v=20260625-deploy-refresh"></script>
-  <script src="./shared.js?v=20261018-whatsapp-number"></script>
-  <script src="./app.js?v=20260923-categories-refinement" defer></script>
-  <script src="./home-ui.js?v=20261018-financing-update" defer></script>
+  <script src="./shared.js?v=20261018-hide-recruitment"></script>
+  <script src="./app.js?v=20261018-video-cover-v2" defer></script>
+  <script src="./home-ui.js?v=20261018-header-v3" defer></script>
 </body>
 </html>

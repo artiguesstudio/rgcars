@@ -24,6 +24,9 @@ const $filterYearMin = document.getElementById('filterYearMin');
 const $filterYearMax = document.getElementById('filterYearMax');
 const $filterPriceMin = document.getElementById('filterPriceMin');
 const $filterPriceMax = document.getElementById('filterPriceMax');
+const $catalogCount = document.getElementById('catalogCount');
+const $catalogCategories = document.getElementById('catalogCategories');
+const $catalogActiveFilters = document.getElementById('catalogActiveFilters');
 const $soldSection = document.getElementById('soldVehiclesSection');
 const $soldCarousel = document.getElementById('soldVehiclesCarousel');
 const $soldPrev = document.getElementById('soldVehiclesPrev');
@@ -37,6 +40,7 @@ let soldAutoplayResumeTimer = null;
 let soldCarouselBound = false;
 let searchTrackingTimer = null;
 let lastSearchTrackingSignature = '';
+let filterDialogReturnFocus = null;
 const soldReducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
 function escape(value) {
@@ -73,11 +77,33 @@ function isPublicStockVehicle(vehicle) {
   return status !== 'hidden' && status !== 'sold';
 }
 
-function imagesHTML(vehicle) {
-  const images = Array.isArray(vehicle.images) ? vehicle.images : [];
+function vehicleImages(vehicle) {
+  return Array.isArray(vehicle.images) ? vehicle.images.filter((src) => typeof src === 'string' && src.trim()) : [];
+}
+
+function imagesHTML(vehicle, preview = false) {
+  const images = vehicleImages(vehicle);
   const primary = images[0];
   if (!primary) return '<div class="media-placeholder">Sin foto principal</div>';
-  return `<img src="${primary}" alt="${escape(vehicle.title || 'Vehículo')}" class="is-active">`;
+  return `<img src="${escape(primary)}" alt="${escape(vehicle.title || 'Vehículo')}" class="is-active vehicle-photo--primary" loading="lazy" decoding="async">
+    ${preview && images[1] ? `<img src="${escape(images[1])}" alt="" class="vehicle-photo--secondary" loading="lazy" decoding="async" aria-hidden="true">` : ''}`;
+}
+
+function vehicleSpecs(vehicle) {
+  const specs = [];
+  if (vehicle.year) specs.push(String(vehicle.year));
+  const km = Number(vehicle.km);
+  if (vehicle.km != null && String(vehicle.km).trim() !== '' && Number.isFinite(km) && km >= 0) {
+    specs.push(`${km.toLocaleString('es-AR')} km`);
+  }
+  const transmission = String(vehicle.transmission || '').trim();
+  if (transmission) specs.push(transmission);
+  return specs.join(' · ');
+}
+
+function vehicleCreatedTime(vehicle) {
+  const timestamp = Date.parse(vehicle.created_at || '');
+  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 function extraBadgesHTML(vehicle) {
@@ -95,19 +121,20 @@ function statusPillHTML(vehicle) {
 }
 
 function cardHTML(vehicle, position = 0) {
-  const year = String(vehicle.year || '').trim();
+  const specs = vehicleSpecs(vehicle);
   const minimumDownPayment = window.RGShared.minimumDownPaymentLabel(vehicle);
+  const preview = !!window.matchMedia?.('(hover: hover) and (pointer: fine)')?.matches;
   return `
     <article class="vehicle-card vehicle-card--catalog" data-catalog-vehicle-id="${escape(vehicle.id)}" data-catalog-position="${position + 1}">
       <a class="vehicle-card-link" href="./vehicle.html?id=${encodeURIComponent(vehicle.id)}" aria-label="Ver detalle de ${escape(vehicle.title || 'Vehículo')}">
-        <div class="vehicle-media">
-          ${imagesHTML(vehicle)}
+        <div class="vehicle-media${preview && vehicleImages(vehicle).length > 1 ? ' has-secondary-photo' : ''}">
+          ${imagesHTML(vehicle, preview)}
           ${statusPillHTML(vehicle)}
           <div class="card-overlay-pills">${extraBadgesHTML(vehicle)}</div>
         </div>
         <div class="vehicle-body">
-          ${year ? `<p class="vehicle-year">${escape(year)}</p>` : ''}
           <h3>${escape(vehicle.title || 'Vehículo')}</h3>
+          ${specs ? `<p class="vehicle-specs">${escape(specs)}</p>` : ''}
           <p class="vehicle-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
           ${minimumDownPayment ? `<p class="vehicle-down-payment">${escape(minimumDownPayment)}</p>` : ''}
         </div>
@@ -138,7 +165,7 @@ function soldCardHTML(vehicle) {
 
 function visibleCatalogLimit() {
   if (window.innerWidth <= 760) return 8;
-  return 10;
+  return 12;
 }
 
 function activeFilterCount() {
@@ -188,20 +215,109 @@ function updateBrandOptions(rows) {
   if (currentKey && brandsMap.has(currentKey)) $filterBrand.value = brandsMap.get(currentKey);
 }
 
+function updateCategoryOptions(rows) {
+  if (!$filterCategory) return;
+  const current = formatText($filterCategory.value);
+  const categories = new Map();
+  (rows || []).forEach((vehicle) => {
+    const value = String(vehicle.category || '').trim();
+    const key = formatText(value);
+    if (!key) return;
+    const category = categories.get(key);
+    if (category) {
+      category.count += 1;
+    } else {
+      categories.set(key, { value, label: window.RGShared.categoryLabel(value), count: 1 });
+    }
+  });
+  const options = [...categories.values()].sort((a, b) => a.label.localeCompare(b.label, 'es'));
+  $filterCategory.innerHTML = '<option value="">Todas</option>' + options.map((category) => `<option value="${escape(category.value)}">${escape(category.label)}</option>`).join('');
+  if (categories.has(current)) $filterCategory.value = categories.get(current).value;
+  if (!$catalogCategories) return;
+  $catalogCategories.hidden = !options.length;
+  $catalogCategories.innerHTML = [
+    { value: '', label: 'Todos', count: rows.length },
+    ...options,
+  ].map((category) => `<button type="button" class="catalog-category" data-category="${escape(category.value)}" aria-pressed="false">${escape(category.label)}<span class="catalog-category__count">${category.count}</span></button>`).join('');
+  updateCategorySelection();
+}
+
+function updateCategorySelection() {
+  const selected = formatText($filterCategory?.value);
+  $catalogCategories?.querySelectorAll('[data-category]').forEach((button) => {
+    const active = formatText(button.dataset.category) === selected;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function activeFilterChips() {
+  const chips = [];
+  const addValue = (control, label) => {
+    const value = String(control?.value || '').trim();
+    if (value) chips.push({ id: control.id, label: `${label}: ${value}` });
+  };
+  const addSelect = (control, label) => {
+    if (!control?.value) return;
+    const value = control.selectedOptions?.[0]?.textContent || control.value;
+    chips.push({ id: control.id, label: `${label}: ${value}` });
+  };
+  addValue($q, 'Búsqueda');
+  [[$filterFeatured, 'Ofertas / oportunidades'], [$filterZeroKm, '0KM'], [$filterUsed, 'Usados']].forEach(([control, label]) => {
+    if (control?.checked) chips.push({ id: control.id, label });
+  });
+  [[$filterCategory, 'Categoría'], [$filterBrand, 'Marca'], [$filterFuel, 'Combustible'], [$filterTransmission, 'Transmisión'], [$filterDrivetrain, 'Tracción']].forEach(([control, label]) => addSelect(control, label));
+  [[$filterColor, 'Color'], [$filterYearMin, 'Año desde'], [$filterYearMax, 'Año hasta'], [$filterPriceMin, 'Precio desde'], [$filterPriceMax, 'Precio hasta']].forEach(([control, label]) => addValue(control, label));
+  if ($sort?.value && $sort.value !== 'newest') addSelect($sort, 'Orden');
+  return chips;
+}
+
+function renderActiveFilters() {
+  if (!$catalogActiveFilters) return;
+  const chips = activeFilterChips();
+  $catalogActiveFilters.hidden = !chips.length;
+  $catalogActiveFilters.innerHTML = chips.map((chip) => `<button type="button" class="catalog-filter-chip" data-clear-filter="${escape(chip.id)}" aria-label="Quitar ${escape(chip.label)}"><span>${escape(chip.label)}</span><span aria-hidden="true">×</span></button>`).join('');
+}
+
+function updateCatalogCount(count) {
+  if (!$catalogCount) return;
+  if (!count) {
+    $catalogCount.textContent = vehiclesCache.length ? 'Sin resultados para esta búsqueda' : 'Todavía no hay vehículos publicados';
+    return;
+  }
+  const visible = stockExpanded ? count : Math.min(count, visibleCatalogLimit());
+  $catalogCount.textContent = `${count} ${count === 1 ? 'vehículo' : 'vehículos'}${visible < count ? ` · Mostrando ${visible}` : ''}`;
+}
+
+function filterDialogFocusableElements() {
+  if (!$filterDialog) return [];
+  return [...$filterDialog.querySelectorAll('a[href], button, input, select, textarea, [tabindex]')]
+    .filter((element) => !element.disabled && element.tabIndex >= 0 && element.getClientRects().length > 0 && window.getComputedStyle(element).visibility !== 'hidden');
+}
+
 function openFilterDialog() {
   if (!$filterDialog || !$filterBackdrop) return;
+  filterDialogReturnFocus = $filterButton || document.activeElement;
   $filterDialog.hidden = false;
   $filterBackdrop.hidden = false;
+  $filterDialog.setAttribute('tabindex', '-1');
   document.body.classList.add('filter-dialog-open');
   $filterButton?.setAttribute('aria-expanded', 'true');
+  (filterDialogFocusableElements()[0] || $filterDialog).focus({ preventScroll: true });
 }
 
 function closeFilterDialog() {
   if (!$filterDialog || !$filterBackdrop) return;
+  const wasOpen = !$filterDialog.hidden;
   $filterDialog.hidden = true;
   $filterBackdrop.hidden = true;
   document.body.classList.remove('filter-dialog-open');
   $filterButton?.setAttribute('aria-expanded', 'false');
+  if (wasOpen) {
+    const returnFocus = filterDialogReturnFocus?.isConnected ? filterDialogReturnFocus : $filterButton;
+    returnFocus?.focus({ preventScroll: true });
+  }
+  filterDialogReturnFocus = null;
 }
 
 function initFilterMenu() {
@@ -213,7 +329,30 @@ function initFilterMenu() {
   $filterBackdrop?.addEventListener('click', closeFilterDialog);
   $applyFilters?.addEventListener('click', closeFilterDialog);
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !$filterDialog?.hidden) closeFilterDialog();
+    if (!$filterDialog || $filterDialog.hidden) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeFilterDialog();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = filterDialogFocusableElements();
+    if (!focusable.length) {
+      event.preventDefault();
+      $filterDialog.focus({ preventScroll: true });
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+    const outsideControls = active === $filterDialog || !$filterDialog.contains(active);
+    if (event.shiftKey && (active === first || outsideControls)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (active === last || outsideControls)) {
+      event.preventDefault();
+      first.focus();
+    }
   });
 }
 
@@ -224,23 +363,6 @@ function currentSearchQuery() {
 function isZeroKm(vehicle) {
   const km = Number(vehicle.km);
   return Number.isFinite(km) && km <= 100;
-}
-
-function vehicleFinancingAvailable(vehicle) {
-  const helper = window.RGShared?.vehicleFinancingAvailable;
-  return typeof helper === 'function' ? helper(vehicle) : true;
-}
-
-function vehiclePriority(vehicle) {
-  let score = 0;
-  const status = normalizeVehicleStatus(vehicle);
-  if (status === 'available') score += 25;
-  if (status === 'incoming') score += 16;
-  if (status === 'reserved') score += 8;
-  if (vehicle.featured || vehicle.outlet) score += 20;
-  if (vehicle.is_recent) score += 14;
-  if (vehicleFinancingAvailable(vehicle)) score += 6;
-  return score;
 }
 
 function sortRows(rows) {
@@ -260,14 +382,10 @@ function sortRows(rows) {
       const aScore = Number(!!a.featured || !!a.outlet);
       const bScore = Number(!!b.featured || !!b.outlet);
       if (bScore !== aScore) return bScore - aScore;
-      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      return vehicleCreatedTime(b) - vehicleCreatedTime(a);
     });
   }
-  return sorted.sort((a, b) => {
-    const diff = vehiclePriority(b) - vehiclePriority(a);
-    if (diff) return diff;
-    return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-  });
+  return sorted.sort((a, b) => vehicleCreatedTime(b) - vehicleCreatedTime(a));
 }
 
 function filteredVehicles(rows) {
@@ -478,7 +596,7 @@ function renderRows(rows, emptyTitle, emptyCopy) {
     stockExpanded = !stockExpanded;
     renderSearchResults();
     if (!stockExpanded) {
-      document.getElementById('stock')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('stock')?.scrollIntoView({ behavior: shouldReduceSoldMotion() ? 'auto' : 'smooth', block: 'start' });
     }
   });
 }
@@ -487,6 +605,9 @@ function renderSearchResults(emptyTitle = 'No encontramos vehículos con esos fi
   const filtered = filteredVehicles(vehiclesCache);
   updateFilterButton();
   updateApplyButton(filtered.length);
+  updateCategorySelection();
+  renderActiveFilters();
+  updateCatalogCount(filtered.length);
   renderRows(filtered, emptyTitle, emptyCopy);
 }
 
@@ -534,6 +655,12 @@ function scheduleSearchTracking() {
 }
 
 function bindCatalogSelectionTracking() {
+  $grid?.addEventListener('error', (event) => {
+    const image = event.target;
+    if (!image.classList?.contains('vehicle-photo--secondary')) return;
+    image.closest('.vehicle-media')?.classList.remove('has-secondary-photo');
+    image.remove();
+  }, true);
   $grid?.addEventListener('click', (event) => {
     const link = event.target.closest('.vehicle-card-link');
     const card = link?.closest('[data-catalog-vehicle-id]');
@@ -558,6 +685,7 @@ function bindCatalogSelectionTracking() {
 async function fetchVehicles() {
   if (!$grid) return;
   stockExpanded = false;
+  if ($catalogCount) $catalogCount.textContent = 'Cargando vehículos…';
   $grid.innerHTML = '<div class="empty-state"><strong>Cargando publicaciones…</strong><span>Esperá un momento.</span></div>';
 
   try {
@@ -572,6 +700,7 @@ async function fetchVehicles() {
     vehiclesCache = rows.filter(isPublicStockVehicle);
     soldVehiclesCache = rows.filter(isSoldVehicle);
     updateBrandOptions(vehiclesCache);
+    updateCategoryOptions(vehiclesCache);
     renderSearchResults();
     renderSoldVehicles(soldVehiclesCache);
     window.RGShared.trackEvent?.('view_item_list', {
@@ -589,6 +718,7 @@ async function fetchVehicles() {
   } catch (error) {
     console.error(error);
     renderSoldVehicles([]);
+    if ($catalogCount) $catalogCount.textContent = 'Catálogo no disponible en este momento';
     $grid.innerHTML = `<div class="empty-state"><strong>No se pudo cargar el catálogo.</strong><span>${escape(error.message || 'Error inesperado.')}</span></div>`;
   }
 }
@@ -600,6 +730,24 @@ function bindFilterEvents() {
     scheduleSearchTracking();
   };
 
+  $catalogCategories?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-category]');
+    if (!button || !$filterCategory) return;
+    $filterCategory.value = button.dataset.category;
+    rerender();
+  });
+  $catalogActiveFilters?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-clear-filter]');
+    if (!button) return;
+    const control = document.getElementById(button.dataset.clearFilter);
+    if (!control) return;
+    const index = [...$catalogActiveFilters.querySelectorAll('[data-clear-filter]')].indexOf(button);
+    if (control.type === 'checkbox') control.checked = false;
+    else control.value = control === $sort ? 'newest' : '';
+    rerender();
+    const remaining = $catalogActiveFilters.querySelectorAll('[data-clear-filter]');
+    (remaining[Math.min(index, remaining.length - 1)] || $filterButton)?.focus();
+  });
   $q?.addEventListener('input', rerender);
   $sort?.addEventListener('change', rerender);
   [$filterFeatured, $filterZeroKm, $filterUsed, $filterCategory, $filterBrand, $filterFuel, $filterTransmission, $filterDrivetrain, $filterColor, $filterYearMin, $filterYearMax, $filterPriceMin, $filterPriceMax]

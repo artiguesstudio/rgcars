@@ -552,6 +552,7 @@
   const JOB_APPLICATION_MAX_FILE_BYTES = 5 * 1024 * 1024;
   const JOB_APPLICATION_FILE_EXTENSIONS = ['pdf', 'doc', 'docx'];
   const RECRUITMENT_DIRECT_HASH = '#postulacion-vendedor';
+  const RECRUITMENT_BUTTON_ENABLED = false;
   let recruitmentTrigger = null;
   let recruitmentPreviousHash = null;
 
@@ -842,6 +843,10 @@
     if (document.querySelector('.recruitment-floating-button')) return;
 
     buildRecruitmentModal();
+    if (!RECRUITMENT_BUTTON_ENABLED) {
+      syncRecruitmentModalWithUrl();
+      return;
+    }
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'recruitment-floating-button';
