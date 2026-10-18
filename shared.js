@@ -171,9 +171,7 @@
   }
 
   function supermovilidadSectionUrl() {
-    const url = new URL(`${siteRoot()}index.html`);
-    url.hash = 'supermovilidad';
-    return url.toString();
+    return financingUrl();
   }
 
   function vehicleInsuranceAvailable(vehicle = null) {

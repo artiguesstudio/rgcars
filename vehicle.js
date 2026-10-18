@@ -261,7 +261,7 @@ function detailMarkup(vehicle) {
 
         <div class="detail-actions">
           <a class="btn btn-primary" href="${window.RGShared.waLink(vehicle)}" data-vehicle-id="${window.RGShared.escapeHTML(vehicle.id || '')}" target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
-          ${financingAvailable ? `<a class="btn btn-soft vehicle-financing-link" href="${window.RGShared.supermovilidadSectionUrl()}" data-vehicle-financing-link>Financiación</a>` : ''}
+          ${financingAvailable ? `<a class="btn btn-soft vehicle-financing-link" href="${window.RGShared.financingUrl(vehicle)}" data-vehicle-financing-link>Financiación</a>` : ''}
           ${insuranceAvailable ? `<a class="btn btn-ghost" href="${window.RGShared.insuranceUrl(vehicle)}">Seguro</a>` : ''}
         </div>
 
@@ -450,7 +450,7 @@ function bindVehicleFinancingAction(vehicle) {
       vehicle_title: vehicle.title || [vehicle.brand, vehicle.model, vehicle.year].filter(Boolean).join(' ') || 'Vehículo',
       financing_type: 'vehicle_financing',
       source: 'vehicle_detail',
-      destination: 'home_supermovilidad_section',
+      destination: 'financing_page',
     });
   });
 }
