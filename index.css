@@ -9653,13 +9653,23 @@ body.public-theme .site-header .header-mobile-toggle {
 body.public-theme .whatsapp-fab {
   right: 24px;
   bottom: 82px;
-  width: 50px;
+  width: auto;
+  max-width: calc(100vw - 48px);
   height: 50px;
-  padding: 0;
+  gap: 8px;
+  padding: 0 14px;
   border-radius: 16px;
+  color: #145c39;
 }
 
-body.public-theme .whatsapp-fab__icon { width: 25px; height: 25px; }
+body.public-theme .whatsapp-fab__icon { flex: 0 0 25px; width: 25px; height: 25px; }
+
+body.public-theme .whatsapp-fab__number {
+  font-size: .875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
 
 body.public-theme .feedback-floating-button {
   right: 24px;
@@ -9745,7 +9755,7 @@ body.vehicle-lightbox-open { overflow: hidden; }
   body.public-theme .site-header .header-inner { padding-block: 6px; }
   body.public-theme .site-header .brand img { max-height: 44px; }
   body.public-theme .site-header .header-mobile-toggle { width: 40px; min-width: 40px; height: 40px; padding: 0; }
-  body.public-theme .whatsapp-fab { right: 16px; bottom: 72px; width: 48px; height: 48px; padding: 0; border-radius: 15px; }
+  body.public-theme .whatsapp-fab { right: 16px; bottom: 72px; max-width: calc(100vw - 32px); height: 48px; padding-inline: 12px; border-radius: 15px; }
   body.public-theme .feedback-floating-button { right: 12px; bottom: 14px; min-height: 40px; max-width: calc(100vw - 24px); padding-inline: 12px; font-size: .76rem; }
   body.public-theme.detail-page .detail-grid { display: block; }
   body.public-theme.detail-page .detail-gallery-card, body.public-theme.detail-page .detail-info-card { padding: 12px; border-radius: 18px; }
@@ -9885,6 +9895,16 @@ body.public-theme .rg-consent-banner__actions .btn {
 
   body.rg-consent-open .feedback-floating-button {
     bottom: var(--rg-consent-offset, 210px) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body.public-theme .whatsapp-fab {
+    bottom: calc(130px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body.rg-consent-open .whatsapp-fab {
+    bottom: calc(var(--rg-consent-offset, 210px) + 116px) !important;
   }
 }
 

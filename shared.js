@@ -1266,12 +1266,16 @@
       if (!document.querySelector('.whatsapp-fab')) {
         const fab = document.createElement('a');
         const phone = String(window.RG?.WHATSAPP || '5492964588267').replace(/\D+/g, '');
+        const phoneLabel = /^549\d{10}$/.test(phone)
+          ? `${phone.slice(3, 7)}-${phone.slice(7)}`
+          : `+${phone}`;
         fab.className = 'whatsapp-fab';
         fab.href = `https://wa.me/${phone}`;
         fab.target = '_blank';
         fab.rel = 'noreferrer';
-        fab.setAttribute('aria-label', 'Abrir WhatsApp');
-        fab.innerHTML = '<img class="whatsapp-fab__icon" src="./imagenes/whatsapp.png" alt="" aria-hidden="true">';
+        fab.setAttribute('aria-label', `Abrir WhatsApp al ${phoneLabel}`);
+        fab.innerHTML = '<img class="whatsapp-fab__icon" src="./imagenes/whatsapp.png" alt="" aria-hidden="true"><span class="whatsapp-fab__number"></span>';
+        fab.querySelector('.whatsapp-fab__number').textContent = phoneLabel;
         document.body.appendChild(fab);
       }
     });
