@@ -1475,6 +1475,7 @@
     const facebookUrl = String(window.RG?.FACEBOOK_URL || '').trim();
     const fiscalParts = [window.RG?.FISCAL_NAME, window.RG?.FISCAL_CUIT && `CUIT ${window.RG.FISCAL_CUIT}`, window.RG?.FISCAL_STATUS].filter(Boolean);
     document.querySelectorAll('.site-footer').forEach((footer) => {
+      const recruitmentSection = footer.querySelector('[data-footer-recruitment]');
       footer.innerHTML = `
         <div class="container footer-main">
           <div class="footer-brand-block">
@@ -1521,6 +1522,7 @@
           ${fiscalParts.length ? `<p class="footer-fiscal">${fiscalParts.join(' · ')}</p>` : ''}
         </div>
       `;
+      if (recruitmentSection) footer.prepend(recruitmentSection);
     });
   }
 
