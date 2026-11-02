@@ -1,0 +1,135 @@
+/* Peritajes: la misma paleta y escala visual de la portada renovada. */
+body.public-theme.peritaje-page {
+  --peritaje-paper: #f7f7f3;
+  --peritaje-ink: #20231f;
+  --peritaje-muted: #666b65;
+  --peritaje-line: #dedfd8;
+  --peritaje-red: #c91d2c;
+  color: var(--peritaje-ink);
+  /* El fondo compartido anterior tiene prioridad !important. */
+  background: var(--peritaje-paper) !important;
+}
+body.peritaje-page [hidden] { display: none !important; }
+body.peritaje-page .container { width: min(calc(100% - 96px), 1240px); }
+body.peritaje-page :is(a, button, input, textarea):focus-visible { outline: 3px solid #b01928; outline-offset: 4px; }
+.peritaje-page :is(#contenido, #consulta, #como-funciona, #gestoria) { scroll-margin-top: 110px; }
+.peritaje-skip-link { position: fixed; top: 8px; left: 8px; z-index: 3000; padding: 12px 18px; color: #fff; background: #20231f; transform: translateY(-150%); }
+.peritaje-skip-link:focus { transform: none; }
+body.peritaje-page .site-header { min-height: 80px; background: rgba(247, 247, 243, .97); border-bottom: 1px solid var(--peritaje-line); box-shadow: none; }
+body.peritaje-page .site-header .header-inner { min-height: 80px; gap: 28px; padding-block: 12px; }
+body.peritaje-page .site-header .brand { margin-right: auto; }
+body.peritaje-page .site-header .brand img { width: 115px; max-height: 54px; object-fit: contain; }
+body.peritaje-page .header-nav--desktop { gap: 25px; }
+body.peritaje-page .header-nav--desktop > a,
+body.peritaje-page .services-toggle { font-size: .82rem; font-weight: 600; letter-spacing: -.015em; color: var(--peritaje-ink); }
+body.peritaje-page .services-toggle { padding: 8px 0; border: 0; background: transparent; box-shadow: none; }
+body.peritaje-page .header-actions--desktop { margin-left: 4px; }
+.peritaje-breadcrumb { display: flex; flex-wrap: wrap; gap: 12px; padding-block: 26px; color: var(--peritaje-muted); font-size: .7rem; line-height: 1.5; }
+.peritaje-breadcrumb a { color: var(--peritaje-muted); }
+.peritaje-breadcrumb a:hover { color: var(--peritaje-red); }
+.peritaje-hero { display: grid; grid-template-columns: 1.12fr 1fr; align-items: center; gap: clamp(36px, 6vw, 96px); padding-bottom: 64px; }
+.peritaje-hero__copy { padding-block: 24px; min-width: 0; }
+.peritaje-page .peritaje-eyebrow { margin: 0 0 20px; color: var(--peritaje-muted); font-size: .66rem; font-weight: 700; line-height: 1.5; letter-spacing: .14em; text-transform: uppercase; }
+.peritaje-hero__copy .peritaje-eyebrow { display: flex; align-items: center; gap: 12px; color: #aa1926; }
+.peritaje-hero__copy .peritaje-eyebrow::before { content: ''; width: 26px; height: 2px; background: var(--peritaje-red); }
+body.peritaje-page .peritaje-hero h1 { margin: 0; color: var(--peritaje-ink); font-size: clamp(2.65rem, 4.35vw, 4.15rem); line-height: 1.07; font-weight: 600; letter-spacing: -.055em; }
+.peritaje-hero h1 > span { color: var(--peritaje-red); }
+.peritaje-hero__description { max-width: 43ch; margin: 26px 0 28px; color: var(--peritaje-muted); font-size: .96rem; line-height: 1.8; }
+.peritaje-hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; }
+.peritaje-page .peritaje-button { display: inline-flex; align-items: center; justify-content: space-between; gap: 28px; min-height: 52px; padding: 14px 22px; border: 1px solid transparent; border-radius: 6px; background: var(--peritaje-red); color: #fff; box-shadow: none; font: inherit; font-size: .82rem; font-weight: 650; line-height: 1.4; text-decoration: none; cursor: pointer; transition: background .18s; }
+.peritaje-page .peritaje-button:hover { background: #a71523; }
+.peritaje-page .peritaje-button:disabled { opacity: .65; cursor: wait; }
+.peritaje-button > span { font-size: 1.2rem; }
+.peritaje-text-link { display: inline-flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 44px; padding: 10px 0; color: var(--peritaje-ink); font-size: .8rem; line-height: 1.5; font-weight: 600; }
+.peritaje-text-link > span { color: var(--peritaje-red); font-size: 1.15rem; }
+.peritaje-text-link:hover { color: var(--peritaje-red); }
+.peritaje-hero__note { display: flex; align-items: center; gap: 16px; margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--peritaje-line); max-width: 390px; }
+.peritaje-hero__note > span { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--peritaje-line); border-radius: 50%; font-size: 1.1rem; }
+.peritaje-hero__note p { margin: 0; color: var(--peritaje-muted); font-size: .73rem; line-height: 1.7; }
+.peritaje-hero__note strong { color: var(--peritaje-ink); font-weight: 500; }
+.peritaje-hero__visual { position: relative; margin: 0; height: clamp(500px, 46vw, 640px); overflow: hidden; border-radius: 8px; background: #292b28; }
+body.peritaje-page .peritaje-hero__visual img { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; }
+.peritaje-hero__visual figcaption { position: absolute; inset: auto 0 0; display: flex; flex-direction: column; gap: 6px; padding: 56px 24px 24px; color: #fff; background: linear-gradient(transparent, rgba(14, 20, 15, .88)); }
+.peritaje-hero__visual figcaption > span { font-size: .6rem; text-transform: uppercase; letter-spacing: .14em; }
+.peritaje-hero__visual figcaption strong { font-size: .85rem; font-weight: 500; }
+.peritaje-process { padding-block: 42px 64px; border-top: 1px solid var(--peritaje-line); }
+.peritaje-section-heading .peritaje-eyebrow { margin-bottom: 12px; }
+.peritaje-page :is(.peritaje-section-heading, .peritaje-consultation__copy, .peritaje-related) h2 { margin: 0; color: var(--peritaje-ink); font-size: clamp(1.8rem, 2.7vw, 2.5rem); font-weight: 600; line-height: 1.16; letter-spacing: -.04em; }
+.peritaje-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; margin: 34px 0 0; padding: 0; list-style: none; }
+.peritaje-steps li { display: flex; align-items: start; gap: 18px; }
+.peritaje-step-number { padding-top: 3px; color: #a51c28; font-size: .7rem; font-variant-numeric: tabular-nums; }
+.peritaje-steps h3 { margin: 0 0 9px; font-size: .9rem; font-weight: 600; line-height: 1.5; }
+.peritaje-steps p { margin: 0; color: var(--peritaje-muted); font-size: .8rem; line-height: 1.75; }
+.peritaje-consultation { padding-block: 72px; background: #edeee7; border-block: 1px solid var(--peritaje-line); }
+.peritaje-consultation__grid { display: grid; grid-template-columns: .85fr 1.15fr; align-items: start; gap: clamp(40px, 7vw, 108px); }
+.peritaje-consultation__copy { padding-top: 30px; }
+.peritaje-consultation__copy > p:not(.peritaje-eyebrow) { max-width: 34ch; margin: 22px 0; color: var(--peritaje-muted); font-size: .9rem; line-height: 1.8; }
+.peritaje-contact { max-width: 330px; margin-top: 38px; padding-top: 24px; border-top: 1px solid #d4d7cc; }
+.peritaje-contact p { margin: 0; color: var(--peritaje-muted); font-size: .76rem; line-height: 1.6; }
+.peritaje-card { min-width: 0; padding: 32px; background: #fff; border: 1px solid var(--peritaje-line); border-radius: 8px; }
+.peritaje-form-heading { margin-bottom: 26px; }
+.peritaje-form-heading h3 { margin: 0 0 10px; font-size: 1.2rem; font-weight: 600; letter-spacing: -.025em; }
+.peritaje-form-heading p { margin: 0; color: var(--peritaje-muted); font-size: .73rem; line-height: 1.65; }
+body.peritaje-page .peritaje-card .form-grid { gap: 20px 16px; }
+body.peritaje-page .peritaje-card .field { min-width: 0; gap: 8px; }
+body.peritaje-page .peritaje-card .field label { color: var(--peritaje-ink); font-size: .76rem; font-weight: 600; line-height: 1.5; }
+.peritaje-optional { font-weight: 400; color: var(--peritaje-muted); }
+body.peritaje-page .peritaje-card :is(.input, .textarea) { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid #d7dbd2; border-radius: 5px; color: var(--peritaje-ink); background: #fafbf8; box-shadow: none; font-family: inherit; font-size: .82rem; line-height: 1.5; }
+body.peritaje-page .peritaje-card .textarea { min-height: 104px; resize: vertical; }
+body.peritaje-page .peritaje-card :is(.input, .textarea)::placeholder { color: var(--peritaje-muted); opacity: 1; }
+body.peritaje-page .peritaje-card :is(.input, .textarea):focus { border-color: #a51c28; background: #fff; box-shadow: none; }
+.peritaje-card .form-message { grid-column: 1 / -1; margin: 0; font-size: .8rem; line-height: 1.6; }
+.peritaje-form-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 4px; }
+.peritaje-reset { min-height: 44px; padding: 10px 0; border: 0; background: transparent; color: var(--peritaje-muted); font: inherit; font-size: .78rem; cursor: pointer; }
+.peritaje-reset:hover { color: var(--peritaje-red); }
+.peritaje-form-note { margin: 18px 0 0; color: var(--peritaje-muted); font-size: .68rem; line-height: 1.6; }
+.peritaje-related { display: flex; align-items: center; justify-content: space-between; gap: 36px; padding-block: 60px; }
+.peritaje-related .peritaje-eyebrow { margin-bottom: 12px; }
+.peritaje-page .peritaje-related h2 { font-size: clamp(1.5rem, 2.2vw, 2rem); }
+.peritaje-related p:not(.peritaje-eyebrow) { margin: 14px 0 0; color: var(--peritaje-muted); font-size: .84rem; line-height: 1.7; }
+.peritaje-related > a { flex-shrink: 0; border-bottom: 1px solid var(--peritaje-line); }
+@media (min-width: 1000px) {
+  body.peritaje-page .site-header :is(.header-nav--desktop, .header-actions--desktop) { display: flex !important; }
+  body.peritaje-page .site-header .header-mobile-actions { display: none !important; }
+}
+@media (max-width: 999px) {
+  body.peritaje-page .container { width: calc(100% - 48px); }
+  body.peritaje-page .site-header :is(.header-nav--desktop, .header-actions--desktop) { display: none !important; }
+  body.peritaje-page .site-header .header-mobile-actions { display: flex; margin-left: auto; }
+  .peritaje-hero { gap: 32px; }
+  .peritaje-hero__visual { height: 540px; }
+  .peritaje-consultation__grid { grid-template-columns: .8fr 1.2fr; gap: 32px; }
+  .peritaje-card { padding: 24px; }
+  .peritaje-card .col-6 { grid-column: span 12; }
+  .peritaje-steps { gap: 24px; }
+  .peritaje-steps li { flex-direction: column; gap: 10px; }
+}
+@media (max-width: 760px) {
+  body.peritaje-page .container { width: calc(100% - 40px); }
+  .peritaje-breadcrumb { padding-block: 20px 10px; font-size: .65rem; }
+  .peritaje-hero { grid-template-columns: 1fr; gap: 28px; padding-bottom: 36px; }
+  .peritaje-hero__copy { padding-block: 22px 0; }
+  body.peritaje-page .peritaje-hero h1 { max-width: 16ch; font-size: clamp(2.6rem, 8.7vw, 3.8rem); }
+  .peritaje-hero__description { margin-block: 22px; font-size: .9rem; }
+  .peritaje-hero__actions { gap: 10px 20px; }
+  .peritaje-hero__note { margin-top: 26px; padding-top: 20px; max-width: none; }
+  .peritaje-hero__visual { height: auto; aspect-ratio: 4 / 5; max-height: 620px; }
+  body.peritaje-page .peritaje-hero__visual img { position: absolute; inset: 0; }
+  .peritaje-hero__visual figcaption { padding: 48px 20px 20px; }
+  .peritaje-process { padding-block: 32px 40px; }
+  .peritaje-steps { grid-template-columns: 1fr; gap: 22px; margin-top: 26px; }
+  .peritaje-steps li { flex-direction: row; gap: 18px; }
+  .peritaje-consultation { padding-block: 40px; }
+  .peritaje-consultation__grid { grid-template-columns: 1fr; gap: 26px; }
+  .peritaje-consultation__copy { padding: 0; }
+  .peritaje-consultation__copy > p:not(.peritaje-eyebrow) { max-width: 42ch; margin-block: 18px; }
+  .peritaje-contact { max-width: none; margin-top: 22px; padding-top: 18px; }
+  .peritaje-card { padding: 24px 20px; }
+  body.peritaje-page .peritaje-card :is(.input, .textarea) { font-size: 1rem; }
+  .peritaje-form-actions { gap: 12px; }
+  .peritaje-form-actions .peritaje-button { justify-content: center; }
+  .peritaje-related { flex-direction: column; align-items: start; gap: 18px; padding-block: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .peritaje-page .peritaje-button { transition: none; }
+}
