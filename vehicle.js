@@ -155,22 +155,21 @@ function firstVehicleImage(vehicle) {
 }
 
 function commercialBlocks(vehicle) {
-  const blocks = [];
-
-  if (vehicleInsuranceAvailable(vehicle)) {
-    blocks.push(`
-      <div class="commercial-panel">
-        <h3>Seguros, peritaje pre-compra y gestoría</h3>
-        <p class="commercial-note">Podés pedir una pre-cotización de seguro, coordinar un peritaje pre-compra con checklist y diagnóstico computarizado, y sumar gestoría para ordenar mejor la operación.</p>
-        <div class="detail-actions detail-actions-tight">
-          <a class="btn btn-ghost" href="${window.RGShared.insuranceUrl(vehicle)}">Pre-cotizar seguro</a>
-          <a class="btn btn-soft" href="${window.RGShared.peritajeUrl(vehicle)}">Solicitar peritaje</a>
-        </div>
+  return `
+    <aside class="vehicle-services" aria-labelledby="vehicleServicesTitle">
+      <p class="vehicle-eyebrow">Te acompañamos</p>
+      <h2 id="vehicleServicesTitle">También, en lo que viene.</h2>
+      <p>Consultanos por los servicios que podés sumar a tu próxima compra.</p>
+      <div class="vehicle-service-links">
+        ${vehicleInsuranceAvailable(vehicle) ? `
+          <a class="vehicle-service-link" href="${window.RGShared.insuranceUrl(vehicle)}"><span><strong>Seguro para tu vehículo</strong><small>Pedí una pre-cotización.</small></span><span aria-hidden="true">↗</span></a>
+          <a class="vehicle-service-link" href="${window.RGShared.peritajeUrl(vehicle)}"><span><strong>Peritaje pre-compra</strong><small>Conocé la unidad de cerca.</small></span><span aria-hidden="true">↗</span></a>
+        ` : ''}
+        <a class="vehicle-service-link" href="./peritaje.html#gestoria"><span><strong>Gestoría</strong><small>Orientación para los próximos pasos.</small></span><span aria-hidden="true">↗</span></a>
       </div>
-    `);
-  }
-
-  return blocks.join('');
+      <div class="vehicle-visit"><p class="vehicle-eyebrow">Encontranos en Río Grande</p><h3>RG Cars TDF</h3><p>Sarmiento 2760<br>Río Grande, Tierra del Fuego</p></div>
+    </aside>
+  `;
 }
 
 
@@ -198,12 +197,12 @@ function equipmentMarkup(vehicle) {
   const equipment = window.RGShared.arrayFromUnknown(vehicle.featured_equipment);
   if (!equipment.length) return '';
   return `
-    <div class="commercial-panel">
-      <h3>Equipamiento destacado</h3>
+    <section id="equipamiento" class="vehicle-equipment" aria-labelledby="equipmentTitle">
+      <h2 id="equipmentTitle">Equipamiento destacado</h2>
       <ul class="feature-list compact-list">
         ${equipment.map((item) => `<li>${window.RGShared.escapeHTML(item)}</li>`).join('')}
       </ul>
-    </div>
+    </section>
   `;
 }
 
@@ -212,20 +211,24 @@ function detailMarkup(vehicle) {
   const financingAvailable = vehicleFinancingAvailable(vehicle);
   const insuranceAvailable = vehicleInsuranceAvailable(vehicle);
   const minimumDownPayment = vehicleMinimumDownPaymentLabel(vehicle);
+  const equipment = equipmentMarkup(vehicle);
+  const quickSpecs = [vehicle.year, vehicle.km != null ? window.RGShared.formatKm(vehicle.km) : '', vehicle.transmission]
+    .filter((value) => value !== undefined && value !== null && value !== '' && value !== '-')
+    .map((value) => `<span>${window.RGShared.escapeHTML(String(value))}</span>`).join('');
   const dotsMarkup = images.length > 1
     ? `
-          <div class="detail-main-dots" aria-label="Fotos del vehiculo">
-            ${images.map((_, index) => `<button class="detail-main-dot ${index === 0 ? 'is-active' : ''}" type="button" data-detail-dot="${index}" aria-label="Ver foto ${index + 1}"></button>`).join('')}
+          <div class="detail-main-dots" aria-label="Fotos del vehículo">
+            ${images.map((_, index) => `<button class="detail-main-dot ${index === 0 ? 'is-active' : ''}" type="button" data-detail-dot="${index}" aria-label="Ver foto ${index + 1}" aria-pressed="${index === 0}"></button>`).join('')}
           </div>
       `
     : '';
   const mainMedia = images.length
-    ? `<img id="mainVehicleImage" src="${window.RGShared.escapeHTML(images[0])}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}, foto 1 de ${images.length}" tabindex="0">`
+    ? `<img id="mainVehicleImage" src="${window.RGShared.escapeHTML(images[0])}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}, foto 1 de ${images.length}" tabindex="0" role="button" aria-label="Ampliar foto del vehículo" aria-haspopup="dialog" fetchpriority="high" decoding="async">`
     : `<div class="media-placeholder large vehicle-gallery-placeholder"><img src="./imagenes/isotipo.png" alt=""><span>Imagen próximamente</span></div>`;
 
   return `
     <article class="detail-grid">
-      <section class="detail-gallery-card">
+      <section class="detail-gallery-card" aria-label="Fotos del vehículo">
         <div class="detail-main-media">
           ${mainMedia}
           ${images.length > 1 ? `
@@ -236,27 +239,29 @@ function detailMarkup(vehicle) {
           ${dotsMarkup}
           <div class="detail-top-pills">${commercialPills(vehicle)}</div>
         </div>
-        <div class="detail-thumbs">
+        <div class="vehicle-gallery-caption"><span>${images.length ? 'Explorá cada detalle' : 'Las fotos estarán disponibles próximamente'}</span>${images.length ? `<span data-gallery-counter aria-live="polite">1 / ${images.length}</span>` : ''}</div>
+        <div class="detail-thumbs" aria-label="Miniaturas del vehículo" ${images.length < 2 ? 'hidden' : ''}>
           ${images.length ? images.map((src, index) => `
-            <button class="thumb-button ${index === 0 ? 'is-active' : ''}" type="button" data-thumb-src="${window.RGShared.escapeHTML(src)}" data-thumb-index="${index}" aria-label="Ver imagen ${index + 1}">
-              <img src="${window.RGShared.escapeHTML(src)}" alt="Miniatura ${index + 1}">
+            <button class="thumb-button ${index === 0 ? 'is-active' : ''}" type="button" data-thumb-src="${window.RGShared.escapeHTML(src)}" data-thumb-index="${index}" aria-label="Ver imagen ${index + 1}" aria-pressed="${index === 0}">
+              <img src="${window.RGShared.escapeHTML(src)}" alt="" loading="lazy" decoding="async">
             </button>
           `).join('') : '<div class="empty-inline">Todavía no hay miniaturas cargadas.</div>'}
         </div>
       </section>
 
-      <aside class="detail-info-card">
-        <div class="detail-info-top">
-          <span class="vehicle-category">${window.RGShared.categoryLabel(vehicle.category)}</span>
-          ${commercialPills(vehicle)}
+      <div class="vehicle-identity">
+        <div class="vehicle-heading-meta">
+          <span class="vehicle-category">${window.RGShared.escapeHTML(window.RGShared.categoryLabel(vehicle.category))}</span>
+          <span class="vehicle-availability ${window.RGShared.statusClass(vehicle.status)}">${window.RGShared.statusLabel(vehicle.status)}</span>
         </div>
-
         <h1>${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}</h1>
-        <p class="detail-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
-        ${minimumDownPayment ? `<p class="detail-down-payment">${window.RGShared.escapeHTML(minimumDownPayment)}</p>` : ''}
-
-        <div class="detail-specs-grid">
-          ${detailSpecItems(vehicle)}
+        <div class="vehicle-quick-specs">${quickSpecs}</div>
+      </div>
+      <aside class="detail-info-card" aria-label="Precio y consultas">
+        <div class="vehicle-price-block">
+          <p class="vehicle-eyebrow">Precio de publicación</p>
+          <p class="detail-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
+          ${minimumDownPayment ? `<p class="detail-down-payment">${window.RGShared.escapeHTML(minimumDownPayment)}</p>` : ''}
         </div>
 
         <div class="detail-actions">
@@ -265,16 +270,21 @@ function detailMarkup(vehicle) {
           ${insuranceAvailable ? `<a class="btn btn-ghost" href="${window.RGShared.insuranceUrl(vehicle)}">Seguro</a>` : ''}
         </div>
 
-        ${equipmentMarkup(vehicle)}
-
-        <div class="detail-copy">
-          <h2>Descripción</h2>
-          <p>${window.RGShared.escapeHTML(vehicle.description || 'Esta unidad está publicada por RG Cars TDF. Consultá disponibilidad actualizada, financiación y formas de pago.').replace(/\n/g, '<br>')}</p>
-        </div>
-
-        ${commercialBlocks(vehicle)}
+        <p class="vehicle-contact-note">Consultanos por disponibilidad y formas de pago.</p>
+        ${financingAvailable ? '<div class="vehicle-finance-note"><p class="vehicle-eyebrow">Tu próximo paso</p><h2>Conocé tus opciones de financiación.</h2><p>Consultá alternativas y condiciones para esta unidad.</p></div>' : ''}
       </aside>
     </article>
+    <nav class="vehicle-section-nav" aria-label="Información del vehículo">
+      <a href="#caracteristicas">Características</a><a href="#descripcion">Descripción</a>${equipment ? '<a href="#equipamiento">Equipamiento</a>' : ''}
+    </nav>
+    <div class="vehicle-details">
+      <div class="vehicle-details-main">
+        <section id="caracteristicas" class="vehicle-specifications" aria-labelledby="specificationsTitle"><p class="vehicle-eyebrow">Conocé la unidad</p><h2 id="specificationsTitle">Los datos, a simple vista.</h2><div class="detail-specs-grid">${detailSpecItems(vehicle)}</div></section>
+        <section id="descripcion" class="detail-copy" aria-labelledby="descriptionTitle"><h2 id="descriptionTitle">Sobre este vehículo</h2><p>${window.RGShared.escapeHTML(vehicle.description || 'Esta unidad está publicada por RG Cars TDF. Consultá disponibilidad actualizada, financiación y formas de pago.').replace(/\n/g, '<br>')}</p></section>
+        ${equipment}
+      </div>
+      ${commercialBlocks(vehicle)}
+    </div>
   `;
 }
 
@@ -285,11 +295,12 @@ function cardHTML(vehicle) {
     <article class="vehicle-card compact-card">
       <a class="vehicle-card-link" href="./vehicle.html?id=${vehicle.id}" aria-label="Ver detalle de ${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}">
         <div class="vehicle-media compact-media">
-          ${image ? `<img src="${image}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}" class="is-active">` : '<div class="media-placeholder">Sin foto</div>'}
+          ${image ? `<img src="${window.RGShared.escapeHTML(image)}" alt="${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}" class="is-active" loading="lazy" decoding="async">` : '<div class="media-placeholder">Sin foto</div>'}
           <span class="status-pill ${window.RGShared.statusClass(vehicle.status)}">${window.RGShared.statusLabel(vehicle.status)}</span>
         </div>
         <div class="vehicle-body compact-body">
           <h3>${window.RGShared.escapeHTML(vehicle.title || 'Vehículo')}</h3>
+          <p class="vehicle-specs">${[vehicle.year, vehicle.km != null ? window.RGShared.formatKm(vehicle.km) : '', vehicle.transmission].filter(Boolean).map((value) => window.RGShared.escapeHTML(String(value))).join(' · ')}</p>
           <p class="vehicle-price">${window.RGShared.formatPrice(vehicle.price, vehicle.currency)}</p>
           ${minimumDownPayment ? `<p class="vehicle-down-payment">${window.RGShared.escapeHTML(minimumDownPayment)}</p>` : ''}
         </div>
@@ -327,11 +338,15 @@ function bindDetailEvents() {
     thumbButtons.forEach((item) => {
       const itemIndex = Number(item.getAttribute('data-thumb-index') || '0');
       item.classList.toggle('is-active', itemIndex === currentIndex);
+      item.setAttribute('aria-pressed', String(itemIndex === currentIndex));
     });
     dotButtons.forEach((item) => {
       const itemIndex = Number(item.getAttribute('data-detail-dot') || '0');
       item.classList.toggle('is-active', itemIndex === currentIndex);
+      item.setAttribute('aria-pressed', String(itemIndex === currentIndex));
     });
+    const counter = document.querySelector('[data-gallery-counter]');
+    if (counter) counter.textContent = `${currentIndex + 1} / ${total}`;
   }
 
   thumbButtons.forEach((button) => {
@@ -361,6 +376,7 @@ function bindDetailEvents() {
   }
 
   function openLightbox() {
+    if (lightbox) return;
     focusBeforeLightbox = document.activeElement;
     lightbox = document.createElement('div');
     lightbox.className = 'vehicle-lightbox';
@@ -394,7 +410,12 @@ function bindDetailEvents() {
     failedImages.add(failed);
     const next = imageSources.findIndex((src) => !failedImages.has(src));
     if (next >= 0) syncGallery(next);
-    else mainMedia.innerHTML = '<div class="media-placeholder large vehicle-gallery-placeholder"><img src="./imagenes/isotipo.png" alt=""><span>Imagen no disponible</span></div>';
+    else {
+      mainMedia.innerHTML = '<div class="media-placeholder large vehicle-gallery-placeholder"><img src="./imagenes/isotipo.png" alt=""><span>Imagen no disponible</span></div>';
+      document.querySelector('.detail-thumbs')?.setAttribute('hidden', '');
+      const caption = document.querySelector('.vehicle-gallery-caption');
+      if (caption) caption.textContent = 'Consultanos para conocer más sobre esta unidad.';
+    }
   });
 
   document.addEventListener('keydown', (event) => {

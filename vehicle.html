@@ -24,8 +24,10 @@
 
   <link rel="stylesheet" href="./styles.css?v=20260625-deploy-refresh" />
   <link rel="stylesheet" href="./index.css?v=20261018-whatsapp-number" />
+  <link rel="stylesheet" href="./vehicle.css?v=20261102-vehicle" />
 </head>
 <body class="public-theme detail-page">
+  <a class="vehicle-skip-link" href="#detail">Ir al vehículo</a>
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="./index.html" aria-label="RG Cars TDF">
@@ -50,13 +52,14 @@
     <section class="detail-shell">
       <div class="container">
         <div class="detail-backline">
-          <a href="./index.html#explorar-stock" class="btn btn-primary back-to-catalog" aria-label="Volver al catálogo de vehículos">
+          <a href="./index.html#explorar-stock" class="vehicle-back-link" aria-label="Volver al catálogo de vehículos">
             <span aria-hidden="true">←</span>
             <span>Volver al catálogo</span>
           </a>
+          <span class="vehicle-breadcrumb-label">Stock / Detalle del vehículo</span>
         </div>
 
-        <section id="detail" aria-live="polite"></section>
+        <section id="detail" aria-live="polite" tabindex="-1"></section>
 
         <section class="related-shell">
           <div class="section-head compact">
@@ -64,6 +67,7 @@
               <span class="eyebrow">Más vehículos</span>
               <h2>También te puede interesar</h2>
             </div>
+            <a class="vehicle-text-link" href="./index.html#explorar-stock">Ver todo el stock <span aria-hidden="true">↗</span></a>
           </div>
           <div id="relatedGrid" class="vehicle-grid related-grid"></div>
         </section>
@@ -81,8 +85,8 @@
       <div class="footer-columns">
         <div class="footer-column">
           <h3>Comprar</h3>
-          <a href="#explorar-stock">Explorar stock</a>
-          <a href="#stock">Catálogo</a>
+          <a href="./index.html#explorar-stock">Explorar stock</a>
+          <a href="./index.html#stock">Catálogo</a>
         </div>
         <div class="footer-column">
           <h3>Servicios</h3>
@@ -115,6 +119,6 @@
   <script src="./config.js?v=20260625-deploy-refresh"></script>
   <script src="./measurement.js?v=20260829-consent-actions-v3"></script>
   <script src="./shared.js?v=20261018-hide-recruitment"></script>
-  <script src="./vehicle.js?v=20261018-financing-update" defer></script>
+  <script src="./vehicle.js?v=20261102-vehicle" defer></script>
 </body>
 </html>

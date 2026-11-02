@@ -43,6 +43,7 @@ deployment:
     - /bin/cp home.css $DEPLOYPATH/
     - /bin/cp services.css $DEPLOYPATH/
     - /bin/cp peritaje.css $DEPLOYPATH/
+    - /bin/cp vehicle.css $DEPLOYPATH/
 
     # JS base
     - /bin/cp config.js $DEPLOYPATH/
