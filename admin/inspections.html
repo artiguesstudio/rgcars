@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <meta name="referrer" content="same-origin" />
+  <title>Peritajes · RG Cars TDF</title>
+  <link rel="icon" type="image/png" href="../imagenes/pestana.png" />
+  <link rel="stylesheet" href="../styles.css?v=20260829-automotive-premium-v2" />
+  <link rel="stylesheet" href="../inspections/admin.css?v=20261105-choice" />
+</head>
+<body class="inspection-admin">
+  <header class="inspection-header">
+    <a class="inspection-brand" href="./admin.html#vehicles"><img src="../imagenes/isotipo.png" alt="RG Cars TDF" /><span>Volver a vehículos</span></a>
+    <div class="inspection-heading"><span class="eyebrow">Peritajes</span><h1 id="vehicleTitle">Ficha de peritaje</h1><p id="vehicleMeta">Verificando sesión y permisos…</p><p id="sessionIdentity" hidden><small><span id="sessionEmail"></span> · <span id="sessionRole">Verificando acceso…</span></small></p></div>
+    <a id="vehiclePublicLink" class="btn btn-ghost" hidden target="_blank" rel="noopener noreferrer">Ver vehículo</a>
+  </header>
+  <main class="inspection-layout">
+    <section class="inspection-toolbar" aria-label="Informes de esta unidad">
+      <div class="inspection-history"><label class="inspection-field" for="historySelect"><span>Informe</span><select id="historySelect" disabled><option>Cargando informes…</option></select></label><div id="historyList" aria-live="polite"></div></div>
+      <button type="button" id="newInspection" class="btn btn-ghost" hidden>Nuevo peritaje</button>
+      <details class="inspection-guide"><summary>Cómo completar</summary><div><p>Marcá <strong>Bueno, Regular o Malo</strong> en la fila de cada componente y escribí sus observaciones al lado. Usá <strong>Fotos</strong> para adjuntar evidencia.</p><p><strong>N/A (No aplica)</strong> requiere permiso y un motivo. Una pieza rota o faltante debe evaluarse. Ninguna respuesta viene seleccionada; × permite dejar un estado pendiente.</p><p>En frenos, cargá únicamente la vida útil de 0 a 100 %. Aporta esa proporción de sus puntos. Bueno = 1; Regular = 0,5; Malo = 0. Los 83 pesos originales se conservan. Aptitud y riesgo los define el perito.</p><p>Guardá antes de salir. Los informes aprobados conservan sus criterios originales. Los datos del propietario y las notas internas son privados.</p></div></details>
+    </section>
+    <section class="inspection-workspace" aria-label="Informe seleccionado">
+      <div id="notice" class="inspection-notice" role="status" aria-live="polite" hidden></div>
+      <div id="validation" class="inspection-validation" role="alert" tabindex="-1" hidden></div>
+      <div id="emptyState" class="inspection-card"><h2>Peritajes de esta unidad</h2><p>Elegí un informe o creá uno nuevo para comenzar.</p></div>
+      <div id="editor" hidden>
+        <div class="inspection-card inspection-editor-header"><div><span id="reportStatus" class="inspection-badge"></span><h2 id="reportTitle">Ficha de peritaje</h2><p id="reportMeta"></p></div><div id="scoreSummary" aria-live="polite"></div></div>
+        <form id="inspectionForm" novalidate autocomplete="off"></form>
+        <div class="inspection-actions" id="reportActions"></div>
+      </div>
+    </section>
+  </main>
+  <dialog id="previewDialog" class="inspection-preview" aria-labelledby="previewTitle"><header><h2 id="previewTitle">Previsualización</h2><button type="button" id="closePreview" class="btn btn-ghost">Cerrar</button></header><div id="previewContent"></div></dialog>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="../config.js"></script>
+  <script type="module" src="./inspections.mjs?v=20261105-choice"></script>
+</body>
+</html>

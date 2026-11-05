@@ -7,6 +7,8 @@ deployment:
     - /bin/mkdir -p $DEPLOYPATH
     - /bin/mkdir -p $DEPLOYPATH/admin
     - /bin/mkdir -p $DEPLOYPATH/api
+    - /bin/mkdir -p $DEPLOYPATH/api/inspections
+    - /bin/mkdir -p $DEPLOYPATH/inspections
     - /bin/mkdir -p $DEPLOYPATH/imagenes
     - /bin/mkdir -p $DEPLOYPATH/uploads/vehicles
     - /bin/mkdir -p $DEPLOYPATH/videos
@@ -18,7 +20,11 @@ deployment:
 
     # Carpetas públicas
     - /bin/cp -R admin/. $DEPLOYPATH/admin/
-    - /bin/cp -R api/. $DEPLOYPATH/api/
+    # Lista explícita: no publicar configuraciones privadas ni archivos auxiliares.
+    - /bin/cp api/vehicle-images.php api/job-applications.php api/inspections.php $DEPLOYPATH/api/
+    - /bin/cp api/.htaccess $DEPLOYPATH/api/.htaccess
+    - /bin/cp api/inspections/bootstrap.php api/inspections/repository.php api/inspections/evidence.php api/inspections/domain.php api/inspections/config.json $DEPLOYPATH/api/inspections/
+    - /bin/cp -R inspections/. $DEPLOYPATH/inspections/
     - /bin/cp -R imagenes/. $DEPLOYPATH/imagenes/
     - /bin/cp uploads/.htaccess $DEPLOYPATH/uploads/.htaccess
     - /bin/cp -R videos/. $DEPLOYPATH/videos/

@@ -1,0 +1,671 @@
+{
+  "version": "rgcars-83-v2",
+  "scale_version": "propuesta-interna-v2",
+  "scale_notice": "Criterio interno propuesto, sujeto a validación del cliente: Bueno = 1; Regular = 0,5; Malo = 0. En frenos se utiliza el porcentaje de vida útil / 100. No determina aptitud ni riesgo.",
+  "factors": {
+    "B": 1,
+    "R": 0.5,
+    "M": 0
+  },
+  "allow_na": true,
+  "categories": [
+    {
+      "id": "exterior",
+      "label": "CARROCERÍA EXTERIOR",
+      "max": 17.5,
+      "order": 1,
+      "items": [
+        {
+          "id": "exterior-chapa-patente",
+          "label": "Chapa patente",
+          "weight": 1,
+          "type": "state",
+          "order": 1
+        },
+        {
+          "id": "exterior-paragolpe-delantero",
+          "label": "Paragolpe delantero",
+          "weight": 10,
+          "type": "state",
+          "order": 2
+        },
+        {
+          "id": "exterior-antiniebla-delantero",
+          "label": "Antiniebla delantero",
+          "weight": 1,
+          "type": "state",
+          "order": 3
+        },
+        {
+          "id": "exterior-parrilla",
+          "label": "Parrilla",
+          "weight": 3,
+          "type": "state",
+          "order": 4
+        },
+        {
+          "id": "exterior-optica-delantera",
+          "label": "Óptica delantera",
+          "weight": 7,
+          "type": "state",
+          "order": 5
+        },
+        {
+          "id": "exterior-insignias-delanteras",
+          "label": "Insignias delanteras",
+          "weight": 1,
+          "type": "state",
+          "order": 6
+        },
+        {
+          "id": "exterior-capot",
+          "label": "Capot",
+          "weight": 5,
+          "type": "state",
+          "order": 7
+        },
+        {
+          "id": "exterior-parabrisas",
+          "label": "Estado de parabrisas (fisuras / impactos)",
+          "weight": 10,
+          "type": "windshield",
+          "order": 8
+        },
+        {
+          "id": "exterior-escobilla",
+          "label": "Escobilla",
+          "weight": 1,
+          "type": "state",
+          "order": 9
+        },
+        {
+          "id": "exterior-bagueta",
+          "label": "Bagueta",
+          "weight": 1,
+          "type": "state",
+          "order": 10
+        },
+        {
+          "id": "exterior-guardabarro-delantero-conductor",
+          "label": "Guardabarro delantero conductor",
+          "weight": 2,
+          "type": "state",
+          "order": 11
+        },
+        {
+          "id": "exterior-puerta-delantera-conductor",
+          "label": "Puerta delantera conductor",
+          "weight": 2,
+          "type": "state",
+          "order": 12
+        },
+        {
+          "id": "exterior-espejo-conductor",
+          "label": "Espejo conductor",
+          "weight": 2,
+          "type": "state",
+          "order": 13
+        },
+        {
+          "id": "exterior-puerta-trasera-conductor",
+          "label": "Puerta trasera conductor",
+          "weight": 2,
+          "type": "state",
+          "order": 14
+        },
+        {
+          "id": "exterior-guardabarro-trasero-conductor",
+          "label": "Guardabarro trasero conductor",
+          "weight": 2,
+          "type": "state",
+          "order": 15
+        },
+        {
+          "id": "exterior-baul-caja",
+          "label": "Baúl / caja",
+          "weight": 10,
+          "type": "state",
+          "order": 16
+        },
+        {
+          "id": "exterior-paragolpe-trasero",
+          "label": "Paragolpe trasero",
+          "weight": 10,
+          "type": "state",
+          "order": 17
+        },
+        {
+          "id": "exterior-insignias-traseras",
+          "label": "Insignias traseras",
+          "weight": 1,
+          "type": "state",
+          "order": 18
+        },
+        {
+          "id": "exterior-optica-trasera",
+          "label": "Óptica trasera",
+          "weight": 5,
+          "type": "state",
+          "order": 19
+        },
+        {
+          "id": "exterior-luneta",
+          "label": "Luneta",
+          "weight": 1,
+          "type": "state",
+          "order": 20
+        },
+        {
+          "id": "exterior-guardabarro-trasero-acompanante",
+          "label": "Guardabarro trasero acompañante",
+          "weight": 2,
+          "type": "state",
+          "order": 21
+        },
+        {
+          "id": "exterior-puerta-trasera-acompanante",
+          "label": "Puerta trasera acompañante",
+          "weight": 2,
+          "type": "state",
+          "order": 22
+        },
+        {
+          "id": "exterior-puerta-delantera-acompanante",
+          "label": "Puerta delantera acompañante",
+          "weight": 2,
+          "type": "state",
+          "order": 23
+        },
+        {
+          "id": "exterior-espejo-acompanante",
+          "label": "Espejo acompañante",
+          "weight": 1,
+          "type": "state",
+          "order": 24
+        },
+        {
+          "id": "exterior-guardabarro-delantero-acompanante",
+          "label": "Guardabarro delantero acompañante",
+          "weight": 5,
+          "type": "state",
+          "order": 25
+        },
+        {
+          "id": "exterior-techo",
+          "label": "Techo",
+          "weight": 10,
+          "type": "state",
+          "order": 26
+        },
+        {
+          "id": "exterior-antena",
+          "label": "Antena",
+          "weight": 1,
+          "type": "state",
+          "order": 27
+        },
+        {
+          "id": "exterior-pintura",
+          "label": "Pintura general (% original / repintado)",
+          "weight": 10,
+          "type": "percentage",
+          "order": 28,
+          "unit": "% original",
+          "partition": "original_paint"
+        },
+        {
+          "id": "exterior-golpes",
+          "label": "Presencia de golpes (detallar zona)",
+          "weight": 10,
+          "type": "damage",
+          "order": 29
+        }
+      ]
+    },
+    {
+      "id": "interior-estetica",
+      "label": "CARROCERÍA INTERIOR ESTÉTICA",
+      "max": 12.5,
+      "order": 2,
+      "items": [
+        {
+          "id": "interior-estetica-entrada-puerta",
+          "label": "Entrada de puerta",
+          "weight": 15,
+          "type": "state",
+          "order": 1
+        },
+        {
+          "id": "interior-estetica-burlete",
+          "label": "Burlete",
+          "weight": 8,
+          "type": "state",
+          "order": 2
+        },
+        {
+          "id": "interior-estetica-asientos",
+          "label": "Asientos",
+          "weight": 20,
+          "type": "state",
+          "order": 3
+        },
+        {
+          "id": "interior-estetica-panel-puerta",
+          "label": "Panel de puerta",
+          "weight": 2,
+          "type": "state",
+          "order": 4
+        },
+        {
+          "id": "interior-estetica-techo-interior",
+          "label": "Techo (interior)",
+          "weight": 16,
+          "type": "state",
+          "order": 5
+        },
+        {
+          "id": "interior-estetica-volante",
+          "label": "Volante",
+          "weight": 15,
+          "type": "state",
+          "order": 6
+        },
+        {
+          "id": "interior-estetica-guantera",
+          "label": "Guantera",
+          "weight": 2,
+          "type": "state",
+          "order": 7
+        },
+        {
+          "id": "interior-estetica-tablero",
+          "label": "Tablero",
+          "weight": 2,
+          "type": "state",
+          "order": 8
+        },
+        {
+          "id": "interior-estetica-freno-mano",
+          "label": "Freno de mano",
+          "weight": 8,
+          "type": "state",
+          "order": 9
+        },
+        {
+          "id": "interior-estetica-palanca-cambios",
+          "label": "Palanca de cambios",
+          "weight": 2,
+          "type": "state",
+          "order": 10
+        },
+        {
+          "id": "interior-estetica-alfombra",
+          "label": "Alfombra",
+          "weight": 10,
+          "type": "state",
+          "order": 11
+        }
+      ]
+    },
+    {
+      "id": "luces",
+      "label": "LUCES",
+      "max": 4,
+      "order": 3,
+      "items": [
+        {
+          "id": "luces-luz-baja",
+          "label": "Luz baja",
+          "weight": 20,
+          "type": "state",
+          "order": 1
+        },
+        {
+          "id": "luces-luz-alta",
+          "label": "Luz alta",
+          "weight": 20,
+          "type": "state",
+          "order": 2
+        },
+        {
+          "id": "luces-posicion",
+          "label": "Luces de posición",
+          "weight": 20,
+          "type": "state",
+          "order": 3
+        },
+        {
+          "id": "luces-giro",
+          "label": "Luces de giro",
+          "weight": 20,
+          "type": "state",
+          "order": 4
+        },
+        {
+          "id": "luces-freno",
+          "label": "Luces de freno",
+          "weight": 20,
+          "type": "state",
+          "order": 5
+        }
+      ]
+    },
+    {
+      "id": "interior-funcion",
+      "label": "CARROCERÍA INTERIOR FUNCIÓN",
+      "max": 12.5,
+      "order": 4,
+      "items": [
+        {
+          "id": "interior-funcion-levanta-cristal",
+          "label": "Levanta cristal",
+          "weight": 4,
+          "type": "state",
+          "order": 1
+        },
+        {
+          "id": "interior-funcion-cierre-puertas",
+          "label": "Cierre de puertas",
+          "weight": 4,
+          "type": "state",
+          "order": 2
+        },
+        {
+          "id": "interior-funcion-espejo-electronico",
+          "label": "Espejo electrónico",
+          "weight": 2,
+          "type": "state",
+          "order": 3
+        },
+        {
+          "id": "interior-funcion-techo-electrico",
+          "label": "Techo eléctrico",
+          "weight": 10,
+          "type": "state",
+          "order": 4
+        },
+        {
+          "id": "interior-funcion-radio",
+          "label": "Radio",
+          "weight": 15,
+          "type": "state",
+          "order": 5
+        },
+        {
+          "id": "interior-funcion-aire-acondicionado",
+          "label": "Aire acondicionado",
+          "weight": 20,
+          "type": "state",
+          "order": 6
+        },
+        {
+          "id": "interior-funcion-calefaccion",
+          "label": "Calefacción",
+          "weight": 20,
+          "type": "state",
+          "order": 7
+        },
+        {
+          "id": "interior-funcion-comando-volante",
+          "label": "Comando de volante",
+          "weight": 5,
+          "type": "state",
+          "order": 8
+        },
+        {
+          "id": "interior-funcion-llave",
+          "label": "Llave",
+          "weight": 10,
+          "type": "state",
+          "order": 9
+        },
+        {
+          "id": "interior-funcion-asiento-electronico",
+          "label": "Asiento electrónico",
+          "weight": 5,
+          "type": "state",
+          "order": 10
+        },
+        {
+          "id": "interior-funcion-cerradura",
+          "label": "Cerradura",
+          "weight": 5,
+          "type": "state",
+          "order": 11
+        }
+      ]
+    },
+    {
+      "id": "chasis",
+      "label": "CHASIS",
+      "max": 16.5,
+      "order": 5,
+      "items": [
+        {
+          "id": "chasis-tasas",
+          "label": "Tasas",
+          "weight": 1,
+          "type": "state",
+          "order": 1
+        },
+        {
+          "id": "chasis-tren-delantero",
+          "label": "Tren delantero",
+          "weight": 20,
+          "type": "state",
+          "order": 2
+        },
+        {
+          "id": "chasis-tren-trasero",
+          "label": "Tren trasero",
+          "weight": 5,
+          "type": "state",
+          "order": 3
+        },
+        {
+          "id": "chasis-caja-cambios",
+          "label": "Caja de cambios (% de suavidad)",
+          "weight": 5,
+          "type": "percentage",
+          "order": 4,
+          "unit": "% de suavidad estimada"
+        },
+        {
+          "id": "chasis-diferencial",
+          "label": "Diferencial",
+          "weight": 5,
+          "type": "state",
+          "order": 5
+        },
+        {
+          "id": "chasis-amortiguadores",
+          "label": "Amortiguadores (% eficiencia estimada)",
+          "weight": 15,
+          "type": "percentage",
+          "order": 6,
+          "unit": "% eficiencia estimada"
+        },
+        {
+          "id": "chasis-direccion",
+          "label": "Dirección / cremallera",
+          "weight": 5,
+          "type": "state",
+          "order": 7
+        },
+        {
+          "id": "chasis-embrague",
+          "label": "Embrague",
+          "weight": 10,
+          "type": "state",
+          "order": 8
+        },
+        {
+          "id": "chasis-escape",
+          "label": "Escape",
+          "weight": 2,
+          "type": "state",
+          "order": 9
+        },
+        {
+          "id": "chasis-frenos-delantero",
+          "label": "Frenos delantero (% vida útil)",
+          "weight": 5,
+          "type": "percentage",
+          "order": 10,
+          "unit": "% vida útil estimada",
+          "scoring": "percentage"
+        },
+        {
+          "id": "chasis-frenos-trasero",
+          "label": "Frenos trasero (% vida útil)",
+          "weight": 5,
+          "type": "percentage",
+          "order": 11,
+          "unit": "% vida útil estimada",
+          "scoring": "percentage"
+        },
+        {
+          "id": "chasis-discos-pastillas",
+          "label": "Estado de disco y pastillas",
+          "weight": 5,
+          "type": "state",
+          "order": 12
+        }
+      ]
+    },
+    {
+      "id": "neumaticos",
+      "label": "NEUMÁTICOS Y LLANTAS",
+      "max": 16.5,
+      "order": 6,
+      "items": [
+        {
+          "id": "neumaticos-delantera-izquierda",
+          "label": "Rueda delantera izquierda",
+          "weight": 4,
+          "type": "tire",
+          "order": 1,
+          "details_required": false
+        },
+        {
+          "id": "neumaticos-delantera-derecha",
+          "label": "Rueda delantera derecha",
+          "weight": 4,
+          "type": "tire",
+          "order": 2,
+          "details_required": false
+        },
+        {
+          "id": "neumaticos-trasera-izquierda",
+          "label": "Rueda trasera izquierda",
+          "weight": 4,
+          "type": "tire",
+          "order": 3,
+          "details_required": false
+        },
+        {
+          "id": "neumaticos-trasera-derecha",
+          "label": "Rueda trasera derecha",
+          "weight": 4,
+          "type": "tire",
+          "order": 4,
+          "details_required": false
+        },
+        {
+          "id": "neumaticos-auxilio",
+          "label": "Rueda de auxilio",
+          "weight": 4,
+          "type": "tire",
+          "order": 5,
+          "details_required": false
+        },
+        {
+          "id": "neumaticos-llantas",
+          "label": "Estado de llantas (golpes / rayones / fisuras)",
+          "weight": 2,
+          "type": "damage",
+          "order": 6
+        }
+      ]
+    },
+    {
+      "id": "motor",
+      "label": "MOTOR / MARCA",
+      "max": 16.5,
+      "order": 7,
+      "items": [
+        {
+          "id": "motor-bateria",
+          "label": "Batería",
+          "weight": 3,
+          "type": "state",
+          "order": 1
+        },
+        {
+          "id": "motor-alternador",
+          "label": "Alternador",
+          "weight": 3,
+          "type": "state",
+          "order": 2
+        },
+        {
+          "id": "motor-burro-arranque",
+          "label": "Burro de arranque",
+          "weight": 20,
+          "type": "state",
+          "order": 3
+        },
+        {
+          "id": "motor-inyectores",
+          "label": "Inyectores",
+          "weight": 20,
+          "type": "state",
+          "order": 4
+        },
+        {
+          "id": "motor-motor",
+          "label": "Motor",
+          "weight": 30,
+          "type": "state",
+          "order": 5
+        },
+        {
+          "id": "motor-turbo",
+          "label": "Turbo",
+          "weight": 24,
+          "type": "state",
+          "order": 6
+        }
+      ]
+    },
+    {
+      "id": "varios",
+      "label": "VARIOS",
+      "max": 4,
+      "order": 8,
+      "items": [
+        {
+          "id": "varios-gato",
+          "label": "Gato",
+          "weight": 30,
+          "type": "state",
+          "order": 1
+        },
+        {
+          "id": "varios-llave-cruz",
+          "label": "Llave cruz",
+          "weight": 10,
+          "type": "state",
+          "order": 2
+        },
+        {
+          "id": "varios-matafuego",
+          "label": "Matafuego",
+          "weight": 10,
+          "type": "state",
+          "order": 3
+        }
+      ]
+    }
+  ]
+}
