@@ -2,6 +2,18 @@
 
 El backend PHP mantiene el contrato del administrador, la ficha pública y el PDF. Los informes, permisos del módulo, auditoría y evidencias se almacenan en cPanel. El login, los perfiles activos y el inventario siguen siendo los actuales de Supabase. No requiere Edge Functions, tablas ni buckets nuevos en Supabase.
 
+## Actualización publicada el 05/11/2026
+
+Se publicó el commit `7214ee2ff7de16272d2d978b22ba655a5aa66188` mediante Git de cPanel a las 18:48 de Argentina. La carga usa opciones Bueno / Regular / Malo / N/A en una fila, observaciones visibles con altura automática y un desplegable separado para fotos. Neumáticos usa Bueno y ya no exige marca, medida, desgaste ni profundidad; conserva los datos técnicos que existían en informes anteriores.
+
+La configuración `rgcars-83-v2` aplica `peso × porcentaje / 100` únicamente a vida útil de frenos delanteros y traseros, sin exigir una valoración cualitativa. El 0 % es válido; un porcentaje vacío queda pendiente. Los borradores usan los criterios actuales; los informes aprobados conservan su configuración y resultado originales. No se realizaron migraciones ni cambios de permisos ni se editaron informes reales.
+
+Verificación: 56 pruebas Node/PHP aprobadas, ninguna omitida; paridad con PHP 8.4.27 portable y sintaxis de los seis PHP comprobadas. Recorridos de navegador para administración y vista pública aprobados, incluyendo guardado, porcentaje 0/50/100, N/A con permiso revocado, snapshots antiguos, PDF y privacidad. Sin errores de consola ni desbordamiento a 1366, 768, 390 y 320 px; las filas comunes de escritorio miden 51 px. La integración con una base MariaDB nueva no se repitió en esta actualización.
+
+Los diez archivos estáticos del módulo publicados responden HTTP 200 y coinciden con los archivos probados (normalizando finales de línea). La consulta pública de la API responde HTTP 200 sin error. Los cuatro archivos PHP sin cambios se compararon con el respaldo real del servidor y coincidieron; el diff de `domain.php` contiene únicamente validación y cálculo de los nuevos criterios.
+
+Respaldo previo del backend: `/home2/rgcarsco/rgcars-private/peritajes-pre-v2-20261105-ec23507.zip`, fuera del sitio público. Copia local de los estáticos anteriores y del backend en `output/peritajes-compactos/backup-antes-v2`. El módulo completo y su despliegue ahora están versionados; `.cpanel.yml` incluye `inspections/`, la API y su `.htaccess`, excluyendo secretos y archivos de instalación.
+
 ## Hosting verificado el 14/10/2026
 
 - Dominio: `rgcars.com.ar`; PHP real del sitio **8.1.34**.
