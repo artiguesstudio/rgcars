@@ -49,8 +49,10 @@ test('admin vehicle writes tolerate lifecycle columns missing from the deployed 
   assert.match(admin, /\(insertPayload\) => sb\.from\('vehicles'\)\.insert\(insertPayload\)/);
   assert.match(admin, /\(updatePayload\) => sb\.from\('vehicles'\)\.update\(updatePayload\)/);
   assert.match(admin, /\(nextStatusPayload\) => sb\.from\('vehicles'\)\.update\(nextStatusPayload\)/);
-  assert.match(adminHtml, /admin\.js\?v=20260901-vehicle-schema-compat-v1/);
-  assert.match(loginHtml, /admin\.js\?v=20260901-vehicle-schema-compat-v1/);
+  const adminVersion = adminHtml.match(/admin\.js\?v=([^"\s]+)/)?.[1];
+  const loginVersion = loginHtml.match(/admin\.js\?v=([^"\s]+)/)?.[1];
+  assert.ok(adminVersion, 'The admin script must use a cache version');
+  assert.equal(loginVersion, adminVersion, 'Login and admin must load the same script version');
 
   const helpers = admin.slice(
     admin.indexOf('function isPlateSchemaError'),

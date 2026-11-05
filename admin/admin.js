@@ -3390,6 +3390,7 @@ function renderPostSaveActions(vehicle, highlight = true) {
     </div>
     <div class="post-save-buttons">
       <a class="btn btn-ghost" href="${window.RGShared.vehicleUrl(vehicle.id)}" target="_blank" rel="noreferrer">Ver publicación</a>
+      <a class="btn btn-soft" href="./inspections.html?vehicle_id=${encodeURIComponent(vehicle.id)}">Peritaje</a>
       <button class="btn btn-soft" type="button" data-edit-photos="${vehicle.id}">Editar fotos</button>
       <button class="btn btn-soft" type="button" data-complete-advanced="${vehicle.id}">Completar ficha avanzada</button>
       <button class="btn btn-soft" type="button" data-duplicate="${vehicle.id}">Duplicar unidad</button>
@@ -3435,6 +3436,7 @@ function adminCardHTML(vehicle) {
         </div>
         <div class="table-actions">
           <button class="btn btn-soft" type="button" data-edit="${vehicle.id}">Editar</button>
+          <a class="btn btn-ghost" href="./inspections.html?vehicle_id=${encodeURIComponent(vehicle.id)}">Peritaje</a>
           <button class="btn btn-ghost" type="button" data-download="${vehicle.id}">Ficha</button>
           <a class="btn btn-ghost" href="${window.RGShared.vehicleUrl(vehicle.id)}" target="_blank" rel="noreferrer">Ver</a>
           <button class="btn btn-danger" type="button" data-del="${vehicle.id}">Eliminar</button>
@@ -3515,6 +3517,7 @@ function quickPriceRowHTML(vehicle) {
         <div class="quick-actions">
           <button type="button" class="btn btn-primary" data-price-save="${vehicle.id}" ${saveDisabled}>${escape(quickSaveButtonLabel(vehicle.id))}</button>
           <button type="button" class="btn btn-ghost" data-edit="${vehicle.id}">Editar ficha</button>
+          <a class="btn btn-ghost" href="./inspections.html?vehicle_id=${encodeURIComponent(vehicle.id)}">Peritaje</a>
           <a class="btn btn-ghost" href="${window.RGShared.vehicleUrl(vehicle.id)}" target="_blank" rel="noreferrer">Ver</a>
         </div>
       </td>

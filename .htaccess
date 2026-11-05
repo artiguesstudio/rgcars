@@ -5,9 +5,13 @@
     Header always set Expires "0"
   </FilesMatch>
 
-  <FilesMatch "\.(js|css)$">
+  <FilesMatch "\.(js|mjs|css)$">
     Header always set Cache-Control "no-cache, must-revalidate"
     Header always set Pragma "no-cache"
     Header always set Expires "0"
   </FilesMatch>
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType text/javascript .mjs
 </IfModule>

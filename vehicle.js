@@ -268,6 +268,7 @@ function detailMarkup(vehicle) {
           <a class="btn btn-primary" href="${window.RGShared.waLink(vehicle)}" data-vehicle-id="${window.RGShared.escapeHTML(vehicle.id || '')}" target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
           ${financingAvailable ? `<a class="btn btn-soft vehicle-financing-link" href="${window.RGShared.financingUrl(vehicle)}" data-vehicle-financing-link>Financiación</a>` : ''}
           ${insuranceAvailable ? `<a class="btn btn-ghost" href="${window.RGShared.insuranceUrl(vehicle)}">Seguro</a>` : ''}
+          <a class="btn btn-soft" href="#vehicleInspection" data-inspection-link aria-controls="vehicleInspection" hidden>Ver peritaje</a>
         </div>
 
         <p class="vehicle-contact-note">Consultanos por disponibilidad y formas de pago.</p>
@@ -556,6 +557,7 @@ async function load() {
     $detail.innerHTML = detailMarkup(data);
     bindDetailEvents();
     bindVehicleFinancingAction(data);
+    import('./inspections/public.mjs').then(({ mountPublicInspection }) => mountPublicInspection(data.id)).catch(() => {});
     window.RGShared.trackEvent?.('view_item', {
       vehicle_id: data.id,
       item_id: String(data.id),
