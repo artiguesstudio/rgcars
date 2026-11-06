@@ -167,7 +167,7 @@ Antes de este paso, revisá también los textos destinados al público y los con
 
 En Más opciones → Previsualizar público, revisá la información que verá el visitante. También podés descargar PDF público; antes de publicar se identifica como vista previa. Si todo está correcto, pulsá Publicar como vigente y verificá el estado Publicado · vigente.
 
-Abrí Ver vehículo y comprobá el botón Ver peritaje en la ficha pública. Al publicar un nuevo informe, el anterior vigente de esa unidad se archiva automáticamente. Solo queda uno vigente por vehículo.
+Abrí Ver vehículo y comprobá el botón Ver peritaje en la ficha pública. La nota y las barras pasan de rojo a amarillo y verde según el porcentaje; Estado general y Riesgo se muestran debajo de las barras. Los visitantes consultan el informe en pantalla; las descargas PDF quedan en el administrador. Al publicar un nuevo informe, el anterior vigente de esa unidad se archiva automáticamente. Solo queda uno vigente por vehículo.
 
 ## Si detectás un error después de aprobar
 
@@ -186,7 +186,7 @@ CONSULTA PARA AMBOS ROLES
 
 ## Descargar una ficha
 
-Seleccioná vehículo e Informe. Si estás editando, pulsá primero Guardar borrador. Después abrí Más opciones y elegí la descarga:
+Ingresá al administrador con tu cuenta habilitada y seleccioná vehículo e Informe. Si estás editando, pulsá primero Guardar borrador. Después abrí Más opciones y elegí la descarga. Estas opciones están disponibles únicamente en el administrador:
 
 | Opción | Cuándo usarla |
 | --- | --- |

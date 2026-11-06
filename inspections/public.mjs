@@ -1,4 +1,4 @@
-import { prepareInspectionReport, formatInspectionDate, itemDetails, ratingLabel, downloadInspectionPdf } from './pdf.mjs';
+import { prepareInspectionReport, formatInspectionDate, itemDetails, ratingLabel } from './presentation.mjs';
 import { inspectionEndpoint, inspectionHeaders } from './transport.mjs';
 
 function element(tag, className, text) {
@@ -76,13 +76,13 @@ export function renderPublicInspection(source, host) {
   if (report.inspector_name) appendText(heading, 'p', 'inspection-public__date', `Perito: ${report.inspector_name}`);
   intro.append(heading);
   const score = element('div', 'inspection-public__score');
+  score.style.setProperty('--inspection-score-hue', String(Math.max(0, Math.min(100, report.score.total_100)) * 1.2));
   score.setAttribute('aria-label', `Calificación ${report.score.nota_10.toFixed(1)} sobre 10`);
   appendText(score, 'strong', '', report.score.nota_10.toFixed(1)); appendText(score, 'span', '', '/ 10');
   intro.append(score); host.append(intro);
   const badges = element('div', 'inspection-public__badges');
   appendText(badges, 'span', 'inspection-public__badge', `Estado general: ${report.fitness}`);
   appendText(badges, 'span', 'inspection-public__badge', `Riesgo: ${report.risk}`);
-  host.append(badges);
   if (report.verdict_reason) appendText(host, 'p', 'inspection-public__reason', report.verdict_reason);
   appendText(host, 'p', 'inspection-public__notice', 'La aptitud y el riesgo reflejan el dictamen del perito en esa fecha y son independientes de la calificación. La inspección no constituye una garantía absoluta ni reemplaza revisiones posteriores.');
   const bars = element('div', 'inspection-public__bars');
@@ -94,25 +94,15 @@ export function renderPublicInspection(source, host) {
     appendText(caption, 'strong', '', `${result.points.toFixed(2)} / ${category.max.toFixed(2)}`);
     row.append(caption);
     const meter = element('progress'); meter.max = category.max; meter.value = result.points;
+    meter.style.setProperty('--inspection-score-hue', String(Math.max(0, Math.min(100, result.points / category.max * 100)) * 1.2));
     meter.setAttribute('aria-label', `${category.label}: ${result.points.toFixed(2)} de ${category.max.toFixed(2)} puntos`);
     row.append(meter); bars.append(row);
   }
   host.append(bars);
-  const actions = element('div', 'inspection-public__actions');
-  const pdf = appendText(actions, 'button', 'btn btn-primary', 'Descargar informe PDF'); pdf.type = 'button';
-  const status = appendText(actions, 'p', 'inspection-public__download-status', ''); status.setAttribute('role', 'status');
-  pdf.addEventListener('click', async () => {
-    pdf.disabled = true; status.textContent = 'Preparando el informe público…';
-    try {
-      const result = await downloadInspectionPdf(await refreshReport(true));
-      status.textContent = result.missingEvidence ? `PDF descargado con ${result.missingEvidence} fotografía(s) no disponible(s). Reintentá la descarga para incorporarlas.` : 'Informe listo para descargar.';
-    }
-    catch (error) { status.textContent = error.message || 'No se pudo descargar el informe. Intentá nuevamente.'; }
-    finally { pdf.disabled = false; }
-  });
-  host.append(actions);
+  host.append(badges);
   const detail = element('details', 'inspection-public__details');
   appendText(detail, 'summary', '', 'Detalle del peritaje · 83 componentes');
+  const status = appendText(detail, 'p', 'inspection-public__status', ''); status.setAttribute('role', 'status');
   const percentageScoring = report.config.categories.some((category) => category.items.some((item) => item.scoring === 'percentage'));
   appendText(detail, 'p', 'inspection-public__notice', `Datos históricos de la inspección. Bueno, Regular, Malo y No aplica son valoraciones confirmadas por el perito.${percentageScoring ? ' La vida útil de frenos se expresa como porcentaje y suma proporcionalmente al puntaje.' : ''} Las mediciones estimadas no determinan por sí solas la seguridad mecánica.`);
   let detailsRendered = false;

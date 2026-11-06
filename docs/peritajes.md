@@ -6,7 +6,7 @@ Se integra en el sitio HTML/JavaScript existente, con la sesión de Supabase Aut
 
 El formulario comercial `peritaje.html` continúa recibiendo consultas. No se modifican sus leads ni la edición/publicación del inventario. Editar los datos del auto en un peritaje modifica únicamente su copia histórica. En PHP, la referencia al inventario es externa y el historial permanece aunque se retire la unidad del catálogo; no existe una FK entre bases. La alternativa Supabase sí impide eliminar vehículos con peritajes mediante FK.
 
-La ficha pública incorpora **Ver peritaje** junto a WhatsApp, financiación y seguro. El botón aparece únicamente después de obtener un informe aprobado y publicado; desplaza el foco al informe y abre su detalle completo. Se oculta cuando no existe informe publicado y no interfiere con **Solicitar peritaje**, que sigue siendo la consulta comercial.
+La ficha pública incorpora **Ver peritaje** junto a WhatsApp, financiación y seguro. El botón aparece únicamente después de obtener un informe aprobado y publicado; desplaza el foco al informe y abre su detalle completo. Se oculta cuando no existe informe publicado y no interfiere con **Solicitar peritaje**, que sigue siendo la consulta comercial. La nota y las barras varían de rojo a amarillo y verde según su porcentaje; Estado general y Riesgo aparecen después de las barras. La ficha pública permite consultar el informe; las descargas PDF se realizan únicamente desde el administrador.
 
 El catálogo único está en `inspections/config.mjs`: ocho categorías, 83 identificadores estables, etiquetas originales (incluida **Tasas**), tipos, orden y pesos. Los pesos internos suman **120, 100, 100, 100, 83, 22, 100, 50** y los topes suman 100. No se detectaron divergencias respecto del Markdown recibido. No se adjuntó el PDF físico mencionado; se preservan los campos enumerados, pero no se afirma reproducir exactamente su diagramación original de tres páginas.
 
@@ -42,7 +42,7 @@ La carga utiliza un formulario compacto de ancho completo. Cada componente prese
 6. Completar **Apto/No apto**, **Bajo/Medio/Alto**, el fundamento, las observaciones, la firma electrónica capturada o adjunta y la fecha de conformidad. La firma es electrónica simple, no certificada. El nombre del perito y su firma tienen autorizaciones públicas separadas y desactivadas inicialmente.
 7. **Enviar a revisión**. Un administrador revisa datos técnicos, hallazgos, dictámenes y contenido público, incluidas notas y fotos que pudieran contener información personal. Puede devolver a borrador para corregir o **Aprobar informe**. La aprobación congela respuestas, criterios, datos y evidencias.
 8. **Publicar como vigente** hace visible el informe y archiva atómicamente el anterior de esa unidad. Para corregir un informe aprobado, crear otro; no se reescribe el historial. **Archivar** un vigente lo retira de la consulta pública.
-9. Usar previsualización y **PDF interno** para operación privada. **PDF público** elimina los campos privados; las vistas previas aprobadas aún no publicadas se identifican como tales. El PDF se genera a pedido, con todas las secciones y los 83 componentes, y agrega páginas para contenido extenso/evidencias. El navegador permite imprimir el archivo descargado.
+9. Desde **Más opciones** del administrador, usar previsualización y **PDF interno** para operación privada. **PDF público** elimina los campos privados; las vistas previas aprobadas aún no publicadas se identifican como tales. Ambas descargas están disponibles solo en el backoffice para usuarios habilitados. El PDF se genera a pedido, con todas las secciones y los 83 componentes, y agrega páginas para contenido extenso/evidencias. El navegador permite imprimir el archivo descargado.
 
 ## Privacidad y publicación
 
@@ -88,7 +88,7 @@ Antes de operar con datos reales, validar:
 |---|---|
 | Motor y catálogo | `inspections/config.mjs`, `inspections/domain.mjs` |
 | Administrador | `admin/inspections.html`, `admin/inspections.mjs`, `inspections/admin.css`; enlaces en `admin/admin.js` |
-| Ficha y PDF | `inspections/public.mjs`, `inspections/public.css`, `inspections/pdf.mjs`; integración en `vehicle.html`, `vehicle.js` |
+| Ficha y PDF | `inspections/presentation.mjs` comparte la proyección y las etiquetas; `inspections/public.mjs` y `inspections/public.css` presentan la ficha; `inspections/pdf.mjs` genera el PDF desde el administrador; integración en `vehicle.html`, `vehicle.js` |
 | Servidor | `api/inspections.php`, `api/inspections/{bootstrap,repository,evidence,domain}.php`; alternativa `supabase/functions/inspections-api/` |
 | Persistencia | `scripts/inspection-cpanel-schema.sql`, plantilla `scripts/inspection-cpanel-permissions.sql`, `api/inspections/config.json`; migraciones Supabase alternativas |
 | Publicación | `.cpanel.yml`, `.htaccess` |

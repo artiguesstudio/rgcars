@@ -557,7 +557,7 @@ async function load() {
     $detail.innerHTML = detailMarkup(data);
     bindDetailEvents();
     bindVehicleFinancingAction(data);
-    import('./inspections/public.mjs').then(({ mountPublicInspection }) => mountPublicInspection(data.id)).catch(() => {});
+    import('./inspections/public.mjs?v=20261106-public-layout').then(({ mountPublicInspection }) => mountPublicInspection(data.id)).catch(() => {});
     window.RGShared.trackEvent?.('view_item', {
       vehicle_id: data.id,
       item_id: String(data.id),

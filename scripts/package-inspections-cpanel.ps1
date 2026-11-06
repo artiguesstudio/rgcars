@@ -10,8 +10,8 @@ $publicFiles = @(
   'api/inspections/repository.php', 'api/inspections/evidence.php', 'api/inspections/config.json',
   'admin/inspections.html', 'admin/inspections.mjs', 'admin/admin.js',
   'inspections/config.mjs', 'inspections/domain.mjs', 'inspections/admin.css',
-  'inspections/public.mjs', 'inspections/public.css', 'inspections/pdf.mjs', 'inspections/transport.mjs',
-  'vehicle.html', 'vehicle.js', 'config.js'
+  'inspections/public.mjs', 'inspections/public.css', 'inspections/presentation.mjs', 'inspections/pdf.mjs', 'inspections/transport.mjs',
+  'vehicle.html', 'vehicle.js', 'vehicle.css', 'index.css', 'config.js'
 )
 $manifest = foreach ($relativePath in $publicFiles) {
   $sourcePath = Join-Path $projectRoot $relativePath
@@ -28,7 +28,7 @@ foreach ($relativePath in @('scripts/inspection-cpanel-schema.sql','scripts/insp
 $manifest | ConvertTo-Json -Depth 3 | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $releaseRoot 'manifest.json')
 @'
 Paquete de peritajes RG Cars. Extraer fuera de public_html.
-public_html/ contiene solo los 19 archivos del modulo e integraciones.
+public_html/ contiene solo los archivos del modulo e integraciones indicados en manifest.json.
 install/ y manifest.json NO son contenido publico.
 El esquema NO concede permisos. Configurar la conexion privada antes de activar.
 Respaldar los archivos publicos que se reemplazaran.
