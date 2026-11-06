@@ -2,6 +2,14 @@
 
 El backend PHP mantiene el contrato del administrador, la ficha pública y el PDF. Los informes, permisos del módulo, auditoría y evidencias se almacenan en cPanel. El login, los perfiles activos y el inventario siguen siendo los actuales de Supabase. No requiere Edge Functions, tablas ni buckets nuevos en Supabase.
 
+## Actualización pública del 06/11/2026
+
+La ficha pública ya no ofrece descarga PDF ni carga el generador o jsPDF. Las descargas permanecen en el backoffice. `inspections/presentation.mjs` comparte la proyección pública y las etiquetas con `pdf.mjs`, que conserva su API administrativa. Incluir el nuevo archivo al desplegar; tanto `.cpanel.yml` como el empaquetador lo contemplan.
+
+Estado general y Riesgo se muestran debajo de las barras, en el lugar del antiguo botón. La nota y las barras usan una escala continua de rojo a amarillo y verde. Se compactaron las acciones de la ficha y el footer público; la galería tiene más ancho, llena su superficie y abre las fotos completas en un modal ajustado a su proporción natural. Se actualizaron las versiones de caché en los HTML públicos.
+
+Verificación: 47 pruebas Node aprobadas; smoke público con CSS real, privacidad, históricos, ausencia de solicitudes PDF y colores 0/50/100; smoke administrativo con siete descargas PDF. Galería/modal y footer comprobados en 1440, 1024, 768, 390 y 320 px, sin desbordamiento ni errores JavaScript. No se editaron datos reales ni permisos. Copia local de los 19 estáticos reemplazados en `output/public-layout-20261106/backup-before`; los 20 archivos publicados (incluido el nuevo módulo) se compararon por HTTP con los probados.
+
 ## Actualización publicada el 05/11/2026
 
 Se publicó el commit `7214ee2ff7de16272d2d978b22ba655a5aa66188` mediante Git de cPanel a las 18:48 de Argentina. La carga usa opciones Bueno / Regular / Malo / N/A en una fila, observaciones visibles con altura automática y un desplegable separado para fotos. Neumáticos usa Bueno y ya no exige marca, medida, desgaste ni profundidad; conserva los datos técnicos que existían en informes anteriores.

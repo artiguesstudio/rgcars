@@ -19,7 +19,7 @@ body.public-theme.detail-page .vehicle-skip-link:focus { transform: none; }
 
 /* Encabezado de navegación. */
 body.public-theme.detail-page .site-header { min-height: 80px; background: rgba(247,247,243,.97); border-bottom: 1px solid var(--vehicle-line); box-shadow: none; }
-body.public-theme.detail-page .site-header .header-inner { min-height: 72px; gap: 24px; padding-block: 8px; flex-wrap: nowrap; }
+body.public-theme.detail-page .site-header .header-inner { display: flex; min-height: 72px; gap: 24px; padding-block: 8px; flex-wrap: nowrap; }
 body.public-theme.detail-page .site-header .brand { margin-right: auto; }
 body.public-theme.detail-page .site-header .brand img { width: 115px; max-height: 54px; object-fit: contain; }
 body.public-theme.detail-page .header-nav--desktop { gap: 25px; }
